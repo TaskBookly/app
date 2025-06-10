@@ -1,5 +1,7 @@
 name: Test Build
 
+run-name: "Test Build: ${{ github.event.inputs.platform }} (${{ github.event.inputs.build_type }})"
+
 on:
     workflow_dispatch:
         inputs:
