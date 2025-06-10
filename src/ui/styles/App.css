@@ -1,0 +1,356 @@
+@import url("./theme.css");
+@import "./Tooltip.css";
+
+#rootFlex {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	width: 100vw;
+	overflow: hidden;
+	background: var(--color-bg-main);
+}
+
+#sidebar {
+	display: inline-flex;
+	flex-direction: column;
+	flex: 0 0 250px;
+	background-color: var(--color-bg-secondary);
+	padding: 20px 1em;
+	box-shadow: var(--color-shadow);
+	gap: 1em;
+	overflow: auto;
+	box-sizing: border-box;
+	max-height: 100vh;
+	transition: flex-basis 0.3s ease;
+	position: relative;
+
+	button {
+		overflow: hidden;
+		.material-symbols-rounded {
+			font-size: 2em;
+		}
+	}
+
+	button:not(#toggleSbBtn) {
+		justify-content: space-between;
+		display: flex;
+		width: 100%;
+	}
+
+	button:not(.selected) span {
+		opacity: 80%;
+	}
+
+	#toggleSbBtn {
+		width: min-content;
+	}
+
+	.buttonText {
+		transition: opacity 0.3s ease;
+		white-space: nowrap;
+	}
+}
+
+#sidebar.sb-collapsed {
+	flex-basis: 97px;
+
+	button {
+		span.buttonText {
+			opacity: 0;
+			pointer-events: none;
+		}
+	}
+}
+
+#sidebar:not(.sb-collapsed) button .buttonText {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+#topbar {
+	flex: 0 0 36px;
+	height: 36px;
+	width: 100vw;
+	background: var(--color-bg-header);
+	color: var(--color-text-main);
+	display: flex;
+	align-items: center;
+	padding-left: 70px; /* leave space for window controls */
+	font-size: 1.1em;
+	font-weight: 600;
+	-webkit-app-region: drag;
+	user-select: none;
+	z-index: 9999;
+	top: 0;
+	left: 0;
+	box-shadow: var(--color-shadow-topbar);
+}
+
+.topbar-title {
+	pointer-events: none;
+	flex: 1;
+	text-align: left;
+	padding-left: 0.5em;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+#topbar button,
+#topbar .window-controls {
+	-webkit-app-region: no-drag;
+}
+
+#topbar .window-controls {
+	position: absolute;
+	left: 0;
+	display: flex;
+	align-items: center;
+	height: 100%;
+	gap: 0;
+	-webkit-app-region: no-drag;
+}
+
+#topbar .window-controls button {
+	width: 36px;
+	height: 36px;
+	background: none;
+	border: none;
+	outline: none;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+}
+
+#appContent {
+	display: flex;
+	flex-direction: row;
+	width: 100vw;
+	flex: 1 1 0%;
+	min-height: 0;
+	padding-top: 0;
+}
+
+#sectionContainer {
+	flex: 1 1 0%;
+	height: 100%;
+	box-sizing: border-box;
+	overflow: hidden;
+	position: relative;
+	container-type: inline-size;
+
+	.sectionLabel {
+		font-size: 3em;
+		font-weight: 1000;
+		margin-bottom: 100px;
+	}
+}
+
+#sectionContainer > .section {
+	position: relative;
+	padding: 20px 25px;
+	max-height: 100vh;
+	box-sizing: border-box;
+	overflow: auto;
+}
+
+#sectionContainer > .section.section-anim-in,
+#sectionContainer > .section.section-anim-out {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+#sectionContainer > .section .container {
+	position: relative;
+	border-radius: 1em;
+	background-color: var(--color-bg-secondary);
+	box-sizing: border-box;
+	margin-block: 20px;
+	overflow: hidden;
+	outline: 1.5px solid var(--color-outline);
+
+	.containerContent {
+		padding: 20px;
+	}
+
+	.containerHeader {
+		display: flex;
+		width: 100%;
+		top: 0;
+		left: 0;
+		padding: 10px 20px 10px 20px;
+		gap: 10px;
+		color: var(--color-text-main);
+		background-color: var(--color-bg-accent);
+		padding-bottom: 10px;
+
+		span,
+		label {
+			font-size: 1.25em;
+			vertical-align: middle;
+			display: flex;
+			align-items: center;
+		}
+		span {
+			font-size: 1.75em;
+		}
+	}
+}
+
+.tabCont {
+	margin-block: 20px;
+	display: flex;
+	flex-direction: column;
+
+	.tabs {
+		padding-block: 0.5em;
+		padding-inline: 1em;
+		overflow-x: auto;
+		overflow-y: visible;
+		display: flex;
+		gap: 1em;
+		button {
+			width: 100%;
+		}
+	}
+}
+
+.setting {
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+}
+
+.setting > .settingContent {
+	display: flex;
+	position: relative;
+	gap: 30px;
+	align-items: center;
+}
+
+.setting > .settingHint {
+	display: flex;
+	background: var(--color-glow-accent-35);
+	color: var(--color-text-main);
+	padding: 1em 1em;
+	border-radius: 0.6em;
+	gap: 0.5em;
+	align-items: start;
+
+	.hintLabel {
+		opacity: 80%;
+		white-space: pre-line;
+	}
+
+	.hintIcon {
+		opacity: 70%;
+	}
+}
+
+.setting > .settingHint.settingHint-warning {
+	background: var(--color-hint-warning-bg);
+	color: var(--color-hint-warning-text);
+	box-shadow: 0 0 20px 0 var(--color-hint-glow-warning);
+}
+.setting > .settingHint.settingHint-error {
+	background: var(--color-hint-error-bg);
+	color: var(--color-hint-error-text);
+	box-shadow: 0 0 20px 0 var(--color-hint-glow-error);
+}
+.setting > .settingHint.settingHint-success {
+	background: var(--color-hint-success-bg);
+	color: var(--color-hint-success-text);
+}
+.setting > .settingHint.settingHint-processing {
+	.hintIcon {
+		animation: spin 1s linear infinite;
+	}
+}
+
+.setting:not(:last-child) {
+	border-bottom: 1.5px solid var(--color-bg-main);
+	margin-bottom: 1em;
+	padding-bottom: 1em;
+}
+
+.setting > .settingContent > .settingInfo {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	flex-basis: 0;
+	flex-grow: 1;
+	gap: 2.5px;
+	min-height: 100%;
+
+	.settingLabel {
+		font-size: 1.2em;
+		color: var(--color-text-main);
+	}
+	.settingDesc {
+		font-size: 1em;
+		color: var(--color-text-secondary);
+		margin: 0;
+		font-weight: 500;
+		white-space: pre-line;
+	}
+}
+
+.setting > .settingContent > .settingInput {
+	position: relative;
+	display: flex;
+	flex-basis: auto;
+	min-height: 100%;
+}
+
+.setting > .settingContent > .settingInput > * {
+	position: relative;
+	right: 0;
+}
+
+.section-hidden {
+	display: none !important;
+}
+.section-anim-in {
+	animation: fadeInSection 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.section-anim-out {
+	animation: fadeOutSection 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes fadeInSection {
+	0% {
+		opacity: 0;
+		transform: translateY(20px) scale(0.98);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+@keyframes fadeOutSection {
+	0% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+	100% {
+		opacity: 0;
+		transform: translateY(-20px) scale(0.98);
+	}
+}
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@container (max-width: 600px) {
+	.tabCont .tabs > button span.buttonText {
+		display: none;
+	}
+}

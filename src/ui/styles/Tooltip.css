@@ -1,0 +1,67 @@
+.app-tooltip {
+	position: fixed;
+	z-index: 9999;
+	background: var(--color-bg-main);
+	color: var(--color-text-main);
+	border-radius: 8px;
+	box-shadow: 0 0 16px 4px var(--color-glow-accent-28);
+	padding: 7px 13px;
+	font-size: 0.97rem;
+	font-family: inherit;
+	pointer-events: none;
+	opacity: 0;
+	transform: translateY(6px) scale(0.98);
+	transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+	max-width: 220px;
+	min-width: 0;
+	min-height: 0;
+	word-break: break-word;
+	line-height: 1.35;
+	user-select: none;
+	letter-spacing: 0.01em;
+	filter: none;
+	backdrop-filter: blur(1.5px);
+	will-change: opacity, transform;
+	display: inline-block;
+	white-space: pre-line;
+	outline: 1.5px solid var(--color-outline);
+}
+
+.app-tooltip[data-active="true"] {
+	opacity: 1;
+	transform: translateY(-2px) scale(1.03);
+	box-shadow: 0 2px 24px 6px var(--color-glow-accent-28);
+}
+
+.app-tooltip-arrow {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 0;
+	height: 0;
+	pointer-events: none;
+}
+
+.app-tooltip--bottom .app-tooltip-arrow {
+	top: -7px;
+	border-left: 8px solid transparent;
+	border-right: 8px solid transparent;
+	border-bottom: 7px solid var(--color-bg-accent);
+	border-top: none;
+}
+
+.app-tooltip--top .app-tooltip-arrow {
+	bottom: -7px;
+	border-left: 8px solid transparent;
+	border-right: 8px solid transparent;
+	border-top: 7px solid var(--color-bg-accent);
+	border-bottom: none;
+}
+
+@media (max-width: 600px) {
+	.app-tooltip {
+		font-size: 0.93rem;
+		padding: 6px 8px;
+		max-width: 90vw;
+	}
+}
