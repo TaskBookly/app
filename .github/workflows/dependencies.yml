@@ -1,0 +1,58 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Run every Sunday at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+    
+    - name: Check for outdated packages
+      run: |
+        npm outdated || true
+        echo "Checking for security updates..."
+        npm audit || true
+    
+    - name: Update patch and minor versions
+      run: |
+        npm update
+    
+    - name: Check if there are changes
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create Pull Request
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'chore: update dependencies'
+        title: 'chore: automated dependency updates'
+        body: |
+          This PR contains automated dependency updates.
+          
+          Please review the changes and ensure all tests pass before merging.
+          
+          Changes:
+          - Updated patch and minor versions of dependencies
+          - No breaking changes expected
+        branch: automated-dependency-updates
+        delete-branch: true

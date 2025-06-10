@@ -1,12 +1,15 @@
-name: Release
+name: Build Draft Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., v1.0.0)'
+        required: true
+        type: string
 
 jobs:
-  release:
+  build:
     runs-on: ${{ matrix.os }}
     
     strategy:
@@ -31,23 +34,21 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
+    - name: Update version in package.json
+      run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+    
     - name: Build Linux
       if: matrix.platform == 'linux'
       run: npm run dist:linux
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Build Windows
       if: matrix.platform == 'win'
       run: npm run dist:win
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Build macOS
       if: matrix.platform == 'mac'
       run: npm run dist:mac
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CSC_LINK: ${{ secrets.CSC_LINK }}
         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -58,7 +59,7 @@ jobs:
       if: matrix.platform == 'linux'
       uses: actions/upload-artifact@v4
       with:
-        name: linux-artifacts
+        name: linux-build-${{ github.event.inputs.version }}
         path: |
           dist/*.AppImage
           dist/*.tar.gz
@@ -67,7 +68,7 @@ jobs:
       if: matrix.platform == 'win'
       uses: actions/upload-artifact@v4
       with:
-        name: windows-artifacts
+        name: windows-build-${{ github.event.inputs.version }}
         path: |
           dist/*.exe
           dist/*.msi
@@ -76,15 +77,14 @@ jobs:
       if: matrix.platform == 'mac'
       uses: actions/upload-artifact@v4
       with:
-        name: macos-artifacts
+        name: macos-build-${{ github.event.inputs.version }}
         path: |
           dist/*.dmg
           dist/*.zip
 
-  publish:
-    needs: release
+  create-draft-release:
+    needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
     
     steps:
     - uses: actions/checkout@v4
@@ -94,12 +94,14 @@ jobs:
       with:
         path: ./artifacts
     
-    - name: Create Release
+    - name: Create Draft Release
       uses: softprops/action-gh-release@v1
       with:
+        tag_name: ${{ github.event.inputs.version }}
+        name: TaskBookly ${{ github.event.inputs.version }}
         files: |
           artifacts/**/*
-        draft: false
+        draft: true
         prerelease: false
         generate_release_notes: true
       env:
