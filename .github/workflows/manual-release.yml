@@ -2,6 +2,10 @@ name: Manual Release
 
 run-name: "${{ github.event.inputs.version }}${{ github.event.inputs.prerelease == 'true' && ' (pre-release)' || '' }}"
 
+permissions:
+    contents: write
+    actions: read
+
 on:
     workflow_dispatch:
         inputs:

@@ -2,6 +2,10 @@ name: Release
 
 run-name: "${{ github.ref_name }}"
 
+permissions:
+    contents: write
+    actions: read
+
 on:
     push:
         tags:

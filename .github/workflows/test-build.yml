@@ -69,7 +69,7 @@ jobs:
                   if [ "${{ github.event.inputs.build_type }}" = "unpacked" ]; then
                     npm run test:${{ matrix.platform }}
                   else
-                    npm run dist:${{ matrix.platform }}
+                    npm run test-installer:${{ matrix.platform }}
                   fi
               shell: bash
 
