@@ -41,14 +41,28 @@ const Settings: React.FC = () => {
 			value: "clearLocalStorage",
 			icon: "delete",
 			onClick: () => {
-				if (window.confirm("Are you sure you want to clear local storage? This will reset all settings and data.")) {
-					localStorage.clear();
-					window.location.reload();
+				try {
+					if (window.confirm("Are you sure you want to clear local storage? This will reset all settings and data.")) {
+						localStorage.clear();
+						window.location.reload();
+					}
+				} catch (error) {
+					console.error("Failed to clear local storage:", error);
 				}
 			},
 		},
-		{ label: "Open dev tools", value: "openDevTools", onClick: () => window.open("devtools://devtools/bundled/inspector.html?ws=localhost:9222/devtools/page/1") },
-		{ label: "Reload app", value: "reloadApp", icon: "refresh", onClick: () => window.location.reload() },
+		{
+			label: "Reload app",
+			value: "reloadApp",
+			icon: "refresh",
+			onClick: () => {
+				try {
+					window.location.reload();
+				} catch (error) {
+					console.error("Failed to reload app:", error);
+				}
+			},
+		},
 	];
 
 	const tabs: Tab[] = [
@@ -100,9 +114,13 @@ const Settings: React.FC = () => {
 										label: "Confirm?",
 										value: "confirm",
 										onClick: () => {
-											setSettingsState(defaultSettings);
-											if (typeof window !== undefined) {
-												localStorage.setItem("settings", JSON.stringify(defaultSettings));
+											try {
+												setSettingsState(defaultSettings);
+												if (typeof window !== "undefined") {
+													localStorage.setItem("settings", JSON.stringify(defaultSettings));
+												}
+											} catch (error) {
+												console.error("Failed to reset settings:", error);
 											}
 										},
 									},

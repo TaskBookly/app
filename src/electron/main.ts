@@ -13,6 +13,11 @@ app.on("ready", () => {
 		webPreferences: {
 			preload: getPreloadPath(),
 			devTools: isDev(),
+			nodeIntegration: false, // Disable Node.js integration in renderer
+			contextIsolation: true, // Enable context isolation
+			webSecurity: true, // Enable web security
+			allowRunningInsecureContent: false, // Prevent insecure content
+			experimentalFeatures: false, // Disable experimental web features
 		},
 		minWidth: 500,
 		minHeight: 250,

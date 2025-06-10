@@ -49,7 +49,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 	useEffect(() => {
 		if (typeof window !== "undefined") {
-			localStorage.setItem("settings", JSON.stringify(settings));
+			try {
+				localStorage.setItem("settings", JSON.stringify(settings));
+			} catch (error) {
+				console.error("Failed to save settings to localStorage:", error);
+			}
 		}
 	}, [settings]);
 
