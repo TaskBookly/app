@@ -1,3 +1,6 @@
+# Optimized Release Workflow for Electron App
+# Builds, lints, type-checks, packages, and uploads release assets on all major OSes
+
 name: Release App
 
 on:
@@ -19,14 +22,31 @@ jobs:
               with:
                   node-version: "20"
 
+            - name: Cache node modules
+              uses: actions/cache@v4
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+
             - name: Install dependencies
               run: npm install
+
+            - name: Lint code
+              run: npm run lint
+
+            - name: Type check (frontend)
+              run: npx tsc --noEmit -p tsconfig.app.json
+
+            - name: Type check (electron)
+              run: npx tsc --noEmit -p src/electron/tsconfig.json
 
             - name: Build Electron app
               run: npm run build
 
             - name: Package app (electron-builder)
-              run: npm run dist
+              run: npm run dist:${{ matrix.os == 'macos-latest' && 'mac' || matrix.os == 'windows-latest' && 'win' || 'linux' }}
 
             - name: Upload release assets
               uses: softprops/action-gh-release@v2
