@@ -1,9 +1,17 @@
-name: Release
+name: Manual Release
 
 on:
-    push:
-        tags:
-            - "v*.*.*"
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "Release version (e.g., v1.0.0)"
+                required: true
+                type: string
+            prerelease:
+                description: "Mark as pre-release"
+                required: false
+                default: false
+                type: boolean
 
 jobs:
     release:
@@ -31,6 +39,9 @@ jobs:
 
             - name: Install dependencies
               run: npm ci
+
+            - name: Update version in package.json
+              run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
 
             - name: Build and package app
               run: npm run dist:${{ matrix.platform }}
@@ -76,10 +87,12 @@ jobs:
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v1
               with:
+                  tag_name: ${{ github.event.inputs.version }}
+                  name: TaskBookly ${{ github.event.inputs.version }}
                   files: |
                       release-assets/**/*
                   draft: false
-                  prerelease: false
+                  prerelease: ${{ github.event.inputs.prerelease }}
                   generate_release_notes: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
