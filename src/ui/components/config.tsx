@@ -1,11 +1,22 @@
 import React from "react";
 import IcoButton, { type SelectionMenuOption, type ActionMenuOption, SelectionMenu, ActionMenu } from "./core";
 
+// Platform type for availableOn
+export type Platform = "windows" | "mac" | "linux" | "all";
+
+export function getPlatform(): Platform {
+	const ua = typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
+	if (ua.includes("win")) return "windows";
+	if (ua.includes("mac")) return "mac";
+	if (ua.includes("linux")) return "linux";
+	return "windows"; // fallback
+}
+
 interface InfoProps {
 	name: string;
 	data: string | number | boolean;
 	copyButton?: boolean;
-	availableOn?: Array<"windows" | "mac" | "linux">;
+	availableOn?: Platform[];
 	hint?: {
 		type: "info" | "warning" | "error" | "success" | "processing";
 		label: string;
@@ -16,7 +27,7 @@ interface ConfigDefaults {
 	name: string;
 	description?: string;
 	disabled?: boolean;
-	availableOn?: Array<"windows" | "mac" | "linux">;
+	availableOn?: Platform[];
 	hint?: {
 		type: "info" | "warning" | "error" | "success" | "processing";
 		label: string;
@@ -71,6 +82,9 @@ const Hint: React.FC<{ type: "info" | "warning" | "error" | "success" | "process
 };
 
 const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint, availableOn = ["all"] }) => {
+	const platform = getPlatform();
+	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+
 	return copyButton ? (
 		<ButtonActionConfig name={name} description={data.toString()} button={{ icon: "content_copy", tooltip: "Copy value" }} onClick={() => navigator.clipboard.writeText(data.toString())} />
 	) : (
@@ -88,6 +102,9 @@ const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint,
 };
 
 const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["all"] }) => {
+	const platform = getPlatform();
+	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+
 	return (
 		<div data-settingtype="switch" className="setting">
 			<div className="settingContent">
@@ -106,6 +123,9 @@ const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = fal
 };
 
 const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, disabled = false, button, hint, onClick = () => {}, availableOn = ["all"] }) => {
+	const platform = getPlatform();
+	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+
 	return (
 		<div data-settingtype="actionButton" className="setting">
 			<div className="settingContent">
@@ -124,6 +144,9 @@ const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, di
 };
 
 const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["all"] }) => {
+	const platform = getPlatform();
+	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+
 	return (
 		<div data-settingtype="actionButton" className="setting">
 			<div className="settingContent">
@@ -142,6 +165,9 @@ const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, 
 };
 
 const ActionMenuConfig: React.FC<ActionMenuProps> = ({ name, description, menu, disabled = false, hint, availableOn = ["all"] }) => {
+	const platform = getPlatform();
+	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+
 	return (
 		<div data-settingtype="actionButton" className="setting">
 			<div className="settingContent">

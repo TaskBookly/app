@@ -1,4 +1,4 @@
-name: Release Electron App
+name: Release App
 
 on:
     release:
@@ -25,9 +25,8 @@ jobs:
             - name: Build Electron app
               run: npm run build
 
-            # If you use a packaging command, uncomment and adjust the following
-            # - name: Package app
-            #   run: npm run dist
+            - name: Package app (electron-builder)
+              run: npm run dist
 
             - name: Upload release assets
               uses: softprops/action-gh-release@v2

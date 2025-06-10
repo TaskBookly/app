@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { getPlatform } from "./config";
 
 type Setting = { key: string; value: string };
 type SettingsContextType = {
@@ -9,12 +10,16 @@ type SettingsContextType = {
 	defaultSettings: Setting[];
 };
 
+const platform = getPlatform();
+
 const defaultSettings: Setting[] = [
 	{ key: "notifs:focus", value: "all" },
 	{ key: "notifs:tasks", value: "notifsOnly" },
 	{ key: "theme", value: "dark" },
-	{ key: "touchBar", value: "true" },
-	{ key: "launchOnLogin", value: "false" },
+	// Only include touchBar if on mac
+	...(platform === "mac" ? [{ key: "touchBar", value: "true" }] : []),
+	// Only include launchOnLogin if on windows
+	...(platform === "windows" ? [{ key: "launchOnLogin", value: "false" }] : []),
 	{ key: "autoUpdate", value: "false" },
 	{ key: "wrapupReminder", value: "5" },
 ];
