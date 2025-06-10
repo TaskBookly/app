@@ -28,36 +28,29 @@ jobs:
     setup:
         runs-on: ubuntu-latest
         outputs:
-            build-mac: ${{ steps.check-platforms.outputs.build-mac }}
-            build-linux: ${{ steps.check-platforms.outputs.build-linux }}
-            build-win: ${{ steps.check-platforms.outputs.build-win }}
+            matrix: ${{ steps.set-matrix.outputs.matrix }}
         steps:
-            - name: Check which platforms to build
-              id: check-platforms
+            - name: Set matrix based on platform selection
+              id: set-matrix
               run: |
                   if [ "${{ github.event.inputs.platform }}" = "all" ]; then
-                    echo "build-mac=true" >> $GITHUB_OUTPUT
-                    echo "build-linux=true" >> $GITHUB_OUTPUT
-                    echo "build-win=true" >> $GITHUB_OUTPUT
+                    echo 'matrix={"include":[{"os":"macos-latest","platform":"mac"},{"os":"ubuntu-latest","platform":"linux"},{"os":"windows-latest","platform":"win"}]}' >> $GITHUB_OUTPUT
                   elif [ "${{ github.event.inputs.platform }}" = "mac" ]; then
-                    echo "build-mac=true" >> $GITHUB_OUTPUT
-                    echo "build-linux=false" >> $GITHUB_OUTPUT
-                    echo "build-win=false" >> $GITHUB_OUTPUT
+                    echo 'matrix={"include":[{"os":"macos-latest","platform":"mac"}]}' >> $GITHUB_OUTPUT
                   elif [ "${{ github.event.inputs.platform }}" = "linux" ]; then
-                    echo "build-mac=false" >> $GITHUB_OUTPUT
-                    echo "build-linux=true" >> $GITHUB_OUTPUT
-                    echo "build-win=false" >> $GITHUB_OUTPUT
+                    echo 'matrix={"include":[{"os":"ubuntu-latest","platform":"linux"}]}' >> $GITHUB_OUTPUT
                   elif [ "${{ github.event.inputs.platform }}" = "win" ]; then
-                    echo "build-mac=false" >> $GITHUB_OUTPUT
-                    echo "build-linux=false" >> $GITHUB_OUTPUT
-                    echo "build-win=true" >> $GITHUB_OUTPUT
+                    echo 'matrix={"include":[{"os":"windows-latest","platform":"win"}]}' >> $GITHUB_OUTPUT
                   fi
               shell: bash
 
-    build-mac:
-        if: needs.setup.outputs.build-mac == 'true'
+    test-build:
         needs: setup
-        runs-on: macos-latest
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+            matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -71,118 +64,68 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
-            - name: Build macOS app
+            - name: Build app
               run: |
                   if [ "${{ github.event.inputs.build_type }}" = "unpacked" ]; then
-                    npm run test:mac
+                    npm run test:${{ matrix.platform }}
                   else
-                    npm run dist:mac
+                    npm run dist:${{ matrix.platform }}
                   fi
               shell: bash
 
             - name: Debug - List dist directory contents
-              if: github.event.inputs.build_type == 'unpacked'
+              if: matrix.platform == 'mac' && github.event.inputs.build_type == 'unpacked'
               run: |
                   echo "=== Contents of dist directory ==="
                   find dist -name "*.app" -type d 2>/dev/null || echo "No .app bundles found"
                   echo "=== Full dist structure ==="
                   ls -la dist/ || echo "dist directory not found"
+                  echo "=== Recursive listing ==="
+                  find dist -type d -name "*mac*" 2>/dev/null || echo "No mac directories found"
               shell: bash
 
-            - name: Upload macOS unpacked build
-              if: github.event.inputs.build_type == 'unpacked'
+            - name: Upload unpacked build (macOS)
+              if: matrix.platform == 'mac' && github.event.inputs.build_type == 'unpacked'
               uses: actions/upload-artifact@v4
               with:
-                  name: unpacked-build-macos
+                  name: unpacked-build-macos-app
                   path: dist/
                   retention-days: 30
 
-            - name: Upload macOS installer
-              if: github.event.inputs.build_type == 'installer'
+            - name: Upload installer build (macOS)
+              if: matrix.platform == 'mac' && github.event.inputs.build_type == 'installer'
               uses: actions/upload-artifact@v4
               with:
-                  name: installer-build-macos
+                  name: installer-build-macos-dmg
                   path: dist/*.dmg
                   retention-days: 30
 
-    build-linux:
-        if: needs.setup.outputs.build-linux == 'true'
-        needs: setup
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-                  cache: "npm"
-
-            - name: Install dependencies
-              run: npm ci
-
-            - name: Build Linux app
-              run: |
-                  if [ "${{ github.event.inputs.build_type }}" = "unpacked" ]; then
-                    npm run test:linux
-                  else
-                    npm run dist:linux
-                  fi
-              shell: bash
-
-            - name: Upload Linux unpacked build
-              if: github.event.inputs.build_type == 'unpacked'
+            - name: Upload unpacked build (Linux)
+              if: matrix.platform == 'linux' && github.event.inputs.build_type == 'unpacked'
               uses: actions/upload-artifact@v4
               with:
                   name: unpacked-build-linux
                   path: dist/linux-unpacked/
                   retention-days: 30
 
-            - name: Upload Linux installer
-              if: github.event.inputs.build_type == 'installer'
+            - name: Upload installer build (Linux)
+              if: matrix.platform == 'linux' && github.event.inputs.build_type == 'installer'
               uses: actions/upload-artifact@v4
               with:
                   name: installer-build-linux
                   path: dist/*.AppImage
                   retention-days: 30
 
-    build-win:
-        if: needs.setup.outputs.build-win == 'true'
-        needs: setup
-        runs-on: windows-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-                  cache: "npm"
-
-            - name: Install dependencies
-              run: npm ci
-
-            - name: Build Windows app
-              run: |
-                  if [ "${{ github.event.inputs.build_type }}" = "unpacked" ]; then
-                    npm run test:win
-                  else
-                    npm run dist:win
-                  fi
-              shell: bash
-
-            - name: Upload Windows unpacked build
-              if: github.event.inputs.build_type == 'unpacked'
+            - name: Upload unpacked build (Windows)
+              if: matrix.platform == 'win' && github.event.inputs.build_type == 'unpacked'
               uses: actions/upload-artifact@v4
               with:
                   name: unpacked-build-windows
                   path: dist/win-unpacked/
                   retention-days: 30
 
-            - name: Upload Windows installer
-              if: github.event.inputs.build_type == 'installer'
+            - name: Upload installer build (Windows)
+              if: matrix.platform == 'win' && github.event.inputs.build_type == 'installer'
               uses: actions/upload-artifact@v4
               with:
                   name: installer-build-windows
