@@ -25,54 +25,56 @@ on:
                     - installer
 
 jobs:
+    setup:
+        runs-on: ubuntu-latest
+        outputs:
+            matrix: ${{ steps.set-matrix.outputs.matrix }}
+        steps:
+            - name: Set matrix based on platform selection
+              id: set-matrix
+              run: |
+                  if [ "${{ github.event.inputs.platform }}" = "all" ]; then
+                    echo 'matrix={"include":[{"os":"macos-latest","platform":"mac"},{"os":"ubuntu-latest","platform":"linux"},{"os":"windows-latest","platform":"win"}]}' >> $GITHUB_OUTPUT
+                  elif [ "${{ github.event.inputs.platform }}" = "mac" ]; then
+                    echo 'matrix={"include":[{"os":"macos-latest","platform":"mac"}]}' >> $GITHUB_OUTPUT
+                  elif [ "${{ github.event.inputs.platform }}" = "linux" ]; then
+                    echo 'matrix={"include":[{"os":"ubuntu-latest","platform":"linux"}]}' >> $GITHUB_OUTPUT
+                  elif [ "${{ github.event.inputs.platform }}" = "win" ]; then
+                    echo 'matrix={"include":[{"os":"windows-latest","platform":"win"}]}' >> $GITHUB_OUTPUT
+                  fi
+              shell: bash
+
     test-build:
+        needs: setup
         runs-on: ${{ matrix.os }}
 
         strategy:
-            matrix:
-                include:
-                    - os: macos-latest
-                      platform: mac
-                    - os: ubuntu-latest
-                      platform: linux
-                    - os: windows-latest
-                      platform: win
+            matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
 
         steps:
-            - name: Check if platform should build
-              id: should-build
-              run: |
-                  if [ "${{ github.event.inputs.platform }}" = "${{ matrix.platform }}" ] || [ "${{ github.event.inputs.platform }}" = "all" ]; then
-                    echo "build=true" >> $GITHUB_OUTPUT
-                  else
-                    echo "build=false" >> $GITHUB_OUTPUT
-                  fi
             - name: Checkout code
-              if: steps.should-build.outputs.build == 'true'
               uses: actions/checkout@v4
 
             - name: Setup Node.js
-              if: steps.should-build.outputs.build == 'true'
               uses: actions/setup-node@v4
               with:
                   node-version: 20
                   cache: "npm"
 
             - name: Install dependencies
-              if: steps.should-build.outputs.build == 'true'
               run: npm ci
 
             - name: Build app
-              if: steps.should-build.outputs.build == 'true'
               run: |
                   if [ "${{ github.event.inputs.build_type }}" = "unpacked" ]; then
                     npm run test:${{ matrix.platform }}
                   else
                     npm run dist:${{ matrix.platform }}
                   fi
+              shell: bash
 
             - name: Upload unpacked build (macOS .app)
-              if: steps.should-build.outputs.build == 'true' && matrix.platform == 'mac' && github.event.inputs.build_type == 'unpacked'
+              if: matrix.platform == 'mac' && github.event.inputs.build_type == 'unpacked'
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ github.event.inputs.build_type }}-build-macos-app
@@ -80,7 +82,7 @@ jobs:
                   retention-days: 30
 
             - name: Upload installer build (macOS .dmg)
-              if: steps.should-build.outputs.build == 'true' && matrix.platform == 'mac' && github.event.inputs.build_type == 'installer'
+              if: matrix.platform == 'mac' && github.event.inputs.build_type == 'installer'
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ github.event.inputs.build_type }}-build-macos-dmg
@@ -88,7 +90,7 @@ jobs:
                   retention-days: 30
 
             - name: Upload unpacked build (Linux)
-              if: steps.should-build.outputs.build == 'true' && matrix.platform == 'linux' && github.event.inputs.build_type == 'unpacked'
+              if: matrix.platform == 'linux' && github.event.inputs.build_type == 'unpacked'
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ github.event.inputs.build_type }}-build-linux
@@ -96,7 +98,7 @@ jobs:
                   retention-days: 30
 
             - name: Upload installer build (Linux)
-              if: steps.should-build.outputs.build == 'true' && matrix.platform == 'linux' && github.event.inputs.build_type == 'installer'
+              if: matrix.platform == 'linux' && github.event.inputs.build_type == 'installer'
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ github.event.inputs.build_type }}-build-linux
@@ -104,7 +106,7 @@ jobs:
                   retention-days: 30
 
             - name: Upload unpacked build (Windows)
-              if: steps.should-build.outputs.build == 'true' && matrix.platform == 'win' && github.event.inputs.build_type == 'unpacked'
+              if: matrix.platform == 'win' && github.event.inputs.build_type == 'unpacked'
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ github.event.inputs.build_type }}-build-windows
@@ -112,7 +114,7 @@ jobs:
                   retention-days: 30
 
             - name: Upload installer build (Windows)
-              if: steps.should-build.outputs.build == 'true' && matrix.platform == 'win' && github.event.inputs.build_type == 'installer'
+              if: matrix.platform == 'win' && github.event.inputs.build_type == 'installer'
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ github.event.inputs.build_type }}-build-windows
