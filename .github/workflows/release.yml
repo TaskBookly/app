@@ -1,18 +1,38 @@
 name: Release
 
-run-name: "${{ github.ref_name }}"
+run-name: "Release v${{ needs.get-version.outputs.version }}${{ github.event.inputs.prerelease == 'true' && ' (pre-release)' || '' }}"
 
 permissions:
     contents: write
     actions: read
 
 on:
-    push:
-        tags:
-            - "v*.*.*"
+    workflow_dispatch:
+        inputs:
+            prerelease:
+                description: "Mark as pre-release"
+                required: false
+                default: false
+                type: boolean
 
 jobs:
+    get-version:
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.get-version.outputs.version }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Get version from package.json
+              id: get-version
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "Version: $VERSION"
+
     release:
+        needs: get-version
         runs-on: ${{ matrix.os }}
 
         strategy:
@@ -37,6 +57,11 @@ jobs:
 
             - name: Install dependencies
               run: npm ci
+
+            - name: Confirm version
+              run: |
+                  VERSION="${{ needs.get-version.outputs.version }}"
+                  echo "Building release for version: $VERSION"
 
             - name: Build and package app
               run: npm run dist:${{ matrix.platform }}
@@ -82,10 +107,12 @@ jobs:
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v1
               with:
+                  tag_name: v${{ needs.get-version.outputs.version }}
+                  name: TaskBookly v${{ needs.get-version.outputs.version }}
                   files: |
                       release-assets/**/*
                   draft: false
-                  prerelease: false
+                  prerelease: ${{ github.event.inputs.prerelease }}
                   generate_release_notes: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
