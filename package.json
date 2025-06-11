@@ -28,7 +28,6 @@
 	},
 	"build": {
 		"appId": "com.taskbookly.app",
-		"icon": "./icon.png",
 		"copyright": "(C) 2025 TaskBookly LLC",
 		"files": [
 			"dist-electron",
@@ -38,14 +37,17 @@
 			"dist-electron/preload.cjs"
 		],
 		"mac": {
+			"icon": "build-resources/icons/mac/icon-lg.png",
 			"target": "dmg",
 			"category": "public.app-category.productivity"
 		},
 		"linux": {
+			"icon": "build-resources/icons/linux/icon.png",
 			"target": "AppImage",
 			"category": "Utility"
 		},
 		"win": {
+			"icon": "build-resources/icons/windows/icon.png",
 			"target": [
 				"portable",
 				"msi"
