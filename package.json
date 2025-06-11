@@ -2,7 +2,8 @@
 	"name": "taskbookly",
 	"productName": "TaskBookly",
 	"private": true,
-	"version": "0.0.0",
+	"version": "0.1.0-test",
+	"license": "MIT",
 	"type": "module",
 	"author": "TaskBookly LLC",
 	"description": "A task management and focus tool application.",
@@ -37,7 +38,8 @@
 			"dist-electron/preload.cjs"
 		],
 		"mac": {
-			"target": "dmg"
+			"target": "dmg",
+			"category": "public.app-category.productivity"
 		},
 		"linux": {
 			"target": "AppImage",

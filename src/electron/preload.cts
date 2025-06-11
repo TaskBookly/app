@@ -8,6 +8,10 @@ contextBridge.exposeInMainWorld("electron", {
 			ipcRenderer.on("sidebar-state", (_event: any, collapsed: boolean) => callback(collapsed));
 		},
 	},
+	app: {
+		getVersion: () => ipcRenderer.invoke("get-app-version"),
+		getNodeEnv: () => ipcRenderer.invoke("get-node-env"),
+	},
 	onJumpToSection: (callback: (section: string) => void) => {
 		ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section));
 	},

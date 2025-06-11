@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Container, type SelectionMenuOption, type ActionMenuOption } from "../core";
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
@@ -6,6 +6,22 @@ import { useSettings } from "../SettingsContext";
 
 const Settings: React.FC = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
+	const [appVersion, setAppVersion] = useState<string>("Loading...");
+	const [nodeEnv, setNodeEnv] = useState<string>("Loading...");
+
+	useEffect(() => {
+		// Fetch app version and node environment from electron
+		Promise.all([window.electron.app.getVersion(), window.electron.app.getNodeEnv()])
+			.then(([version, env]) => {
+				setAppVersion(`v${version}`);
+				setNodeEnv(env);
+			})
+			.catch((error) => {
+				console.error("Failed to get app info:", error);
+				setAppVersion("Unknown");
+				setNodeEnv("Unknown");
+			});
+	}, []);
 
 	const themeOptions: SelectionMenuOption[] = [
 		{ label: "Light", value: "light" },
@@ -72,7 +88,7 @@ const Settings: React.FC = () => {
 			icon: "web_asset",
 			content: (
 				<Container name="settings_app">
-					<ButtonActionConfig name="Software Update" description={`TaskBookly v0.3.0\nLast checked: N/A`} button={{ text: "Check for Updates", icon: "refresh" }} />
+					<ButtonActionConfig name="Software Update" description={`TaskBookly ${appVersion}\nLast checked: N/A`} button={{ text: "Check for Updates", icon: "refresh" }} />
 					<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
 					<SwitchConfig name="Auto-update" description="TaskBookly will check for updates and attempt to apply them when launching the app." value={getSetting("autoUpdate") === "true"} onChange={() => setSetting("autoUpdate", getSetting("autoUpdate") === "true" ? "false" : "true")} />
 					<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
@@ -141,8 +157,8 @@ const Settings: React.FC = () => {
 						<ActionMenuConfig name="Debug actions" menu={{ button: { text: "Open debug actions", icon: "bug_report" }, options: debugActions }} />
 					</Container>
 					<Container name="settings_clientData">
-						<InfoConfig name="Version" data="v0.3.0" />
-						<InfoConfig name="Node environment" data="development" copyButton />
+						<InfoConfig name="Version" data={appVersion} copyButton />
+						<InfoConfig name="Node environment" data={nodeEnv} copyButton />
 					</Container>
 				</>
 			),

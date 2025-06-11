@@ -1,9 +1,20 @@
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import type { MenuItemConstructorOptions } from "electron";
 import path from "path";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
 
 import { isDev } from "./util.js";
 import { getPreloadPath } from "./pathResolver.js";
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Read package.json to get version (go up from dist-electron to project root)
+const packagePath = path.join(__dirname, "..", "package.json");
+const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
+const appVersion = packageJson.version;
 
 let sidebarCollapsed: boolean = false;
 
@@ -106,6 +117,14 @@ app.on("ready", () => {
 
 	ipcMain.handle("get-sidebar-state", () => {
 		return sidebarCollapsed;
+	});
+
+	ipcMain.handle("get-app-version", () => {
+		return appVersion;
+	});
+
+	ipcMain.handle("get-node-env", () => {
+		return process.env.NODE_ENV || "production";
 	});
 
 	if (isDev()) {
