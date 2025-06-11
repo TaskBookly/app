@@ -37,7 +37,7 @@
 			"dist-electron/preload.cjs"
 		],
 		"mac": {
-			"icon": "build-resources/icons/mac/icon-lg.png",
+			"icon": "build-resources/icons/mac/icon.png",
 			"target": "dmg",
 			"category": "public.app-category.productivity"
 		},
