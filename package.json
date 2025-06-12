@@ -29,6 +29,7 @@
 	"build": {
 		"appId": "com.taskbookly.app",
 		"copyright": "(C) 2025 TaskBookly LLC",
+		"artifactName": "${productName}.${ext}",
 		"files": [
 			"dist-electron",
 			"dist-react"
