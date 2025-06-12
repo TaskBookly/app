@@ -75,9 +75,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: taskbookly-windows
-                  path: |
-                      dist/*.exe
-                      dist/*.msi
+                  path: dist/*.exe
 
     publish:
         needs: release
@@ -99,7 +97,7 @@ jobs:
                   name: TaskBookly ${{ github.event.inputs.version }}
                   files: |
                       release-assets/**/*
-                  draft: false
+                  draft: true
                   prerelease: ${{ github.event.inputs.prerelease }}
                   generate_release_notes: true
               env:

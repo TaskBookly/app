@@ -48,10 +48,7 @@
 		},
 		"win": {
 			"icon": "build-resources/icons/windows/icon.png",
-			"target": [
-				"portable",
-				"msi"
-			]
+			"target": "nsis"
 		}
 	},
 	"dependencies": {
