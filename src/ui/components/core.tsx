@@ -98,7 +98,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, s
 			document.removeEventListener("scroll", handleScroll, true);
 			window.removeEventListener("resize", handleResize);
 		};
-	}, [open, buttonRef, menuRef]);
+	}, [open, buttonRef, menuRef, setOpen]);
 
 	React.useEffect(() => {
 		if (open && buttonRef.current && menuRef.current) {
@@ -122,8 +122,8 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, s
 			}
 
 			// Vertical positioning
-			let top = rect.bottom;
-			let above = rect.top - menuHeight;
+			const top = rect.bottom;
+			const above = rect.top - menuHeight;
 			let useAbove = false;
 			if (top + menuHeight > window.innerHeight - padding && above > padding) {
 				useAbove = true;
@@ -165,7 +165,7 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 
 	React.useEffect(() => {
 		if (!open && search) setSearch("");
-	}, [open]);
+	}, [open, search]);
 
 	return (
 		<div ref={ref} style={{ display: "inline-block", position: "relative" }}>
@@ -230,7 +230,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 
 	// Infer disabled from button prop if possible
 	let isDisabled = false;
-	if (React.isValidElement(button) && (button.props as any)?.disabled) {
+	if (React.isValidElement(button) && (button.props as { disabled?: boolean })?.disabled) {
 		isDisabled = true;
 	}
 
@@ -243,7 +243,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 
 	React.useEffect(() => {
 		if (!open && search) setSearch("");
-	}, [open]);
+	}, [open, search]);
 
 	return (
 		<div ref={ref} style={{ display: "inline-block", position: "relative" }}>
@@ -254,12 +254,9 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 				}}
 			>
 				{React.isValidElement(button)
-					? React.cloneElement(
-							button as React.ReactElement<any>,
-							{
-								className: [(button as React.ReactElement<any>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
-							} as any
-					  )
+					? React.cloneElement(button as React.ReactElement<{ className?: string; disabled?: boolean }>, {
+							className: [(button as React.ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
+					  })
 					: button}
 			</div>
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove} className={className}>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import "./styles/App.css";
 import Section, { jumpToSection } from "./components/nav.tsx";
 import IcoButton from "./components/core.tsx";
@@ -6,7 +6,6 @@ import { useTooltip, TooltipPortal } from "./components/Tooltip";
 import { SettingsProvider } from "./components/SettingsContext";
 
 function App() {
-	const [_, setSidebarCollapsed] = useState(false);
 	const tooltip = useTooltip();
 
 	useEffect(() => {
@@ -17,11 +16,9 @@ function App() {
 			jumpToSection(section);
 		});
 		window.electron.sidebar.getState().then((collapsed: boolean) => {
-			setSidebarCollapsed(collapsed);
 			setSidebarClass(collapsed);
 		});
 		window.electron.sidebar.onState((collapsed: boolean) => {
-			setSidebarCollapsed(collapsed);
 			setSidebarClass(collapsed);
 		});
 	}, []);

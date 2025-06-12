@@ -66,21 +66,10 @@ export function useTooltip() {
 }
 
 export function TooltipPortal({ tooltip }: { tooltip: TooltipState }) {
-	if (!tooltip.visible && !tooltip.text) return null;
-	const padding = 6;
-	const width = 220;
-	const { innerWidth, innerHeight } = window;
-	let left = tooltip.rect ? tooltip.rect.left + tooltip.rect.width / 2 : 0;
-	let top = tooltip.rect ? tooltip.rect.bottom + padding + 7 : 0;
-	let placement: "top" | "bottom" = "bottom";
-	if (tooltip.rect && top + 36 > innerHeight) {
-		top = tooltip.rect.top - 36 - padding - 7;
-		placement = "top";
-	}
-	left = clamp(left, 16, innerWidth - 16);
 	// Animation: fade+scale from element center, animate out on mouse leave
 	const [active, setActive] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
+
 	useEffect(() => {
 		if (tooltip.visible && tooltip.rect) {
 			setShouldRender(true);
@@ -92,8 +81,22 @@ export function TooltipPortal({ tooltip }: { tooltip: TooltipState }) {
 			const timeout = setTimeout(() => setShouldRender(false), 180);
 			return () => clearTimeout(timeout);
 		}
-	}, [tooltip.visible, tooltip.text, tooltip.rect]);
+	}, [tooltip.visible, tooltip.text, tooltip.rect, shouldRender]);
+
+	if (!tooltip.visible && !tooltip.text) return null;
 	if (!shouldRender) return null;
+
+	const padding = 6;
+	const width = 220;
+	const { innerWidth, innerHeight } = window;
+	let left = tooltip.rect ? tooltip.rect.left + tooltip.rect.width / 2 : 0;
+	let top = tooltip.rect ? tooltip.rect.bottom + padding + 7 : 0;
+	let placement: "top" | "bottom" = "bottom";
+	if (tooltip.rect && top + 36 > innerHeight) {
+		top = tooltip.rect.top - 36 - padding - 7;
+		placement = "top";
+	}
+	left = clamp(left, 16, innerWidth - 16);
 	return ReactDOM.createPortal(
 		<div
 			className={`app-tooltip app-tooltip--${placement}`}

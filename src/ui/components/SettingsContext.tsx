@@ -57,15 +57,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 		}
 	}, [settings]);
 
-	const getSetting = (key: string) => {
-		const found = settings.find((s) => s.key === key)?.value;
-		return typeof found === "string" ? found : defaultSettings.find((s) => s.key === key)?.value || "";
-	};
+	const getSetting = React.useCallback(
+		(key: string) => {
+			const found = settings.find((s) => s.key === key)?.value;
+			return typeof found === "string" ? found : defaultSettings.find((s) => s.key === key)?.value || "";
+		},
+		[settings]
+	);
 
 	// Theme effect
 	React.useEffect(() => {
 		document.documentElement.setAttribute("data-theme", getSetting("theme"));
-	}, [settings]);
+	}, [getSetting]);
 
 	const setSetting = (key: string, value: string) => {
 		setSettingsState((prev) => {
