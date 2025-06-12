@@ -33,15 +33,24 @@ jobs:
             - name: Set matrix based on platform selection
               id: set-matrix
               run: |
-                  if [ "${{ github.event.inputs.platform }}" = "all" ]; then
-                    echo 'matrix={"include":[{"os":"macos-latest","platform":"mac"},{"os":"ubuntu-latest","platform":"linux"},{"os":"windows-latest","platform":"win"}]}' >> $GITHUB_OUTPUT
-                  elif [ "${{ github.event.inputs.platform }}" = "mac" ]; then
-                    echo 'matrix={"include":[{"os":"macos-latest","platform":"mac"}]}' >> $GITHUB_OUTPUT
-                  elif [ "${{ github.event.inputs.platform }}" = "linux" ]; then
-                    echo 'matrix={"include":[{"os":"ubuntu-latest","platform":"linux"}]}' >> $GITHUB_OUTPUT
-                  elif [ "${{ github.event.inputs.platform }}" = "win" ]; then
-                    echo 'matrix={"include":[{"os":"windows-latest","platform":"win"}]}' >> $GITHUB_OUTPUT
-                  fi
+                  case "${{ github.event.inputs.platform }}" in
+                    "all")
+                      echo 'matrix={"include":[{"os":"macos-latest","platform":"mac"},{"os":"ubuntu-latest","platform":"linux"},{"os":"windows-latest","platform":"win"}]}' >> $GITHUB_OUTPUT
+                      ;;
+                    "mac")
+                      echo 'matrix={"include":[{"os":"macos-latest","platform":"mac"}]}' >> $GITHUB_OUTPUT
+                      ;;
+                    "linux")
+                      echo 'matrix={"include":[{"os":"ubuntu-latest","platform":"linux"}]}' >> $GITHUB_OUTPUT
+                      ;;
+                    "win")
+                      echo 'matrix={"include":[{"os":"windows-latest","platform":"win"}]}' >> $GITHUB_OUTPUT
+                      ;;
+                    *)
+                      echo "Error: Invalid platform '${{ github.event.inputs.platform }}'"
+                      exit 1
+                      ;;
+                  esac
               shell: bash
 
     test-build:
@@ -66,11 +75,18 @@ jobs:
 
             - name: Build app
               run: |
-                  if [ "${{ github.event.inputs.build_type }}" = "unpacked" ]; then
-                    npm run test:${{ matrix.platform }}
-                  else
-                    npm run test-installer:${{ matrix.platform }}
-                  fi
+                  case "${{ github.event.inputs.build_type }}" in
+                    "unpacked")
+                      npm run test:${{ matrix.platform }}
+                      ;;
+                    "installer")
+                      npm run test-installer:${{ matrix.platform }}
+                      ;;
+                    *)
+                      echo "Error: Invalid build type '${{ github.event.inputs.build_type }}'"
+                      exit 1
+                      ;;
+                  esac
               shell: bash
 
             - name: Debug - List dist directory contents
@@ -89,8 +105,9 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: unpacked-build-macos-app
-                  path: dist/
+                  path: dist/mac/
                   retention-days: 7
+                  if-no-files-found: error
 
             - name: Upload installer build (macOS)
               if: matrix.platform == 'mac' && github.event.inputs.build_type == 'installer'
@@ -99,6 +116,7 @@ jobs:
                   name: installer-build-macos-dmg
                   path: dist/*.dmg
                   retention-days: 7
+                  if-no-files-found: error
 
             - name: Upload unpacked build (Linux)
               if: matrix.platform == 'linux' && github.event.inputs.build_type == 'unpacked'
@@ -107,6 +125,7 @@ jobs:
                   name: unpacked-build-linux
                   path: dist/linux-unpacked/
                   retention-days: 7
+                  if-no-files-found: error
 
             - name: Upload installer build (Linux)
               if: matrix.platform == 'linux' && github.event.inputs.build_type == 'installer'
@@ -115,6 +134,7 @@ jobs:
                   name: installer-build-linux
                   path: dist/*.AppImage
                   retention-days: 7
+                  if-no-files-found: error
 
             - name: Upload unpacked build (Windows)
               if: matrix.platform == 'win' && github.event.inputs.build_type == 'unpacked'
@@ -123,6 +143,7 @@ jobs:
                   name: unpacked-build-windows
                   path: dist/win-unpacked/
                   retention-days: 7
+                  if-no-files-found: error
 
             - name: Upload installer build (Windows)
               if: matrix.platform == 'win' && github.event.inputs.build_type == 'installer'
@@ -131,3 +152,4 @@ jobs:
                   name: installer-build-windows
                   path: dist/*.exe
                   retention-days: 7
+                  if-no-files-found: error

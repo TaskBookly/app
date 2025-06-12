@@ -12,8 +12,10 @@ on:
 jobs:
     release:
         runs-on: ${{ matrix.os }}
+        timeout-minutes: 45
 
         strategy:
+            fail-fast: false
             matrix:
                 include:
                     - os: macos-latest
@@ -36,14 +38,6 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
-            - name: Get version from package.json
-              id: package-version
-              shell: bash
-              run: |
-                  VERSION=$(node -p "require('./package.json').version")
-                  echo "version=$VERSION" >> $GITHUB_OUTPUT
-                  echo "Using version from package.json: $VERSION"
-
             - name: Build and package app
               run: npm run dist:${{ matrix.platform }}
               env:
@@ -55,6 +49,7 @@ jobs:
               with:
                   name: taskbookly-macos
                   path: dist/*.dmg
+                  if-no-files-found: error
 
             - name: Upload release artifacts (Linux)
               if: matrix.platform == 'linux'
@@ -62,6 +57,7 @@ jobs:
               with:
                   name: taskbookly-linux
                   path: dist/*.AppImage
+                  if-no-files-found: error
 
             - name: Upload release artifacts (Windows)
               if: matrix.platform == 'win'
@@ -69,10 +65,12 @@ jobs:
               with:
                   name: taskbookly-windows
                   path: dist/*.exe
+                  if-no-files-found: error
 
     publish:
         needs: release
         runs-on: ubuntu-latest
+        timeout-minutes: 15
 
         steps:
             - name: Checkout code
@@ -90,6 +88,16 @@ jobs:
               uses: actions/download-artifact@v4
               with:
                   path: release-assets
+
+            - name: Verify downloaded artifacts
+              run: |
+                  echo "Checking downloaded artifacts..."
+                  ls -la release-assets/
+                  if [ ! -d "release-assets/taskbookly-macos" ] || [ ! -d "release-assets/taskbookly-linux" ] || [ ! -d "release-assets/taskbookly-windows" ]; then
+                    echo "Error: Missing required artifacts"
+                    exit 1
+                  fi
+                  echo "All artifacts verified"
 
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v1

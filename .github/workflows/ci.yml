@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+    contents: read
+
 on:
     push:
         branches: [main, develop]
@@ -9,8 +12,10 @@ on:
 jobs:
     build:
         runs-on: ${{ matrix.os }}
+        timeout-minutes: 30
 
         strategy:
+            fail-fast: false
             matrix:
                 os: [ubuntu-latest, windows-latest, macos-latest]
 
@@ -27,8 +32,25 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
+            - name: Lint code
+              run: npm run lint
+
             - name: Transpile Electron
               run: npm run transpile:electron
 
             - name: Build React app
               run: npm run build
+
+            - name: Verify build outputs
+              run: |
+                  echo "Checking build outputs..."
+                  if [ ! -d "dist-electron" ]; then
+                    echo "Error: dist-electron directory not found"
+                    exit 1
+                  fi
+                  if [ ! -d "dist-react" ]; then
+                    echo "Error: dist-react directory not found"
+                    exit 1
+                  fi
+                  echo "Build verification successful"
+              shell: bash
