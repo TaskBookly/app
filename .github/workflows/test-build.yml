@@ -105,7 +105,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: unpacked-build-macos-app
-                  path: dist/mac/
+                  path: dist/mac-universal/
                   retention-days: 7
                   if-no-files-found: error
 

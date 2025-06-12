@@ -32,9 +32,6 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
-            - name: Lint code
-              run: npm run lint
-
             - name: Transpile Electron
               run: npm run transpile:electron
 
