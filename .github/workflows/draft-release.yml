@@ -1,6 +1,6 @@
-name: Release
+name: Draft Release
 
-run-name: "${{ github.event.inputs.version }}${{ github.event.inputs.prerelease == 'true' && ' (pre-release)' || '' }}"
+run-name: "New Draft Release"
 
 permissions:
     contents: write
@@ -8,16 +8,6 @@ permissions:
 
 on:
     workflow_dispatch:
-        inputs:
-            version:
-                description: "Release version (e.g., 1.0.0)"
-                required: true
-                type: string
-            prerelease:
-                description: "Mark as pre-release"
-                required: false
-                default: false
-                type: boolean
 
 jobs:
     release:
@@ -46,10 +36,12 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
-            - name: Update version in package.json
+            - name: Get version from package.json
+              id: package-version
               run: |
-                  echo "Setting version to ${{ github.event.inputs.version }}"
-                  npm version ${{ github.event.inputs.version }} --no-git-tag-version --allow-same-version
+                  VERSION=$(node -p "require('./package.json').version")
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "Using version from package.json: $VERSION"
 
             - name: Build and package app
               run: npm run dist:${{ matrix.platform }}
@@ -85,6 +77,13 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
+            - name: Get version from package.json
+              id: package-version
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "Using version from package.json: $VERSION"
+
             - name: Download all artifacts
               uses: actions/download-artifact@v4
               with:
@@ -93,12 +92,11 @@ jobs:
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v1
               with:
-                  tag_name: ${{ github.event.inputs.version }}
-                  name: TaskBookly ${{ github.event.inputs.version }}
+                  tag_name: ${{ steps.package-version.outputs.version }}
+                  name: TaskBookly ${{ steps.package-version.outputs.version }}
                   files: |
                       release-assets/**/*
                   draft: true
-                  prerelease: ${{ github.event.inputs.prerelease }}
                   generate_release_notes: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
