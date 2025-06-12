@@ -6,7 +6,7 @@ on:
     workflow_dispatch:
         inputs:
             platform:
-                description: "Platform to build"
+                description: "Platform"
                 required: true
                 default: "mac"
                 type: choice
@@ -90,7 +90,7 @@ jobs:
               with:
                   name: unpacked-build-macos-app
                   path: dist/
-                  retention-days: 30
+                  retention-days: 7
 
             - name: Upload installer build (macOS)
               if: matrix.platform == 'mac' && github.event.inputs.build_type == 'installer'
@@ -98,7 +98,7 @@ jobs:
               with:
                   name: installer-build-macos-dmg
                   path: dist/*.dmg
-                  retention-days: 30
+                  retention-days: 7
 
             - name: Upload unpacked build (Linux)
               if: matrix.platform == 'linux' && github.event.inputs.build_type == 'unpacked'
@@ -106,7 +106,7 @@ jobs:
               with:
                   name: unpacked-build-linux
                   path: dist/linux-unpacked/
-                  retention-days: 30
+                  retention-days: 7
 
             - name: Upload installer build (Linux)
               if: matrix.platform == 'linux' && github.event.inputs.build_type == 'installer'
@@ -114,7 +114,7 @@ jobs:
               with:
                   name: installer-build-linux
                   path: dist/*.AppImage
-                  retention-days: 30
+                  retention-days: 7
 
             - name: Upload unpacked build (Windows)
               if: matrix.platform == 'win' && github.event.inputs.build_type == 'unpacked'
@@ -122,7 +122,7 @@ jobs:
               with:
                   name: unpacked-build-windows
                   path: dist/win-unpacked/
-                  retention-days: 30
+                  retention-days: 7
 
             - name: Upload installer build (Windows)
               if: matrix.platform == 'win' && github.event.inputs.build_type == 'installer'
@@ -130,4 +130,4 @@ jobs:
               with:
                   name: installer-build-windows
                   path: dist/*.exe
-                  retention-days: 30
+                  retention-days: 7
