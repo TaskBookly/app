@@ -1,6 +1,6 @@
 # TaskBookly
 
-A task management and focus tool application built with Electron and React.
+A simple task management and focus tool.
 
 ## 🔧 Installation
 
@@ -33,8 +33,8 @@ TaskBookly will occasionally check for any new releases. If found, TaskBookly wi
 > [!WARNING]
 > Unfortunately, due to code signatures, TaskBookly is unable to automatically update the software for you. You will have to manually reinstall the software.
 
-## Acknowledgements
-TaskBookly could not have been made without these awesome technologies:
+## 📦 Acknowledgements
+TaskBookly could not have been made without these awesome packages:
 
 ### Core Technologies
 
