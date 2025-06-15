@@ -2,7 +2,7 @@
 
 A task management and focus tool application built with Electron and React.
 
-## Installation
+## 🔧 Installation
 
 ### Windows
 
@@ -26,14 +26,15 @@ A task management and focus tool application built with Electron and React.
 3. Run the application: `./TaskBookly.AppImage`
 4. Optionally, you can integrate it with your system by right-clicking and selecting "Integrate and run"
 
-## Updating
+## 🔄 Updating
 
 TaskBookly will occasionally check for any new releases. If found, TaskBookly will notify you.
 
 > [!WARNING]
 > Unfortunately, due to code signatures, TaskBookly is unable to automatically update the software for you. You will have to manually reinstall the software.
 
-## Attributions
+## Acknowledgements
+TaskBookly could not have been made without these awesome technologies:
 
 ### Core Technologies
 
@@ -50,6 +51,6 @@ TaskBookly will occasionally check for any new releases. If found, TaskBookly wi
 -   **npm-run-all** - Parallel script execution
 -   **concurrently** - Concurrent command execution
 
-## License
+## ⚖️ License
 
 TaskBookly is licensed under the MIT License.
