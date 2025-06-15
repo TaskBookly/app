@@ -31,7 +31,7 @@ A simple task management and focus tool.
 TaskBookly will occasionally check for any new releases. If found, TaskBookly will notify you.
 
 > [!WARNING]
-> Unfortunately, due to code signatures, TaskBookly is unable to automatically update the software for you. You will have to manually reinstall the software.
+> Unfortunately, due to code signatures, TaskBookly is unable to automatically update the software for you at this time. You will have to manually reinstall the software.
 
 ## 📦 Acknowledgements
 TaskBookly could not have been made without these awesome packages:
