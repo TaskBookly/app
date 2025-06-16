@@ -127,6 +127,14 @@ app.on("ready", () => {
 		return process.env.NODE_ENV || "production";
 	});
 
+	ipcMain.handle("get-platform", () => {
+		return process.platform;
+	});
+
+	ipcMain.handle("get-chrome-version", () => {
+		return process.versions.chrome;
+	});
+
 	if (isDev()) {
 		mainWindow.loadURL("http://localhost:5123");
 	} else {

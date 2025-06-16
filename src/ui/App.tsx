@@ -12,13 +12,13 @@ function App() {
 		// Jumps to section automatically when the app loads
 		jumpToSection("focus");
 
-		window.electron.onJumpToSection((section: string) => {
+		window.app.onJumpToSection((section: string) => {
 			jumpToSection(section);
 		});
-		window.electron.sidebar.getState().then((collapsed: boolean) => {
+		window.app.sidebar.getState().then((collapsed: boolean) => {
 			setSidebarClass(collapsed);
 		});
-		window.electron.sidebar.onState((collapsed: boolean) => {
+		window.app.sidebar.onState((collapsed: boolean) => {
 			setSidebarClass(collapsed);
 		});
 	}, []);
@@ -35,7 +35,7 @@ function App() {
 	};
 
 	const handleToggleSidebar = () => {
-		window.electron.sidebar.toggle();
+		window.app.sidebar.toggle();
 	};
 
 	return (

@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("electron", {
+contextBridge.exposeInMainWorld("app", {
 	sidebar: {
 		toggle: () => ipcRenderer.send("toggle-sidebar"),
 		getState: () => ipcRenderer.invoke("get-sidebar-state"),
@@ -8,9 +8,10 @@ contextBridge.exposeInMainWorld("electron", {
 			ipcRenderer.on("sidebar-state", (_event: any, collapsed: boolean) => callback(collapsed));
 		},
 	},
-	app: {
+	build: {
 		getVersion: () => ipcRenderer.invoke("get-app-version"),
 		getNodeEnv: () => ipcRenderer.invoke("get-node-env"),
+		getPlatform: () => ipcRenderer.invoke("get-platform"),
 	},
 	onJumpToSection: (callback: (section: string) => void) => {
 		ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section));

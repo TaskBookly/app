@@ -20,7 +20,7 @@ const defaultSettings: Setting[] = [
 	...(platform === "mac" ? [{ key: "touchBar", value: "true" }] : []),
 	// Only include launchOnLogin if on windows
 	...(platform === "windows" ? [{ key: "launchOnLogin", value: "false" }] : []),
-	{ key: "autoUpdate", value: "false" },
+	{ key: "autoUpdate", value: "true" },
 	{ key: "wrapupReminder", value: "5" },
 ];
 
