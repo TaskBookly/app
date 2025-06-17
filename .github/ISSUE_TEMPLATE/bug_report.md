@@ -1,11 +1,13 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: For bugs and issues you have encountered
 title: ''
 labels: bug
 assignees: ''
 
 ---
+
+**Please make sure you are reporting from the latest version, as the bug you are reporting may have already been patched or requires a different method to produce.**
 
 **Describe the bug**
 A clear and concise description of what the bug is.
