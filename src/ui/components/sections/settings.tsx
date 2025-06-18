@@ -39,31 +39,31 @@ const Settings: React.FC = () => {
 		{ label: "Notifications & Sound", value: "all" },
 	];
 
-	const wrapUpReminderOptions: SelectionMenuOption[] = [
-		{ label: "No reminder", value: "0" },
-		{ label: "1 minute before", value: "1" },
-		{ label: "2 minutes before", value: "2" },
-		{ label: "3 minutes before", value: "3" },
-		{ label: "4 minutes before", value: "4" },
-		{ label: "5 minutes before", value: "5" },
-		{ label: "10 minutes before", value: "10" },
-		{ label: "15 minutes before", value: "15" },
-		{ label: "20 minutes before", value: "20" },
-		{ label: "25 minutes before", value: "25" },
-		{ label: "30 minutes before", value: "30" },
+	const transitionPeriodDurationOptions: SelectionMenuOption[] = [
+		{ label: "1 minute", value: "1" },
+		{ label: "2 minutes", value: "2" },
+		{ label: "3 minutes", value: "3" },
+		{ label: "4 minutes", value: "4" },
+		{ label: "5 minutes", value: "5" },
 	];
 
 	const tabs: Tab[] = [
 		{
-			label: "App",
-			key: "app",
-			icon: "web_asset",
+			label: "General",
+			key: "general",
+			icon: "settings",
 			content: (
-				<Container name="settings_app">
-					<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
-					<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." hint={{ type: "info", label: "Unfortunately, TaskBookly cannot apply these updates for you due to code signing issues. You'll have to manually install new updates." }} value={getSetting("autoUpdate") === "true"} onChange={() => setSetting("autoUpdate", getSetting("autoUpdate") === "true" ? "false" : "true")} />
-					<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
-				</Container>
+				<>
+					<Container name="settings_general">
+						<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
+						<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoUpdate") === "true"} onChange={() => setSetting("autoUpdate", getSetting("autoUpdate") === "true" ? "false" : "true")} />
+						<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
+					</Container>
+					<Container name="settings_focus" header={{ title: "Focus", icon: "timer" }}>
+						<SwitchConfig name="Transition periods" description="If enabled, we'll add a short period between focus sessions to allow you time to transition to the next focus period." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
+						{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: transitionPeriodDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
+					</Container>
+				</>
 			),
 		},
 		{
@@ -75,9 +75,6 @@ const Settings: React.FC = () => {
 					<Container name="settings_notifs">
 						<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions }} value={getSetting("notifs:focus")} onChange={(v) => setSetting("notifs:focus", v)} />
 						<SelectionMenuConfig name="Task deadlines" menu={{ options: notifOptions }} value={getSetting("notifs:tasks")} onChange={(v) => setSetting("notifs:tasks", v)} />
-					</Container>
-					<Container name="settings_notifs_focus" header={{ title: "Focus timer", icon: "timer" }}>
-						<SelectionMenuConfig name="Wrap-up reminder" description="Choose how many minutes before the end of a focus timer you'd like to receive a reminder, so you have time to wrap things up." menu={{ options: wrapUpReminderOptions }} value={getSetting("wrapupReminder")} onChange={(v) => setSetting("wrapupReminder", v)} />
 					</Container>
 				</>
 			),
