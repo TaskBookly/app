@@ -1,5 +1,5 @@
 interface Window {
-	app: {
+	electron: {
 		sidebar: {
 			toggle: () => void;
 			getState: () => Promise<boolean>;

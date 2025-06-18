@@ -12,7 +12,7 @@ const Settings: React.FC = () => {
 
 	useEffect(() => {
 		// Fetch app version and node environment from electron
-		Promise.all([window.app.build.getVersion(), window.app.build.getNodeEnv(), window.app.build.getPlatform()])
+		Promise.all([window.electron.build.getVersion(), window.electron.build.getNodeEnv(), window.electron.build.getPlatform()])
 			.then(([version, env, platform]) => {
 				setAppVersion(`v${version}`);
 				setNodeEnv(env);

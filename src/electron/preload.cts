@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("app", {
+contextBridge.exposeInMainWorld("electron", {
 	sidebar: {
 		toggle: () => ipcRenderer.send("toggle-sidebar"),
 		getState: () => ipcRenderer.invoke("get-sidebar-state"),
