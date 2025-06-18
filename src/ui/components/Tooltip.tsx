@@ -38,16 +38,15 @@ export function useTooltip() {
 				clearTimeout(showTimer.current);
 				showTimer.current = null;
 			}
-			// Only hide if leaving the current tooltip target
+
 			const related = (e as MouseEvent).relatedTarget as HTMLElement | null;
 			if (currentTarget.current && related && related.dataset.tooltip) {
-				// Moving directly to another tooltip target, let showTooltip handle it
 				return;
 			}
 			hideTimer.current = window.setTimeout(() => {
 				setTooltip((t) => ({ ...t, visible: false }));
 				currentTarget.current = null;
-			}, 100); // Short delay to allow for fast hover transitions
+			}, 100);
 		}
 		document.addEventListener("mouseover", showTooltip);
 		document.addEventListener("focusin", showTooltip);
@@ -66,18 +65,15 @@ export function useTooltip() {
 }
 
 export function TooltipPortal({ tooltip }: { tooltip: TooltipState }) {
-	// Animation: fade+scale from element center, animate out on mouse leave
 	const [active, setActive] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
 
 	useEffect(() => {
 		if (tooltip.visible && tooltip.rect) {
 			setShouldRender(true);
-			// Use requestAnimationFrame for reliable animation triggering
 			requestAnimationFrame(() => setActive(true));
 		} else if (!tooltip.visible && shouldRender) {
 			setActive(false);
-			// Wait for animation to finish before unmounting
 			const timeout = setTimeout(() => setShouldRender(false), 180);
 			return () => clearTimeout(timeout);
 		}
