@@ -16,7 +16,7 @@ const defaultSettings: Setting[] = [
 	{ key: "notifs:focus", value: "all" },
 	{ key: "notifs:tasks", value: "notifsOnly" },
 	{ key: "theme", value: "dark" },
-	{ key: "autoUpdate", value: "true" },
+	{ key: "autoCheckForUpdates", value: "true" },
 	{ key: "transitionPeriodsEnabled", value: "true" },
 	{ key: "transitionPeriodDuration", value: "3" },
 
