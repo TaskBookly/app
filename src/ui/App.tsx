@@ -41,9 +41,7 @@ function App() {
 	return (
 		<SettingsProvider>
 			<div id="rootFlex">
-				<div id="topbar">
-					<span className="topbar-title">TaskBookly</span>
-				</div>
+				<div id="topbar"></div>
 				<div id="appContent">
 					<div id="sidebar">
 						<button id="toggleSbBtn" onClick={handleToggleSidebar}>

@@ -5,9 +5,10 @@ interface Window {
 			getState: () => Promise<boolean>;
 			onState: (callback: (collapsed: boolean) => void) => void;
 		};
-		app: {
+		build: {
 			getVersion: () => Promise<string>;
 			getNodeEnv: () => Promise<string>;
+			getPlatform: () => Promise<NodeJS.Platform>;
 		};
 		onJumpToSection: (callback: (section: string) => void) => void;
 	};

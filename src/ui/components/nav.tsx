@@ -46,6 +46,24 @@ const Section: React.FC<{ name: string; displayTitle?: string }> = ({ name, disp
 		};
 	}, [name]);
 
+	React.useEffect(() => {
+		const sectionElement = document.querySelector(`section[data-section="${name}"]`) as HTMLElement;
+		if (sectionElement) {
+			if (name !== "focus") {
+				sectionElement.classList.add("section-hidden");
+			} else {
+				sectionElement.classList.remove("section-hidden");
+				const focusButton = document.querySelector('[data-sect="focus"]') as HTMLButtonElement;
+				if (focusButton) {
+					document.querySelectorAll("button[data-sect].selected").forEach((element) => {
+						element.classList.remove("selected");
+					});
+					focusButton.classList.add("selected");
+				}
+			}
+		}
+	}, []);
+
 	return (
 		<section className="section" data-section={name}>
 			<label className="sectionLabel">{displayTitle || name}</label>

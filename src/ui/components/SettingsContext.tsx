@@ -16,12 +16,13 @@ const defaultSettings: Setting[] = [
 	{ key: "notifs:focus", value: "all" },
 	{ key: "notifs:tasks", value: "notifsOnly" },
 	{ key: "theme", value: "dark" },
-	// Only include touchBar if on mac
+	{ key: "autoCheckForUpdates", value: "true" },
+	{ key: "transitionPeriodsEnabled", value: "true" },
+	{ key: "transitionPeriodDuration", value: "3" },
+
+	// Platform-specific
 	...(platform === "mac" ? [{ key: "touchBar", value: "true" }] : []),
-	// Only include launchOnLogin if on windows
 	...(platform === "windows" ? [{ key: "launchOnLogin", value: "false" }] : []),
-	{ key: "autoUpdate", value: "false" },
-	{ key: "wrapupReminder", value: "5" },
 ];
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
