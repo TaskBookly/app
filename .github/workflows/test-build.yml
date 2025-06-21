@@ -8,7 +8,6 @@ on:
             platform:
                 description: "Platform"
                 required: true
-                default: "mac"
                 type: choice
                 options:
                     - mac
