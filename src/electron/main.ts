@@ -4,7 +4,7 @@ import path from "path";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 
-import { isDev } from "./util.js";
+import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
 
 // Get __dirname equivalent in ES modules
