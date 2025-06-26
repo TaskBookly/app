@@ -218,9 +218,10 @@ interface ActionMenuProps {
 	options: ActionMenuOption[];
 	className?: string;
 	searchable?: boolean;
+	onOptionSelect?: (value: string) => void;
 }
 
-const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = "", searchable = false }) => {
+const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = "", searchable = false, onOptionSelect }) => {
 	const ref = React.useRef<HTMLDivElement>(null);
 	const buttonRef = React.useRef<HTMLDivElement>(null);
 	const [open, setOpen] = React.useState(false);
@@ -268,7 +269,11 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 						className={`dropdown-option`}
 						onClick={() => {
 							setOpen(false);
-							if (opt.onClick) opt.onClick();
+							if (onOptionSelect) {
+								onOptionSelect(opt.value);
+							} else if (opt.onClick) {
+								opt.onClick();
+							}
 						}}
 						role="menuitem"
 					>

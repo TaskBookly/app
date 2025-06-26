@@ -288,6 +288,62 @@
 	}
 }
 
+div.buttonGroup {
+	display: flex;
+	justify-content: center;
+	gap: 1em;
+}
+
+div.groupList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+}
+
+#chargingProgress {
+	background-color: var(--color-bg-main);
+	height: 1.25em;
+	border-radius: 1em;
+	overflow: hidden;
+
+	div {
+		border-radius: 1em 0em 0em 1em;
+		outline: 2.5px solid var(--color-glow-white-50);
+		box-shadow: 0 0 1em 0 var(--color-glow-white-50);
+		outline-offset: -2.5px;
+		transition: width 5s ease;
+		width: 34%;
+		height: 100%;
+		background-color: var(--color-bg-hover);
+	}
+}
+
+#timerCont {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	text-align: center;
+
+	label#sessionType {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		vertical-align: middle;
+		gap: 0.3em;
+		opacity: 60%;
+		font-size: 1em;
+	}
+
+	label#sessionTimer {
+		font-size: 3.5em;
+		font-weight: 900;
+	}
+
+	label#sessionEndTime {
+		opacity: 60%;
+	}
+}
+
 .setting > .settingContent > .settingInput {
 	position: relative;
 	display: flex;

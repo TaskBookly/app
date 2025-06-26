@@ -77,6 +77,10 @@ h1 {
 	line-height: 1.1;
 }
 
+label.sub {
+	font-weight: 500;
+}
+
 button {
 	border-radius: 1em;
 	border: none;

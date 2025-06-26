@@ -21,6 +21,7 @@ interface InfoProps {
 		type: "info" | "warning" | "error" | "success" | "processing";
 		label: string;
 	};
+	children?: React.ReactNode;
 }
 
 interface ConfigDefaults {
@@ -32,6 +33,7 @@ interface ConfigDefaults {
 		type: "info" | "warning" | "error" | "success" | "processing";
 		label: string;
 	};
+	children?: React.ReactNode;
 }
 
 interface SwitchProps extends ConfigDefaults {
@@ -81,12 +83,14 @@ const Hint: React.FC<{ type: "info" | "warning" | "error" | "success" | "process
 	);
 };
 
-const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint, availableOn = ["all"] }) => {
+const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint, availableOn = ["all"], children }) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
 
 	return copyButton ? (
-		<ButtonActionConfig name={name} description={data.toString()} button={{ icon: "content_copy", tooltip: "Copy value" }} onClick={() => navigator.clipboard.writeText(data.toString())} />
+		<ButtonActionConfig name={name} description={data.toString()} button={{ icon: "content_copy", tooltip: "Copy value" }} onClick={() => navigator.clipboard.writeText(data.toString())}>
+			{children}
+		</ButtonActionConfig>
 	) : (
 		<div data-settingtype="info" className="setting">
 			<div className="settingContent">
@@ -97,11 +101,12 @@ const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint,
 			</div>
 
 			{hint ? <Hint type={hint.type} label={hint.label} /> : null}
+			{children}
 		</div>
 	);
 };
 
-const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["all"] }) => {
+const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["all"], children }) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
 
@@ -118,11 +123,12 @@ const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = fal
 			</div>
 
 			{hint ? <Hint type={hint.type} label={hint.label} /> : null}
+			{children}
 		</div>
 	);
 };
 
-const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, disabled = false, button, hint, onClick = () => {}, availableOn = ["all"] }) => {
+const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, disabled = false, button, hint, onClick = () => {}, availableOn = ["all"], children }) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
 
@@ -139,11 +145,12 @@ const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, di
 			</div>
 
 			{hint ? <Hint type={hint.type} label={hint.label} /> : null}
+			{children}
 		</div>
 	);
 };
 
-const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["all"] }) => {
+const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["all"], children }) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
 
@@ -160,11 +167,12 @@ const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, 
 			</div>
 
 			{hint ? <Hint type={hint.type} label={hint.label} /> : null}
+			{children}
 		</div>
 	);
 };
 
-const ActionMenuConfig: React.FC<ActionMenuProps> = ({ name, description, menu, disabled = false, hint, availableOn = ["all"] }) => {
+const ActionMenuConfig: React.FC<ActionMenuProps> = ({ name, description, menu, disabled = false, hint, availableOn = ["all"], children }) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
 
@@ -181,6 +189,7 @@ const ActionMenuConfig: React.FC<ActionMenuProps> = ({ name, description, menu, 
 			</div>
 
 			{hint ? <Hint type={hint.type} label={hint.label} /> : null}
+			{children}
 		</div>
 	);
 };
