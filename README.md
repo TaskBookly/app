@@ -3,7 +3,7 @@
 A simple task management and focus tool.
 
 > [!WARNING]
-> I will tend to prepare features before they are officially added. Meaning, there will be quite a bit of features in the app that don't do anything!
+> I will tend to prepare features before they are officially added. Meaning, there will be quite a bit of features in the app that don't do anything yet!
 
 ## 🔧 Installation
 
