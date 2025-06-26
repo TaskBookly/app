@@ -6,9 +6,15 @@ import { formatAsTime, formatAsClockTime } from "../../utils/format";
 const Focus: React.FC = () => {
 	const [currentSession, setCurrentSession] = useState<"work" | "break" | "transition">("break");
 	const [timerStatus, setTimerStatus] = useState<"counting" | "paused" | "stopped">("stopped");
-	const [breakChargesLeft] = useState<number>(1.001);
+	const [breakChargesLeft] = useState<number>(3);
 	const [timeLeftInSession, updTime] = useState<number>(20 * 60);
 	const [sessionExpectedFinishDate, updExFDate] = useState<Date>(new Date());
+
+	useEffect(() => {
+		if (window.electron?.focus?.sendStatus) {
+			window.electron.focus.sendStatus(timerStatus, currentSession, timeLeftInSession);
+		}
+	}, [timerStatus, currentSession, timeLeftInSession]);
 
 	useEffect(() => {
 		let interval: NodeJS.Timeout;
@@ -37,15 +43,27 @@ const Focus: React.FC = () => {
 
 	// Timer handlers
 	const handleStart = () => {
-		updExFDate(new Date(Date.now() + timeLeftInSession * 1000));
-		setTimerStatus("counting");
+		if (timerStatus === "stopped") {
+			updExFDate(new Date(Date.now() + timeLeftInSession * 1000));
+			setTimerStatus("counting");
+		}
 	};
-	const handleResume = () => setTimerStatus("counting");
+	const handleResume = () => {
+		if (timerStatus === "paused") {
+			setTimerStatus("counting");
+		}
+	};
 
-	const handlePause = () => setTimerStatus("paused");
+	const handlePause = () => {
+		if (currentSession === "work" && timerStatus === "counting") {
+			setTimerStatus("paused");
+		}
+	};
 	const handleStop = () => {
-		setTimerStatus("stopped");
-		setCurrentSession("work");
+		if (timerStatus === "counting" || timerStatus === "paused") {
+			setTimerStatus("stopped");
+			setCurrentSession("work");
+		}
 	};
 
 	const handleAddTime = (mins: number) => {
@@ -63,6 +81,47 @@ const Focus: React.FC = () => {
 		{ label: "5 minutes", value: "300" },
 		{ label: "10 minutes", value: "600" },
 	];
+
+	// Listen for IPC messages from menu bar
+	useEffect(() => {
+		const handleFocusAction = (action: string, data?: any) => {
+			switch (action) {
+				case "start":
+					if (timerStatus === "stopped") {
+						handleStart();
+					}
+					break;
+				case "resume":
+					if (timerStatus === "paused") {
+						handleResume();
+					}
+					break;
+				case "pause":
+					if (timerStatus === "counting") {
+						handlePause();
+					}
+					break;
+				case "stop":
+					handleStop();
+					break;
+				case "add-time":
+					handleAddTime(data);
+					break;
+			}
+		};
+
+		// Add IPC listener
+		if (window.electron?.focus?.onAction) {
+			window.electron.focus.onAction(handleFocusAction);
+		}
+
+		// Cleanup function
+		return () => {
+			if (window.electron?.focus?.removeActionListener) {
+				window.electron.focus.removeActionListener(handleFocusAction);
+			}
+		};
+	}, [timerStatus, currentSession]);
 
 	return (
 		<>

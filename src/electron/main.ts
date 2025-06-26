@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, Tray } from "electron";
 import type { MenuItemConstructorOptions } from "electron";
 import path from "path";
 import { readFileSync } from "fs";
@@ -18,7 +18,164 @@ const appVersion = packageJson.version;
 
 let sidebarCollapsed: boolean = false;
 
-app.on("ready", () => {
+// Focus timer state
+let focusTimerState = {
+	status: "stopped" as "counting" | "paused" | "stopped",
+	session: "work" as "work" | "break" | "transition",
+	timeLeft: 0,
+	canAddTime: false,
+};
+
+// Function to build the focus menu based on current state
+function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
+	const getPrimaryAction = () => {
+		switch (focusTimerState.status) {
+			case "paused":
+				return { label: "Resume", action: "resume", accelerator: "Option+Command+R" };
+			case "counting":
+				return { label: "Pause", action: "pause", accelerator: "Option+Command+R", enabled: focusTimerState.session === "work" };
+			case "stopped":
+			default:
+				return { label: "Start", action: "start", accelerator: "Option+Command+S" };
+		}
+	};
+
+	const getStatusDisplay = () => {
+		if (focusTimerState.status === "counting" || focusTimerState.status === "paused") {
+			const minutes = Math.floor(focusTimerState.timeLeft / 60);
+			const seconds = focusTimerState.timeLeft % 60;
+			const timeStr = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+			const sessionType = focusTimerState.session === "work" ? "Working" : "Taking a break";
+			return focusTimerState.status === "paused" ? `${sessionType} • ${timeStr} ⏸` : `${sessionType} • ${timeStr}`;
+		}
+
+		return "Focus";
+	};
+
+	const primaryAction = getPrimaryAction();
+	const statusDisplay = getStatusDisplay();
+
+	return {
+		label: statusDisplay,
+		submenu: [
+			{
+				type: "normal",
+				label: primaryAction.label,
+				accelerator: primaryAction.accelerator,
+				enabled: primaryAction.enabled !== false,
+				click: () => mainWindow.webContents.send("focus-action", primaryAction.action),
+			},
+			...(focusTimerState.status !== "stopped"
+				? [
+						{
+							type: "normal" as const,
+							label: "Stop",
+							accelerator: "Option+Command+X",
+							click: () => mainWindow.webContents.send("focus-action", "stop"),
+						},
+				  ]
+				: []),
+			...(focusTimerState.session === "break" && (focusTimerState.status === "counting" || focusTimerState.status === "paused")
+				? [
+						{ type: "separator" as const },
+						{
+							type: "normal" as const,
+							label: "Use break charge",
+						},
+				  ]
+				: []),
+			...(focusTimerState.canAddTime
+				? [
+						{ type: "separator" as const },
+						{
+							type: "submenu" as const,
+							label: "Add Time",
+							submenu: [
+								{
+									type: "normal" as const,
+									label: "1 Minute",
+									click: () => mainWindow.webContents.send("focus-action", "add-time", 1),
+								},
+								{
+									type: "normal" as const,
+									label: "2 Minutes",
+									click: () => mainWindow.webContents.send("focus-action", "add-time", 2),
+								},
+								{
+									type: "normal" as const,
+									label: "5 Minutes",
+									click: () => mainWindow.webContents.send("focus-action", "add-time", 5),
+								},
+								{
+									type: "normal" as const,
+									label: "10 Minutes",
+									click: () => mainWindow.webContents.send("focus-action", "add-time", 10),
+								},
+							],
+						},
+				  ]
+				: []),
+		],
+	};
+}
+
+// Function to update the menu
+function updateMenu(mainWindow: BrowserWindow) {
+	if (process.platform !== "darwin") return;
+
+	const menuTemplate: MenuItemConstructorOptions[] = [
+		{
+			label: app.name,
+			submenu: [{ role: "about" }, { type: "separator" }, { label: "Settings...", accelerator: "Command+,", click: () => mainWindow.webContents.send("jumpto-section", "settings") }, { type: "separator" }, { role: "services" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }],
+		},
+		{
+			label: "File",
+			submenu: [{ label: "New Task...", accelerator: "Command+T" }],
+		},
+		{
+			label: "Edit",
+			submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }],
+		},
+		{
+			label: "View",
+			submenu: [
+				{
+					type: "normal",
+					label: "Toggle Sidebar",
+					accelerator: "Ctrl+Tab",
+					click: () => {
+						sidebarCollapsed = !sidebarCollapsed;
+						mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+					},
+				},
+				{ type: "separator" },
+				{ role: "resetZoom" },
+				{ role: "zoomIn" },
+				{ role: "zoomOut" },
+				{ type: "separator" },
+				{ role: "togglefullscreen" },
+			],
+		},
+		buildFocusMenu(mainWindow),
+		{
+			role: "windowMenu",
+		},
+		// Debug menu for development environment
+		...(isDev()
+			? [
+					{
+						label: "Debug",
+						submenu: [{ role: "reload" as const }, { role: "forceReload" as const }, { type: "separator" as const }, { role: "toggleDevTools" as const }],
+					},
+			  ]
+			: []),
+	];
+
+	const menu = Menu.buildFromTemplate(menuTemplate);
+	Menu.setApplicationMenu(menu);
+}
+
+app.whenReady().then(() => {
 	const mainWindow = new BrowserWindow({
 		title: "TaskBookly",
 		webPreferences: {
@@ -39,80 +196,37 @@ app.on("ready", () => {
 
 	// MacOS Menu bar
 	if (process.platform === "darwin") {
-		const menuTemplate: MenuItemConstructorOptions[] = [
-			{
-				label: app.name,
-				submenu: [{ role: "about" }, { type: "separator" }, { label: "Settings...", accelerator: "Command+,", click: () => mainWindow.webContents.send("jumpto-section", "settings") }, { type: "separator" }, { role: "services" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }],
-			},
-			{
-				label: "File",
-				submenu: [{ label: "New Task...", accelerator: "Command+T" }],
-			},
-			{
-				label: "Edit",
-				submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }],
-			},
-			{
-				label: "View",
-				submenu: [
-					{
-						type: "normal",
-						label: "Toggle Sidebar",
-						accelerator: "Ctrl+Tab",
-						click: () => {
-							sidebarCollapsed = !sidebarCollapsed;
-							mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
-						},
-					},
-					{ type: "separator" },
-					{ role: "resetZoom" },
-					{ role: "zoomIn" },
-					{ role: "zoomOut" },
-					{ type: "separator" },
-					{ role: "togglefullscreen" },
-				],
-			},
-			{
-				label: "Focus",
-				submenu: [
-					{ type: "normal", label: "Pause", accelerator: "Option+Command+P" },
-					{ type: "normal", label: "Stop", accelerator: "Option+Command+S" },
-					{ type: "separator" },
-					{
-						type: "submenu",
-						label: "Add Time",
-						submenu: [
-							{ type: "normal", label: "1 Minute" },
-							{ type: "normal", label: "5 Minutes" },
-							{ type: "normal", label: "10 Minutes" },
-							{ type: "normal", label: "15 Minutes" },
-							{ type: "normal", label: "30 Minutes" },
-							{ type: "normal", label: "1 Hour" },
-						],
-					},
-					{ type: "normal", label: "Next Period" },
-				],
-			},
-			{
-				role: "windowMenu",
-			},
-			// Debug menu for development environment
-			...(isDev()
-				? [
-						{
-							label: "Debug",
-							submenu: [{ role: "reload" as const }, { role: "forceReload" as const }, { type: "separator" as const }, { role: "toggleDevTools" as const }],
-						},
-				  ]
-				: []),
-		];
-		const menu = Menu.buildFromTemplate(menuTemplate);
-		Menu.setApplicationMenu(menu);
+		updateMenu(mainWindow);
 	}
 
-	ipcMain.on("toggle-sidebar", () => {
-		sidebarCollapsed = !sidebarCollapsed;
-		mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+	// IPC handlers for focus timer status updates
+	ipcMain.on("focus-status-update", (_, status, session, timeLeft) => {
+		focusTimerState.status = status;
+		focusTimerState.session = session;
+		focusTimerState.timeLeft = timeLeft;
+		focusTimerState.canAddTime = session === "work" && status !== "stopped";
+		updateMenu(mainWindow);
+	});
+
+	// IPC handlers for focus timer actions
+	ipcMain.on("focus-start", () => {
+		mainWindow.webContents.send("focus-action", "start");
+	});
+
+	ipcMain.on("focus-pause", () => {
+		mainWindow.webContents.send("focus-action", "pause");
+	});
+
+	ipcMain.on("focus-resume", () => {
+		mainWindow.webContents.send("focus-action", "resume");
+	});
+
+	ipcMain.on("focus-stop", () => {
+		mainWindow.webContents.send("focus-action", "stop");
+	});
+
+	ipcMain.on("focus-add-time", (_, minutes: number) => {
+		mainWindow.webContents.send("focus-action", "add-time", minutes);
 	});
 
 	ipcMain.handle("get-sidebar-state", () => {
