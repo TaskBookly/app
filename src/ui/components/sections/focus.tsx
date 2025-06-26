@@ -163,7 +163,7 @@ const Focus: React.FC = () => {
 				</div>
 			</Container>
 			<Container name="focus_breakExt">
-				<ButtonActionConfig name="Break charging" description="You'll receive 'Break charges' after enough hours of working. These charges can be used once per break period and will extend them by a few minutes as a reward for working hard!" disabled={currentSession !== "break" || breakChargesLeft <= 0} button={{ text: "Charge break", icon: "bolt" }}>
+				<ButtonActionConfig name="Break charging" description="You'll receive 'Break charges' after enough hours of working. These charges can be used once per break period and will extend them by a few minutes as a reward for working hard!" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0} button={{ text: "Charge break", icon: "bolt" }}>
 					<div className="groupList">
 						<h3 style={{ margin: 0, marginBlockEnd: "-5px" }}>
 							You have <b>{breakChargesLeft}</b> {breakChargesLeft === 1 ? "charge" : "charges"} left.
