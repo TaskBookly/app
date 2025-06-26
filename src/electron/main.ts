@@ -108,6 +108,8 @@ app.on("ready", () => {
 		];
 		const menu = Menu.buildFromTemplate(menuTemplate);
 		Menu.setApplicationMenu(menu);
+	} else {
+		Menu.setApplicationMenu(null);
 	}
 
 	ipcMain.on("toggle-sidebar", () => {
