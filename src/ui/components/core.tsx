@@ -6,12 +6,13 @@ interface IcoButtonProps {
 	icon?: string;
 	disabled?: boolean;
 	onClick?: { jumpToSection?: string; action?: () => void };
+	id?: string;
 	className?: string;
 	tooltip?: string;
 }
 
-const Container: React.FC<{ name: string; header?: { title: string; icon: string }; className?: string; children?: React.ReactNode }> = ({ name, header, children, className = "" }) => (
-	<div id={name} className="container">
+const Container: React.FC<{ name: string; header?: { title: string; icon: string }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => (
+	<div data-container={name} id={id} className={`container ${className}`}>
 		{header ? (
 			<div className="containerHeader">
 				<span className="material-symbols-rounded">{header?.icon}</span>
@@ -19,11 +20,11 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: string
 			</div>
 		) : null}
 
-		<div className={`containerContent ${className}`}>{children}</div>
+		<div className="containerContent">{children}</div>
 	</div>
 );
 
-const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onClick, className = "", tooltip }) => {
+const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onClick, id, className, tooltip }) => {
 	const handleClick = () => {
 		if (onClick?.action) {
 			onClick.action();
@@ -34,7 +35,7 @@ const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onC
 	};
 
 	return (
-		<button data-sect={onClick?.jumpToSection} className={className} disabled={disabled} onClick={handleClick} data-tooltip={tooltip}>
+		<button data-sect={onClick?.jumpToSection} id={id} className={className} disabled={disabled} onClick={handleClick} data-tooltip={tooltip}>
 			{icon ? <span className="material-symbols-rounded buttonIcon">{icon}</span> : null}
 			{text ? <span className="buttonText">{text}</span> : null}
 		</button>

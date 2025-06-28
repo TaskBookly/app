@@ -229,6 +229,11 @@ app.whenReady().then(() => {
 		mainWindow.webContents.send("focus-action", "add-time", minutes);
 	});
 
+	ipcMain.on("toggle-sidebar", () => {
+		sidebarCollapsed = !sidebarCollapsed;
+		mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+	});
+
 	ipcMain.handle("get-sidebar-state", () => {
 		return sidebarCollapsed;
 	});
