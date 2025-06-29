@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain, Tray } from "electron";
+import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import type { MenuItemConstructorOptions } from "electron";
 import path from "path";
 import { readFileSync } from "fs";
