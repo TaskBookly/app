@@ -71,8 +71,6 @@
 		"nsis": {
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true,
-			"createDesktopShortcut": true,
-			"createStartMenuShortcut": true,
 			"runAfterFinish": true,
 			"shortcutName": "TaskBookly"
 		}
