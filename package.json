@@ -66,27 +66,6 @@
 				]
 			}
 		},
-		"dmg": {
-			"title": "${productName} ${version}",
-			"backgroundColor": "#0a3f4f",
-			"window": {
-				"width": 540,
-				"height": 380
-			},
-			"contents": [
-				{
-					"x": 140,
-					"y": 180,
-					"type": "file"
-				},
-				{
-					"x": 400,
-					"y": 180,
-					"type": "link",
-					"path": "/Applications"
-				}
-			]
-		},
 		"nsis": {
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true,
