@@ -6,7 +6,7 @@
 	"license": "MIT",
 	"type": "module",
 	"author": "TaskBookly LLC",
-	"description": "A task management and focus tool application.",
+	"description": "A task management and focus tool.",
 	"main": "dist-electron/main.js",
 	"scripts": {
 		"transpile:electron": "tsc -p src/electron/tsconfig.json",
@@ -30,6 +30,7 @@
 		"appId": "com.taskbookly.app",
 		"copyright": "(C) 2025 TaskBookly LLC",
 		"artifactName": "${productName}.${ext}",
+		"displayName": "TaskBookly",
 		"files": [
 			"dist-electron",
 			"dist-react"
@@ -65,8 +66,7 @@
 					"x64"
 				]
 			},
-			"publisherName": "TaskBookly LLC",
-			"displayName": "TaskBookly"
+			"publisherName": "TaskBookly LLC"
 		},
 		"nsis": {
 			"oneClick": false,
