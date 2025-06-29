@@ -39,17 +39,61 @@
 		],
 		"mac": {
 			"icon": "build-resources/icons/mac/icon.png",
-			"target": "dmg",
+			"target": {
+				"target": "dmg",
+				"arch": [
+					"universal"
+				]
+			},
 			"category": "public.app-category.productivity"
 		},
 		"linux": {
 			"icon": "build-resources/icons/linux/icon.png",
-			"target": "AppImage",
+			"target": {
+				"target": "AppImage",
+				"arch": [
+					"x64"
+				]
+			},
 			"category": "Utility"
 		},
 		"win": {
 			"icon": "build-resources/icons/windows/icon.png",
-			"target": "nsis"
+			"target": {
+				"target": "nsis",
+				"arch": [
+					"x64"
+				]
+			}
+		},
+		"dmg": {
+			"title": "${productName} ${version}",
+			"backgroundColor": "#0a3f4f",
+			"window": {
+				"width": 540,
+				"height": 380
+			},
+			"contents": [
+				{
+					"x": 140,
+					"y": 180,
+					"type": "file"
+				},
+				{
+					"x": 400,
+					"y": 180,
+					"type": "link",
+					"path": "/Applications"
+				}
+			]
+		},
+		"nsis": {
+			"oneClick": false,
+			"allowToChangeInstallationDirectory": true,
+			"createDesktopShortcut": true,
+			"createStartMenuShortcut": true,
+			"runAfterFinish": true,
+			"shortcutName": "TaskBookly"
 		}
 	},
 	"dependencies": {
