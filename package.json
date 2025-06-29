@@ -64,7 +64,9 @@
 				"arch": [
 					"x64"
 				]
-			}
+			},
+			"publisherName": "TaskBookly LLC",
+			"displayName": "TaskBookly"
 		},
 		"nsis": {
 			"oneClick": false,
