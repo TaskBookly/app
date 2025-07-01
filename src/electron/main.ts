@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, shell } from "electron";
 import type { MenuItemConstructorOptions } from "electron";
 import path from "path";
 import { readFileSync } from "fs";
@@ -169,6 +169,7 @@ function updateMenu(mainWindow: BrowserWindow) {
 					},
 			  ]
 			: []),
+		{ role: "help", submenu: [{ type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }] },
 	];
 
 	const menu = Menu.buildFromTemplate(menuTemplate);
