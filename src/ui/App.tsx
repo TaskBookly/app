@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import "./styles/App.css";
-import Section, { jumpToSection } from "./components/nav.tsx";
+import Section, { jumpToSection, clearAllHideTimeouts } from "./components/nav.tsx";
 import IcoButton from "./components/core.tsx";
 import { useTooltip, TooltipPortal } from "./components/Tooltip";
 import { SettingsProvider } from "./components/SettingsContext";
@@ -21,6 +21,11 @@ function App() {
 		window.electron.sidebar.onState((collapsed: boolean) => {
 			setSidebarClass(collapsed);
 		});
+
+		// Cleanup function to clear timeouts when section component unmounts
+		return () => {
+			clearAllHideTimeouts();
+		};
 	}, []);
 
 	const setSidebarClass = (collapsed: boolean) => {
@@ -48,7 +53,6 @@ function App() {
 							<span className="material-symbols-rounded">menu</span>
 						</button>
 						<IcoButton onClick={{ jumpToSection: "focus" }} text="Focus" icon="lightbulb_circle" />
-						<IcoButton onClick={{ jumpToSection: "tasks" }} text="To-do" icon="priority" disabled={true} />
 						<IcoButton onClick={{ jumpToSection: "settings" }} text="Settings" icon="build" />
 					</div>
 
