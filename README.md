@@ -2,6 +2,9 @@ A simple task management and focus tool.
 
 # 🔧 Installation
 
+> [!IMPORTANT]
+> TaskBookly is currently not code signed at the moment. Meaning, you may recieve a security warning upon attempting to run the application.
+
 1. [Go to the latest release](https://github.com/TaskBookly/app/releases/latest)
 2. Navigate down to **Assets**
 3. Download the installer for your operating system:
