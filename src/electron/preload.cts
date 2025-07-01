@@ -13,6 +13,11 @@ contextBridge.exposeInMainWorld("electron", {
 		getNodeEnv: () => ipcRenderer.invoke("get-node-env"),
 		getPlatform: () => ipcRenderer.invoke("get-platform"),
 	},
+	settings: {
+		load: () => ipcRenderer.invoke("settings-load"),
+		get: (key: string) => ipcRenderer.invoke("settings-get", key),
+		set: (key: string, value: string) => ipcRenderer.invoke("settings-set", key, value),
+	},
 	onJumpToSection: (callback: (section: string) => void) => {
 		ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section));
 	},

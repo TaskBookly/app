@@ -10,6 +10,11 @@ interface Window {
 			getNodeEnv: () => Promise<string>;
 			getPlatform: () => Promise<NodeJS.Platform>;
 		};
+		settings: {
+			load: () => Promise<Record<string, string>>;
+			get: (key: string) => Promise<string>;
+			set: (key: string, value: string) => Promise<boolean>;
+		};
 		onJumpToSection: (callback: (section: string) => void) => void;
 	};
 }

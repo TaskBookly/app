@@ -1,11 +1,12 @@
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import type { MenuItemConstructorOptions } from "electron";
 import path from "path";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
 
 import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
+import { platform } from "os";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -16,9 +17,43 @@ const packagePath = path.join(__dirname, "..", "package.json");
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 const appVersion = packageJson.version;
 
+const settingsPath = path.join(app.getPath("userData"), "settings.json");
+
+function loadSettings(): Record<string, string> {
+	try {
+		if (existsSync(settingsPath)) {
+			return JSON.parse(readFileSync(settingsPath, "utf8"));
+		}
+	} catch (error) {
+		console.error("Error loading settings:", error);
+	}
+	return {};
+}
+
+function saveSettings(settings: Record<string, string>): void {
+	try {
+		const userDataPath = app.getPath("userData");
+		if (!existsSync(userDataPath)) {
+			mkdirSync(userDataPath, { recursive: true });
+		}
+		writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+	} catch (error) {
+		console.error("Error saving settings:", error);
+	}
+}
+
 let sidebarCollapsed: boolean = false;
 
 app.on("ready", () => {
+	const settings = loadSettings();
+
+	if (settings.launchOnLogin === "true") {
+		app.setLoginItemSettings({
+			openAtLogin: true,
+			name: "TaskBookly",
+		});
+	}
+
 	const mainWindow = new BrowserWindow({
 		title: "TaskBookly",
 		webPreferences: {
@@ -131,6 +166,35 @@ app.on("ready", () => {
 
 	ipcMain.handle("get-platform", () => {
 		return process.platform;
+	});
+
+	ipcMain.handle("settings-load", () => {
+		return loadSettings();
+	});
+
+	ipcMain.handle("settings-get", (_event, key: string) => {
+		const settings = loadSettings();
+		return settings[key] || "";
+	});
+
+	ipcMain.handle("settings-set", (_event, key: string, value: string) => {
+		const settings = loadSettings();
+		settings[key] = value;
+		saveSettings(settings);
+
+		if (key === "launchOnLogin" && process.platform !== "darwin") {
+			const launchOnLogin = value === "true";
+			try {
+				app.setLoginItemSettings({
+					openAtLogin: launchOnLogin,
+					name: "TaskBookly",
+				});
+			} catch (e) {
+				console.error("Unable to set login item:", e);
+			}
+		}
+
+		return true;
 	});
 
 	if (isDev()) {

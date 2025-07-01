@@ -4,7 +4,7 @@ import { getPlatform } from "./config";
 type Setting = { key: string; value: string };
 type SettingsContextType = {
 	settings: Setting[];
-	setSetting: (key: string, value: string) => void;
+	setSetting: (key: string, value: string) => Promise<void>;
 	getSetting: (key: string) => string;
 	setSettingsState: React.Dispatch<React.SetStateAction<Setting[]>>;
 	defaultSettings: Setting[];
@@ -21,42 +21,35 @@ const defaultSettings: Setting[] = [
 	{ key: "transitionPeriodDuration", value: "3" },
 
 	// Platform-specific
+	...(platform === "windows" || platform === "linux" ? [{ key: "launchOnLogin", value: "false" }] : []),
 	...(platform === "mac" ? [{ key: "touchBar", value: "true" }] : []),
-	...(platform === "windows" ? [{ key: "launchOnLogin", value: "false" }] : []),
 ];
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [settings, setSettingsState] = useState<Setting[]>(() => {
-		if (typeof window !== "undefined") {
-			const stored = localStorage.getItem("settings");
-			if (stored) {
-				try {
-					const loaded: Setting[] = JSON.parse(stored);
-					const merged = defaultSettings.map((def) => {
-						const found = loaded.find((s) => s.key === def.key);
-						return found ? found : def;
-					});
-					const extras = loaded.filter((s) => !defaultSettings.some((def) => def.key === s.key));
-					return [...merged, ...extras];
-				} catch {
-					return defaultSettings;
-				}
-			}
-		}
-		return defaultSettings;
-	});
+	const [settings, setSettingsState] = useState<Setting[]>(() => defaultSettings);
 
 	useEffect(() => {
-		if (typeof window !== "undefined") {
+		const loadStoredSettings = async () => {
 			try {
-				localStorage.setItem("settings", JSON.stringify(settings));
+				if (typeof window !== "undefined" && window.electron) {
+					const stored = await window.electron.settings.load();
+					const merged = defaultSettings.map((def) => {
+						const found = stored[def.key];
+						return found !== undefined ? { key: def.key, value: found } : def;
+					});
+					const extras = Object.entries(stored)
+						.filter(([key]) => !defaultSettings.some((def) => def.key === key))
+						.map(([key, value]) => ({ key, value }));
+					setSettingsState([...merged, ...extras]);
+				}
 			} catch (error) {
-				console.error("Failed to save settings to localStorage:", error);
+				console.error("Failed to load settings:", error);
 			}
-		}
-	}, [settings]);
+		};
+		loadStoredSettings();
+	}, []);
 
 	const getSetting = React.useCallback(
 		(key: string) => {
@@ -66,12 +59,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 		[settings]
 	);
 
-	// Theme effect
-	React.useEffect(() => {
-		document.documentElement.setAttribute("data-theme", getSetting("theme"));
-	}, [getSetting]);
-
-	const setSetting = (key: string, value: string) => {
+	const setSetting = async (key: string, value: string) => {
 		setSettingsState((prev) => {
 			let updated: Setting[];
 			const exists = prev.some((s) => s.key === key);
@@ -80,9 +68,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 			} else {
 				updated = [...prev, { key, value }];
 			}
+			if (typeof window !== "undefined" && window.electron) {
+				window.electron.settings.set(key, value);
+			}
 			return updated;
 		});
 	};
+
+	// Theme effect
+	React.useEffect(() => {
+		document.documentElement.setAttribute("data-theme", getSetting("theme"));
+	}, [getSetting]);
 
 	return <SettingsContext.Provider value={{ settings, setSetting, getSetting, setSettingsState, defaultSettings }}>{children}</SettingsContext.Provider>;
 };
