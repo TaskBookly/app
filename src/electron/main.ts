@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 
 import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
-import { platform } from "os";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
