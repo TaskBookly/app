@@ -129,10 +129,6 @@ function updateMenu(mainWindow: BrowserWindow) {
 			submenu: [{ role: "about" }, { type: "separator" }, { label: "Settings...", accelerator: "Command+,", click: () => mainWindow.webContents.send("jumpto-section", "settings") }, { type: "separator" }, { role: "services" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }],
 		},
 		{
-			label: "File",
-			submenu: [{ label: "New Task...", accelerator: "Command+T" }],
-		},
-		{
 			label: "Edit",
 			submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }],
 		},
@@ -169,7 +165,10 @@ function updateMenu(mainWindow: BrowserWindow) {
 					},
 			  ]
 			: []),
-		{ role: "help", submenu: [{ type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }] },
+		{
+			role: "help",
+			submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }],
+		},
 	];
 
 	const menu = Menu.buildFromTemplate(menuTemplate);

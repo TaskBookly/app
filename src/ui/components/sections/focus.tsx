@@ -4,7 +4,7 @@ import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 
 const Focus: React.FC = () => {
-	const [currentSession, setCurrentSession] = useState<"work" | "break" | "transition">("break");
+	const [currentSession, setCurrentSession] = useState<"work" | "break" | "transition">("work");
 	const [timerStatus, setTimerStatus] = useState<"counting" | "paused" | "stopped">("stopped");
 	const [breakChargesLeft] = useState<number>(3);
 	const [timeLeftInSession, updTime] = useState<number>(20 * 60);
