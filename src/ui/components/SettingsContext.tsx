@@ -13,8 +13,8 @@ type SettingsContextType = {
 const platform = getPlatform();
 
 const defaultSettings: Setting[] = [
-	{ key: "notifs:focus", value: "all" },
-	{ key: "notifs:tasks", value: "notifsOnly" },
+	{ key: "notifsFocus", value: "all" },
+	{ key: "notifsTasks", value: "notifsOnly" },
 	{ key: "theme", value: "dark" },
 	{ key: "autoCheckForUpdates", value: "true" },
 	{ key: "transitionPeriodsEnabled", value: "true" },

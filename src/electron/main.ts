@@ -1,11 +1,13 @@
-import { app, BrowserWindow, Menu, ipcMain } from "electron";
-import type { MenuItemConstructorOptions } from "electron";
-import path from "path";
+import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, shell } from "electron";
+import path, { normalize } from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
 
 import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
+
+import electronUpdPkg from "electron-updater";
+const { autoUpdater } = electronUpdPkg;
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -44,6 +46,7 @@ function saveSettings(settings: Record<string, string>): void {
 let sidebarCollapsed: boolean = false;
 
 app.on("ready", () => {
+	autoUpdater.autoDownload = false;
 	const settings = loadSettings();
 
 	if (settings.launchOnLogin === "true") {
@@ -51,6 +54,10 @@ app.on("ready", () => {
 			openAtLogin: true,
 			name: "TaskBookly",
 		});
+	}
+
+	if (settings.autoCheckForUpdates === "true") {
+		autoUpdater.checkForUpdates();
 	}
 
 	const mainWindow = new BrowserWindow({
@@ -145,6 +152,40 @@ app.on("ready", () => {
 	} else {
 		Menu.setApplicationMenu(null);
 	}
+
+	autoUpdater.on("update-available", (data) => {
+		if (Notification.isSupported()) {
+			const notif = new Notification({
+				title: "Update Available",
+				subtitle: `v${data.version}`,
+				body: "A new TaskBookly update is available to download.",
+			});
+
+			notif.on("click", () => shell.openExternal("https://github.com/TaskBookly/app/releases/latest"));
+			notif.show();
+		}
+	});
+
+	autoUpdater.on("update-not-available", () => {
+		if (Notification.isSupported()) {
+			const notif = new Notification({
+				title: "No updates available",
+				body: "You're all up to date!",
+			});
+
+			notif.show();
+		}
+	});
+
+	autoUpdater.on("error", (err) => {
+		const notif = new Notification({
+			title: "An error occurred when checking for updates",
+			subtitle: err.name,
+			body: err.message,
+		});
+
+		notif.show();
+	});
 
 	ipcMain.on("toggle-sidebar", () => {
 		sidebarCollapsed = !sidebarCollapsed;
