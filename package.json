@@ -16,6 +16,7 @@
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
+		"publish": "electron-builder --publish always",
 		"dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal",
 		"dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64",
 		"dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
@@ -72,12 +73,14 @@
 			"runAfterFinish": true,
 			"shortcutName": "TaskBookly"
 		},
-		"publish": {
-			"provider": "github",
-			"owner": "TaskBookly",
-			"repo": "app",
-			"draft": true
-		}
+		"publish": [
+			{
+				"provider": "github",
+				"owner": "TaskBookly",
+				"repo": "app",
+				"draft": true
+			}
+		]
 	},
 	"dependencies": {
 		"electron-updater": "^6.6.2",
