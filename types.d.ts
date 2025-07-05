@@ -1,10 +1,3 @@
-interface TimerData {
-	session: "none" | "work" | "break" | "transition";
-	status: "counting" | "paused" | "stopped";
-	timeLeft: number;
-	chargesLeft: number;
-}
-
 interface Window {
 	electron: {
 		sidebar: {

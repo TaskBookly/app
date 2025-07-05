@@ -19,14 +19,14 @@ contextBridge.exposeInMainWorld("electron", {
 		resume: () => ipcRenderer.send("focus-resume"),
 		stop: () => ipcRenderer.send("focus-stop"),
 		addTime: (seconds: number) => ipcRenderer.send("focus-add-time", seconds),
-		useBreakCharge: () => ipcRenderer.handle("focus-use-charge"),
-		onTimerUpdate: (callback: (data: any) => void) => {
+		useBreakCharge: () => ipcRenderer.invoke("focus-use-charge"),
+		onTimerUpdate: (callback) => {
 			ipcRenderer.on("focus-timer-update", (_event: any, data: any) => callback(data));
 			// Return cleanup function
 			return () => ipcRenderer.removeAllListeners("focus-timer-update");
 		},
 	},
-	onJumpToSection: (callback: (section: string) => void) => {
+	onJumpToSection: (callback) => {
 		ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section));
 	},
-});
+} satisfies Window["electron"]);
