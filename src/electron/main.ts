@@ -7,6 +7,8 @@ import { fileURLToPath } from "url";
 import { isDev } from "./util.js";
 import { getPreloadPath } from "./pathResolver.js";
 
+import FocusTimer from "./focus.js";
+
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,73 +20,82 @@ const appVersion = packageJson.version;
 
 let sidebarCollapsed: boolean = false;
 
-// Focus timer state
-let focusTimerState = {
-	status: "stopped" as "counting" | "paused" | "stopped",
-	session: "work" as "work" | "break" | "transition",
-	timeLeft: 0,
-	canAddTime: false,
-};
+const focusTimer = new FocusTimer();
 
 // Function to build the focus menu based on current state
 function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
 	const getPrimaryAction = () => {
-		switch (focusTimerState.status) {
+		switch (focusTimer.status) {
 			case "paused":
-				return { label: "Resume", action: "resume", accelerator: "Option+Command+R" };
+				return {
+					label: "Resume",
+					action: "resume",
+					accelerator: "Option+Command+P",
+					click: () => {
+						focusTimer.resume();
+						updateMenu(mainWindow);
+					},
+				};
 			case "counting":
-				return { label: "Pause", action: "pause", accelerator: "Option+Command+R", enabled: focusTimerState.session === "work" };
-			case "stopped":
+				return {
+					label: "Pause",
+					action: "pause",
+					accelerator: "Option+Command+P",
+					click: () => {
+						focusTimer.pause();
+						updateMenu(mainWindow);
+					},
+					enabled: focusTimer.session === "work",
+				};
 			default:
-				return { label: "Start", action: "start", accelerator: "Option+Command+S" };
+				return {
+					label: "Start",
+					action: "start",
+					accelerator: "Option+Command+S",
+					click: () => {
+						focusTimer.start();
+						updateMenu(mainWindow);
+					},
+				};
 		}
-	};
-
-	const getStatusDisplay = () => {
-		if (focusTimerState.status === "counting" || focusTimerState.status === "paused") {
-			const minutes = Math.floor(focusTimerState.timeLeft / 60);
-			const seconds = focusTimerState.timeLeft % 60;
-			const timeStr = `${minutes}:${seconds.toString().padStart(2, "0")}`;
-			const sessionType = focusTimerState.session === "work" ? "Working" : "Taking a break";
-			return focusTimerState.status === "paused" ? `${sessionType} • ${timeStr} ⏸` : `${sessionType} • ${timeStr}`;
-		}
-
-		return "Focus";
 	};
 
 	const primaryAction = getPrimaryAction();
-	const statusDisplay = getStatusDisplay();
 
 	return {
-		label: statusDisplay,
+		label: "Focus",
 		submenu: [
 			{
 				type: "normal",
 				label: primaryAction.label,
 				accelerator: primaryAction.accelerator,
 				enabled: primaryAction.enabled !== false,
-				click: () => mainWindow.webContents.send("focus-action", primaryAction.action),
+				click: primaryAction.click,
 			},
-			...(focusTimerState.status !== "stopped"
+			...(focusTimer.status !== "stopped"
 				? [
 						{
 							type: "normal" as const,
 							label: "Stop",
 							accelerator: "Option+Command+X",
-							click: () => mainWindow.webContents.send("focus-action", "stop"),
+							click: () => {
+								focusTimer.stop();
+								updateMenu(mainWindow);
+							},
 						},
 				  ]
 				: []),
-			...(focusTimerState.session === "break" && (focusTimerState.status === "counting" || focusTimerState.status === "paused")
+			...(focusTimer.session === "break" && (focusTimer.status === "counting" || focusTimer.status === "paused")
 				? [
 						{ type: "separator" as const },
 						{
 							type: "normal" as const,
-							label: "Use break charge",
+							label: "Charge break",
+							enabled: !focusTimer.chargeUsedThisSession || focusTimer.chargesLeft > 0,
 						},
 				  ]
 				: []),
-			...(focusTimerState.canAddTime
+			...(focusTimer.session === "work"
 				? [
 						{ type: "separator" as const },
 						{
@@ -94,22 +105,32 @@ function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
 								{
 									type: "normal" as const,
 									label: "1 Minute",
-									click: () => mainWindow.webContents.send("focus-action", "add-time", 1),
+									click: () => focusTimer.addTime(60),
 								},
 								{
 									type: "normal" as const,
 									label: "2 Minutes",
-									click: () => mainWindow.webContents.send("focus-action", "add-time", 2),
+									click: () => focusTimer.addTime(120),
+								},
+								{
+									type: "normal" as const,
+									label: "3 Minutes",
+									click: () => focusTimer.addTime(180),
+								},
+								{
+									type: "normal" as const,
+									label: "4 Minutes",
+									click: () => focusTimer.addTime(240),
 								},
 								{
 									type: "normal" as const,
 									label: "5 Minutes",
-									click: () => mainWindow.webContents.send("focus-action", "add-time", 5),
+									click: () => focusTimer.addTime(300),
 								},
 								{
 									type: "normal" as const,
 									label: "10 Minutes",
-									click: () => mainWindow.webContents.send("focus-action", "add-time", 10),
+									click: () => focusTimer.addTime(600),
 								},
 							],
 						},
@@ -195,38 +216,42 @@ app.whenReady().then(() => {
 	});
 
 	// MacOS Menu bar
-	if (process.platform === "darwin") {
-		updateMenu(mainWindow);
-	}
+	updateMenu(mainWindow);
 
-	// IPC handlers for focus timer status updates
-	ipcMain.on("focus-status-update", (_, status, session, timeLeft) => {
-		focusTimerState.status = status;
-		focusTimerState.session = session;
-		focusTimerState.timeLeft = timeLeft;
-		focusTimerState.canAddTime = session === "work" && status !== "stopped";
-		updateMenu(mainWindow);
+	// Listen for timer updates and forward to renderer
+	focusTimer.on("timer-update", (data) => {
+		mainWindow.webContents.send("focus-timer-update", data);
 	});
 
-	// IPC handlers for focus timer actions
 	ipcMain.on("focus-start", () => {
-		mainWindow.webContents.send("focus-action", "start");
+		focusTimer.start();
+		updateMenu(mainWindow);
 	});
 
 	ipcMain.on("focus-pause", () => {
-		mainWindow.webContents.send("focus-action", "pause");
+		focusTimer.pause();
+		updateMenu(mainWindow);
 	});
 
 	ipcMain.on("focus-resume", () => {
-		mainWindow.webContents.send("focus-action", "resume");
+		focusTimer.resume();
+		updateMenu(mainWindow);
 	});
 
 	ipcMain.on("focus-stop", () => {
-		mainWindow.webContents.send("focus-action", "stop");
+		focusTimer.stop();
+		updateMenu(mainWindow);
 	});
 
-	ipcMain.on("focus-add-time", (_, minutes: number) => {
-		mainWindow.webContents.send("focus-action", "add-time", minutes);
+	ipcMain.on("focus-add-time", (_, seconds: number) => {
+		focusTimer.addTime(seconds);
+	});
+
+	ipcMain.handle("focus-use-charge", () => {
+		const result = focusTimer.useBreakCharge();
+		updateMenu(mainWindow);
+
+		return result;
 	});
 
 	ipcMain.on("toggle-sidebar", () => {

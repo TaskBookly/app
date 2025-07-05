@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import IcoButton, { Container, ActionMenu, type ActionMenuOption } from "../core";
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
@@ -6,72 +6,26 @@ import { formatAsTime, formatAsClockTime } from "../../utils/format";
 const Focus: React.FC = () => {
 	const [currentSession, setCurrentSession] = useState<"work" | "break" | "transition">("work");
 	const [timerStatus, setTimerStatus] = useState<"counting" | "paused" | "stopped">("stopped");
-	const [breakChargesLeft] = useState<number>(3);
-	const [timeLeftInSession, updTime] = useState<number>(20 * 60);
-	const [sessionExpectedFinishDate, updExFDate] = useState<Date>(new Date());
+	const [breakChargesLeft, setBreakChargesLeft] = useState<number>(3);
+	const [timeLeftInSession, setTimeLeftInSession] = useState<number>(20 * 60);
+	const [sessionExpectedFinishDate, setSessionExpectedFinishDate] = useState<Date>(new Date());
 
+	// Listen for timer updates from backend
 	useEffect(() => {
-		if (window.electron?.focus?.sendStatus) {
-			window.electron.focus.sendStatus(timerStatus, currentSession, timeLeftInSession);
-		}
-	}, [timerStatus, currentSession, timeLeftInSession]);
+		const cleanup = window.electron.focus.onTimerUpdate((data) => {
+			setCurrentSession((data.session as "work" | "break" | "transition") || "work");
+			setTimerStatus((data.status as "counting" | "paused" | "stopped") || "stopped");
+			setTimeLeftInSession(data.timeLeft || 0);
+			setBreakChargesLeft(data.chargesLeft || 0);
 
-	useEffect(() => {
-		let interval: NodeJS.Timeout;
-
-		if (timerStatus === "counting") {
-			interval = setInterval(() => {
-				updTime((prevTime) => {
-					if (prevTime <= 1) {
-						handleStop();
-						return 20 * 60; // Reset timer
-					}
-
-					return prevTime - 1;
-				});
-			}, 1000);
-		} else if (timerStatus === "stopped") {
-			updTime(20 * 60);
-		}
-
-		return () => {
-			if (interval) {
-				clearInterval(interval);
+			// Calculate expected finish time
+			if (data.timeLeft && data.status === "counting") {
+				setSessionExpectedFinishDate(new Date(Date.now() + data.timeLeft * 1000));
 			}
-		};
-	}, [timerStatus]);
+		});
 
-	// Timer handlers
-	const handleStart = () => {
-		if (timerStatus === "stopped") {
-			updExFDate(new Date(Date.now() + timeLeftInSession * 1000));
-			setTimerStatus("counting");
-		}
-	};
-	const handleResume = () => {
-		if (timerStatus === "paused") {
-			setTimerStatus("counting");
-		}
-	};
-
-	const handlePause = () => {
-		if (currentSession === "work" && timerStatus === "counting") {
-			setTimerStatus("paused");
-		}
-	};
-	const handleStop = () => {
-		if (timerStatus === "counting" || timerStatus === "paused") {
-			setTimerStatus("stopped");
-			setCurrentSession("work");
-		}
-	};
-
-	const handleAddTime = (mins: number) => {
-		if (currentSession === "work") {
-			updTime((prevTime) => prevTime + mins * 60);
-			updExFDate((prevDate) => new Date(prevDate.getTime() + mins * 60 * 1000));
-		}
-	};
+		return cleanup;
+	}, []);
 
 	const workSessionAddTimeOptions: ActionMenuOption[] = [
 		{ label: "1 minute", value: "60" },
@@ -82,46 +36,22 @@ const Focus: React.FC = () => {
 		{ label: "10 minutes", value: "600" },
 	];
 
-	// Listen for IPC messages from menu bar
-	useEffect(() => {
-		const handleFocusAction = (action: string, data?: any) => {
-			switch (action) {
-				case "start":
-					if (timerStatus === "stopped") {
-						handleStart();
-					}
-					break;
-				case "resume":
-					if (timerStatus === "paused") {
-						handleResume();
-					}
-					break;
-				case "pause":
-					if (timerStatus === "counting") {
-						handlePause();
-					}
-					break;
-				case "stop":
-					handleStop();
-					break;
-				case "add-time":
-					handleAddTime(data);
-					break;
-			}
-		};
-
-		// Add IPC listener
-		if (window.electron?.focus?.onAction) {
-			window.electron.focus.onAction(handleFocusAction);
-		}
-
-		// Cleanup function
-		return () => {
-			if (window.electron?.focus?.removeActionListener) {
-				window.electron.focus.removeActionListener(handleFocusAction);
-			}
-		};
-	}, [timerStatus, currentSession]);
+	// Simplified action handlers - backend will automatically send updates
+	const handleStart = () => {
+		window.electron.focus.start();
+	};
+	const handlePause = () => {
+		window.electron.focus.pause();
+	};
+	const handleResume = () => {
+		window.electron.focus.resume();
+	};
+	const handleStop = () => {
+		window.electron.focus.stop();
+	};
+	const handleAddTime = (seconds: number) => {
+		window.electron.focus.addTime(seconds);
+	};
 
 	return (
 		<>
@@ -158,7 +88,7 @@ const Focus: React.FC = () => {
 							<IcoButton text="Start" icon="play_arrow" onClick={{ action: handleStart }} />
 						)}
 
-						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value) => handleAddTime(parseInt(value) / 60)} button={<IcoButton icon="timer_arrow_up" text="Add time" />} /> : null}
+						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value) => handleAddTime(parseInt(value))} button={<IcoButton icon="timer_arrow_up" text="Add time" />} /> : null}
 					</div>
 				</div>
 			</Container>

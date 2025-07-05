@@ -14,14 +14,16 @@ contextBridge.exposeInMainWorld("electron", {
 		getPlatform: () => ipcRenderer.invoke("get-platform"),
 	},
 	focus: {
-		sendStatus: (status: "counting" | "paused" | "stopped", session: "work" | "break" | "transition", timeLeft: number) => {
-			ipcRenderer.send("focus-status-update", status, session, timeLeft);
-		},
-		onAction: (callback: (action: string, data?: any) => void) => {
-			ipcRenderer.on("focus-action", (_event: any, action: string, data?: any) => callback(action, data));
-		},
-		removeActionListener: (callback: (action: string, data?: any) => void) => {
-			ipcRenderer.removeListener("focus-action", callback);
+		start: () => ipcRenderer.send("focus-start"),
+		pause: () => ipcRenderer.send("focus-pause"),
+		resume: () => ipcRenderer.send("focus-resume"),
+		stop: () => ipcRenderer.send("focus-stop"),
+		addTime: (seconds: number) => ipcRenderer.send("focus-add-time", seconds),
+		useBreakCharge: () => ipcRenderer.handle("focus-use-charge"),
+		onTimerUpdate: (callback: (data: any) => void) => {
+			ipcRenderer.on("focus-timer-update", (_event: any, data: any) => callback(data));
+			// Return cleanup function
+			return () => ipcRenderer.removeAllListeners("focus-timer-update");
 		},
 	},
 	onJumpToSection: (callback: (section: string) => void) => {

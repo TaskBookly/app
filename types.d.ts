@@ -1,3 +1,10 @@
+interface TimerData {
+	session: "none" | "work" | "break" | "transition";
+	status: "counting" | "paused" | "stopped";
+	timeLeft: number;
+	chargesLeft: number;
+}
+
 interface Window {
 	electron: {
 		sidebar: {
@@ -11,9 +18,13 @@ interface Window {
 			getPlatform: () => Promise<NodeJS.Platform>;
 		};
 		focus: {
-			sendStatus: (status: "counting" | "paused" | "stopped", session: "work" | "break" | "transition", timeLeft: number) => void;
-			onAction: (callback: (action: string, data?: any) => void) => void;
-			removeActionListener: (callback: (action: string, data?: any) => void) => void;
+			start: () => void;
+			pause: () => void;
+			resume: () => void;
+			stop: () => void;
+			addTime: (seconds: number) => void;
+			useBreakCharge: () => Promise<boolean>;
+			onTimerUpdate: (callback: (data: TimerData) => void) => () => void;
 		};
 		onJumpToSection: (callback: (section: string) => void) => void;
 	};
