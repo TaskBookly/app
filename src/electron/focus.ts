@@ -1,5 +1,6 @@
 import { Notification } from "electron";
 import { EventEmitter } from "events";
+import { getPublicAssetPath } from "./assetResolver.js";
 
 type SessionType = "none" | "work" | "break" | "transition";
 type SessionStatus = "counting" | "paused" | "stopped";
@@ -20,7 +21,7 @@ interface TimerData {
 class FocusTimer extends EventEmitter {
 	private static breakCharges: number = 3;
 	private static readonly sessions: FocusSessions = {
-		work: 20,
+		work: 0.5,
 		break: 10,
 		transition: 5,
 	};
@@ -152,6 +153,7 @@ class FocusTimer extends EventEmitter {
 		if (Notification.isSupported()) {
 			const notif = new Notification({
 				title: "Focus session has ended!",
+				sound: getPublicAssetPath("audio/notifs/info.ogg"),
 			});
 
 			notif.show();
