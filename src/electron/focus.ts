@@ -1,6 +1,5 @@
-import { Notification } from "electron";
+import { BrowserWindow, Notification } from "electron";
 import { EventEmitter } from "events";
-import { getPublicAssetPath } from "./assetResolver.js";
 
 type SessionType = "none" | "work" | "break" | "transition";
 type SessionStatus = "counting" | "paused" | "stopped";
@@ -26,6 +25,8 @@ class FocusTimer extends EventEmitter {
 		transition: 5,
 	};
 
+	private readonly mainWindow: BrowserWindow;
+
 	private _currentSession: SessionType;
 	private _sessionStatus: SessionStatus;
 	private _timeLeftInSession: number;
@@ -38,8 +39,9 @@ class FocusTimer extends EventEmitter {
 	private totalPausedDuration: number;
 	private totalAddedTime: number;
 
-	constructor() {
-		super();
+	constructor(window: BrowserWindow) {
+		super(); // Initialize EventEmitter
+		this.mainWindow = window;
 		this._currentSession = "none";
 		this._sessionStatus = "stopped";
 		this._timeLeftInSession = 0;
@@ -152,8 +154,11 @@ class FocusTimer extends EventEmitter {
 	private onSessionComplete(): void {
 		if (Notification.isSupported()) {
 			const notif = new Notification({
-				title: "Focus session has ended!",
-				sound: getPublicAssetPath("audio/notifs/info.ogg"),
+				title: `Your ${this.session} session has ended!`,
+			});
+			notif.on("click", () => {
+				this.mainWindow.focus();
+				this.mainWindow.webContents.send("jumpto-section", "focus");
 			});
 
 			notif.show();

@@ -20,10 +20,11 @@ const appVersion = packageJson.version;
 
 let sidebarCollapsed: boolean = false;
 
-const focusTimer = new FocusTimer();
+let mainWindow: BrowserWindow;
+let focusTimer: FocusTimer;
 
 // Function to build the focus menu based on current state
-function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
+function buildFocusMenu(): MenuItemConstructorOptions {
 	const getPrimaryAction = () => {
 		switch (focusTimer.status) {
 			case "paused":
@@ -33,7 +34,7 @@ function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
 					accelerator: "Option+Command+P",
 					click: () => {
 						focusTimer.resume();
-						updateMenu(mainWindow);
+						updateMenu();
 					},
 				};
 			case "counting":
@@ -43,7 +44,7 @@ function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
 					accelerator: "Option+Command+P",
 					click: () => {
 						focusTimer.pause();
-						updateMenu(mainWindow);
+						updateMenu();
 					},
 					enabled: focusTimer.session === "work",
 				};
@@ -54,7 +55,7 @@ function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
 					accelerator: "Option+Command+S",
 					click: () => {
 						focusTimer.start();
-						updateMenu(mainWindow);
+						updateMenu();
 					},
 				};
 		}
@@ -80,7 +81,7 @@ function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
 							accelerator: "Option+Command+X",
 							click: () => {
 								focusTimer.stop();
-								updateMenu(mainWindow);
+								updateMenu();
 							},
 						},
 				  ]
@@ -140,8 +141,7 @@ function buildFocusMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
 	};
 }
 
-// Function to update the menu
-function updateMenu(mainWindow: BrowserWindow) {
+function updateMenu() {
 	if (process.platform !== "darwin") return;
 
 	const menuTemplate: MenuItemConstructorOptions[] = [
@@ -173,7 +173,7 @@ function updateMenu(mainWindow: BrowserWindow) {
 				{ role: "togglefullscreen" },
 			],
 		},
-		buildFocusMenu(mainWindow),
+		buildFocusMenu(),
 		{
 			role: "windowMenu",
 		},
@@ -197,7 +197,7 @@ function updateMenu(mainWindow: BrowserWindow) {
 }
 
 app.whenReady().then(() => {
-	const mainWindow = new BrowserWindow({
+	mainWindow = new BrowserWindow({
 		title: "TaskBookly",
 		webPreferences: {
 			preload: getPreloadPath(),
@@ -215,8 +215,10 @@ app.whenReady().then(() => {
 		backgroundColor: "#0a3f4f",
 	});
 
+	focusTimer = new FocusTimer(mainWindow);
+
 	// MacOS Menu bar
-	updateMenu(mainWindow);
+	updateMenu();
 
 	// Listen for timer updates and forward to renderer
 	focusTimer.on("timer-update", (data) => {
@@ -225,22 +227,22 @@ app.whenReady().then(() => {
 
 	ipcMain.on("focus-start", () => {
 		focusTimer.start();
-		updateMenu(mainWindow);
+		updateMenu();
 	});
 
 	ipcMain.on("focus-pause", () => {
 		focusTimer.pause();
-		updateMenu(mainWindow);
+		updateMenu();
 	});
 
 	ipcMain.on("focus-resume", () => {
 		focusTimer.resume();
-		updateMenu(mainWindow);
+		updateMenu();
 	});
 
 	ipcMain.on("focus-stop", () => {
 		focusTimer.stop();
-		updateMenu(mainWindow);
+		updateMenu();
 	});
 
 	ipcMain.on("focus-add-time", (_, seconds: number) => {
@@ -249,7 +251,7 @@ app.whenReady().then(() => {
 
 	ipcMain.handle("focus-use-charge", () => {
 		const result = focusTimer.useBreakCharge();
-		updateMenu(mainWindow);
+		updateMenu();
 
 		return result;
 	});

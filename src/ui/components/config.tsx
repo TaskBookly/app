@@ -1,5 +1,5 @@
 import React from "react";
-import IcoButton, { type SelectionMenuOption, type ActionMenuOption, SelectionMenu, ActionMenu } from "./core";
+import IcoButton, { type SelectionMenuOption, type ActionMenuOption, type HintType, Hint, SelectionMenu, ActionMenu } from "./core";
 
 // Platform type for availableOn
 export type Platform = "windows" | "mac" | "linux" | "all";
@@ -18,7 +18,7 @@ interface InfoProps {
 	copyButton?: boolean;
 	availableOn?: Platform[];
 	hint?: {
-		type: "info" | "warning" | "error" | "success" | "processing";
+		type: HintType;
 		label: string;
 	};
 	children?: React.ReactNode;
@@ -30,7 +30,7 @@ interface ConfigDefaults {
 	disabled?: boolean;
 	availableOn?: Platform[];
 	hint?: {
-		type: "info" | "warning" | "error" | "success" | "processing";
+		type: HintType;
 		label: string;
 	};
 	children?: React.ReactNode;
@@ -73,15 +73,6 @@ interface ActionMenuProps extends ConfigDefaults {
 		className?: string;
 	};
 }
-
-const Hint: React.FC<{ type: "info" | "warning" | "error" | "success" | "processing"; label: string }> = ({ type, label }) => {
-	return (
-		<div className={`settingHint settingHint-${type}`}>
-			<span className="hintIcon material-symbols-rounded">{type === "info" ? "info" : type === "warning" ? "warning" : type === "error" ? "error" : type === "success" ? "check_circle" : type === "processing" ? "progress_activity" : "info"}</span>
-			<span className="hintLabel">{label}</span>
-		</div>
-	);
-};
 
 const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint, availableOn = ["all"], children }) => {
 	const platform = getPlatform();

@@ -1,6 +1,8 @@
 import React from "react";
 import { jumpToSection } from "./nav";
 
+type HintType = "info" | "warning" | "error" | "success" | "processing";
+
 interface IcoButtonProps {
 	text?: string;
 	icon?: string;
@@ -39,6 +41,15 @@ const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onC
 			{icon ? <span className="material-symbols-rounded buttonIcon">{icon}</span> : null}
 			{text ? <span className="buttonText">{text}</span> : null}
 		</button>
+	);
+};
+
+const Hint: React.FC<{ type: HintType; label: string }> = ({ type, label }) => {
+	return (
+		<div className={`hint hintType-${type}`}>
+			<span className="hintIcon material-symbols-rounded">{type === "info" ? "info" : type === "warning" ? "warning" : type === "error" ? "error" : type === "success" ? "check_circle" : type === "processing" ? "progress_activity" : "info"}</span>
+			<span className="hintLabel">{label}</span>
+		</div>
 	);
 };
 
@@ -287,6 +298,6 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 	);
 };
 
-export { Container, SelectionMenu, ActionMenu };
-export type { SelectionMenuOption, ActionMenuOption };
+export { Container, SelectionMenu, ActionMenu, Hint };
+export type { SelectionMenuOption, ActionMenuOption, HintType };
 export default IcoButton;
