@@ -132,27 +132,28 @@ const Settings: React.FC = () => {
 					</Container>
 					<Container name="settings_reset">
 						<div>
-              <ActionMenuConfig
-                name="Reset all settings to default"
-                menu={{
-                  button: { text: "Reset" },
-                  options: [
-                    {
-                      label: "Confirm?",
-                      value: "confirm",
-                      onClick: () => {
-                        try {
-                          setSettingsState(defaultSettings);
-                          if (typeof window !== "undefined" && window.electron) {
-                            for (const setting of defaultSettings) {
-                              window.electron.settings.set(setting.key, setting.value);
-                            }
-                          }
-                        },
-                      },
-                    ],
-                  }}
-                />
+							<ActionMenuConfig
+								name="Reset all settings to default"
+								menu={{
+									button: { text: "Reset" },
+									options: [
+										{
+											label: "Confirm?",
+											value: "confirm",
+											onClick: () => {
+												try {
+													setSettingsState(defaultSettings);
+													if (typeof window !== "undefined" && window.electron) {
+														for (const setting of defaultSettings) {
+															window.electron.settings.set(setting.key, setting.value);
+														}
+													}
+												} catch {}
+											},
+										},
+									],
+								}}
+							/>
 						</div>
 					</Container>
 				</>
