@@ -72,7 +72,7 @@ const Settings: React.FC = () => {
 				<>
 					<Container name="settings_general">
 						<div>
-							<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
+							<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows", "linux"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
 							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
 							<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
 						</div>
@@ -132,28 +132,27 @@ const Settings: React.FC = () => {
 					</Container>
 					<Container name="settings_reset">
 						<div>
-							<ActionMenuConfig
-								name="Reset all settings to default"
-								menu={{
-									button: { text: "Reset" },
-									options: [
-										{
-											label: "Confirm?",
-											value: "confirm",
-											onClick: () => {
-												try {
-													setSettingsState(defaultSettings);
-													if (typeof window !== "undefined") {
-														localStorage.setItem("settings", JSON.stringify(defaultSettings));
-													}
-												} catch (error) {
-													console.error("Failed to reset settings:", error);
-												}
-											},
-										},
-									],
-								}}
-							/>
+              <ActionMenuConfig
+                name="Reset all settings to default"
+                menu={{
+                  button: { text: "Reset" },
+                  options: [
+                    {
+                      label: "Confirm?",
+                      value: "confirm",
+                      onClick: () => {
+                        try {
+                          setSettingsState(defaultSettings);
+                          if (typeof window !== "undefined" && window.electron) {
+                            for (const setting of defaultSettings) {
+                              window.electron.settings.set(setting.key, setting.value);
+                            }
+                          }
+                        },
+                      },
+                    ],
+                  }}
+                />
 						</div>
 					</Container>
 				</>

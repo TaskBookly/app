@@ -1,12 +1,11 @@
 {
 	"name": "taskbookly",
-	"productName": "TaskBookly",
 	"private": true,
 	"version": "0.2.0",
 	"license": "MIT",
 	"type": "module",
 	"author": "TaskBookly LLC",
-	"description": "A task management and focus tool application.",
+	"description": "A task management and focus tool.",
 	"main": "dist-electron/main.js",
 	"scripts": {
 		"transpile:electron": "tsc -p src/electron/tsconfig.json",
@@ -16,6 +15,7 @@
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
+		"publish": "electron-builder --publish=always",
 		"dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal",
 		"dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64",
 		"dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
@@ -28,8 +28,9 @@
 	},
 	"build": {
 		"appId": "com.taskbookly.app",
-		"copyright": "(C) 2025 TaskBookly LLC",
+		"productName": "TaskBookly",
 		"artifactName": "${productName}.${ext}",
+		"copyright": "(C) 2025 TaskBookly LLC",
 		"files": [
 			"dist-electron",
 			"dist-react"
@@ -39,25 +40,56 @@
 		],
 		"mac": {
 			"icon": "build-resources/icons/mac/icon.png",
-			"target": "dmg",
+			"target": {
+				"target": "dmg",
+				"arch": [
+					"universal"
+				]
+			},
 			"category": "public.app-category.productivity"
 		},
 		"linux": {
 			"icon": "build-resources/icons/linux/icon.png",
-			"target": "AppImage",
+			"target": {
+				"target": "AppImage",
+				"arch": [
+					"x64"
+				]
+			},
 			"category": "Utility"
 		},
 		"win": {
 			"icon": "build-resources/icons/windows/icon.png",
-			"target": "nsis"
-		}
+			"target": {
+				"target": "nsis",
+				"arch": [
+					"x64"
+				]
+			}
+		},
+		"nsis": {
+			"oneClick": false,
+			"allowToChangeInstallationDirectory": true,
+			"runAfterFinish": true,
+			"shortcutName": "TaskBookly"
+		},
+		"publish": [
+			{
+				"provider": "github",
+				"owner": "TaskBookly",
+				"repo": "app",
+				"draft": true
+			}
+		]
 	},
 	"dependencies": {
+		"electron-updater": "^6.6.2",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.25.0",
+		"@types/node": "^24.0.10",
 		"@types/react": "^19.1.2",
 		"@types/react-dom": "^19.1.2",
 		"@vitejs/plugin-react": "^4.4.1",

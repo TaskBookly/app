@@ -4,7 +4,7 @@ contextBridge.exposeInMainWorld("electron", {
 	sidebar: {
 		toggle: () => ipcRenderer.send("toggle-sidebar"),
 		getState: () => ipcRenderer.invoke("get-sidebar-state"),
-		onState: (callback: (collapsed: boolean) => void) => {
+		onState: (callback) => {
 			ipcRenderer.on("sidebar-state", (_event: any, collapsed: boolean) => callback(collapsed));
 		},
 	},
@@ -25,6 +25,11 @@ contextBridge.exposeInMainWorld("electron", {
 			// Return cleanup function
 			return () => ipcRenderer.removeAllListeners("focus-timer-update");
 		},
+	},
+  settings: {
+		load: () => ipcRenderer.invoke("settings-load"),
+		get: (key: string) => ipcRenderer.invoke("settings-get", key),
+		set: (key: string, value: string) => ipcRenderer.invoke("settings-set", key, value),
 	},
 	onJumpToSection: (callback) => {
 		ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section));

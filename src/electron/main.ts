@@ -1,13 +1,16 @@
-import { app, BrowserWindow, Menu, ipcMain, shell } from "electron";
-import type { MenuItemConstructorOptions } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, shell } from "electron";
+
 import path from "path";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
 
-import { isDev } from "./util.js";
+import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
 
 import FocusTimer from "./focus.js";
+
+import electronUpdPkg from "electron-updater";
+const { autoUpdater } = electronUpdPkg;
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +20,31 @@ const __dirname = path.dirname(__filename);
 const packagePath = path.join(__dirname, "..", "package.json");
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 const appVersion = packageJson.version;
+
+const settingsPath = path.join(app.getPath("userData"), "settings.json");
+
+function loadSettings(): Record<string, string> {
+	try {
+		if (existsSync(settingsPath)) {
+			return JSON.parse(readFileSync(settingsPath, "utf8"));
+		}
+	} catch (error) {
+		console.error("Error loading settings:", error);
+	}
+	return {};
+}
+
+function saveSettings(settings: Record<string, string>): void {
+	try {
+		const userDataPath = app.getPath("userData");
+		if (!existsSync(userDataPath)) {
+			mkdirSync(userDataPath, { recursive: true });
+		}
+		writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+	} catch (error) {
+		console.error("Error saving settings:", error);
+	}
+}
 
 let sidebarCollapsed: boolean = false;
 
@@ -142,61 +170,77 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 }
 
 function updateMenu() {
-	if (process.platform !== "darwin") return;
+	if (process.platform === "darwin") {
+    const menuTemplate: MenuItemConstructorOptions[] = [
+      {
+        label: app.name,
+        submenu: [{ role: "about" }, { type: "separator" }, { label: "Settings...", accelerator: "Command+,", click: () => mainWindow.webContents.send("jumpto-section", "settings") }, { type: "separator" }, { role: "services" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }],
+      },
+      {
+        label: "Edit",
+        submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }],
+      },
+      {
+        label: "View",
+        submenu: [
+          {
+            type: "normal",
+            label: "Toggle Sidebar",
+            accelerator: "Ctrl+Tab",
+            click: () => {
+              sidebarCollapsed = !sidebarCollapsed;
+              mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+            },
+          },
+          { type: "separator" },
+          { role: "resetZoom" },
+          { role: "zoomIn" },
+          { role: "zoomOut" },
+          { type: "separator" },
+          { role: "togglefullscreen" },
+        ],
+      },
+      buildFocusMenu(),
+      {
+        role: "windowMenu",
+      },
+      // Debug menu for development environment
+      ...(isDev()
+        ? [
+            {
+              label: "Debug",
+              submenu: [{ role: "reload" as const }, { role: "forceReload" as const }, { type: "separator" as const }, { role: "toggleDevTools" as const }],
+            },
+          ]
+        : []),
+      {
+        role: "help",
+        submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }],
+      },
+    ];
 
-	const menuTemplate: MenuItemConstructorOptions[] = [
-		{
-			label: app.name,
-			submenu: [{ role: "about" }, { type: "separator" }, { label: "Settings...", accelerator: "Command+,", click: () => mainWindow.webContents.send("jumpto-section", "settings") }, { type: "separator" }, { role: "services" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }],
-		},
-		{
-			label: "Edit",
-			submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }],
-		},
-		{
-			label: "View",
-			submenu: [
-				{
-					type: "normal",
-					label: "Toggle Sidebar",
-					accelerator: "Ctrl+Tab",
-					click: () => {
-						sidebarCollapsed = !sidebarCollapsed;
-						mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
-					},
-				},
-				{ type: "separator" },
-				{ role: "resetZoom" },
-				{ role: "zoomIn" },
-				{ role: "zoomOut" },
-				{ type: "separator" },
-				{ role: "togglefullscreen" },
-			],
-		},
-		buildFocusMenu(),
-		{
-			role: "windowMenu",
-		},
-		// Debug menu for development environment
-		...(isDev()
-			? [
-					{
-						label: "Debug",
-						submenu: [{ role: "reload" as const }, { role: "forceReload" as const }, { type: "separator" as const }, { role: "toggleDevTools" as const }],
-					},
-			  ]
-			: []),
-		{
-			role: "help",
-			submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }],
-		},
-	];
-
-	const menu = Menu.buildFromTemplate(menuTemplate);
-	Menu.setApplicationMenu(menu);
+    const menu = Menu.buildFromTemplate(menuTemplate);
+    Menu.setApplicationMenu(menu);
+  } else {
+    Menu.setApplicationMenu(null);
+  }
 }
 
 app.whenReady().then(() => {
+  autoUpdater.autoDownload = false;
+	const settings = loadSettings();
+
+	if (settings.launchOnLogin === "true") {
+		app.setLoginItemSettings({
+			openAtLogin: true,
+			name: "TaskBookly",
+		});
+	}
+
+	if (settings.autoCheckForUpdates === "true") {
+		autoUpdater.checkForUpdates();
+	}
+  
 	mainWindow = new BrowserWindow({
 		title: "TaskBookly",
 		webPreferences: {
@@ -256,6 +300,40 @@ app.whenReady().then(() => {
 		return result;
 	});
 
+	autoUpdater.on("update-available", (data) => {
+		if (Notification.isSupported()) {
+			const notif = new Notification({
+				title: "Update Available",
+				subtitle: `v${data.version}`,
+				body: "A new TaskBookly update is available to download.",
+			});
+
+			notif.on("click", () => shell.openExternal("https://github.com/TaskBookly/app/releases/latest"));
+			notif.show();
+		}
+	});
+
+	autoUpdater.on("update-not-available", () => {
+		if (Notification.isSupported()) {
+			const notif = new Notification({
+				title: "No updates available",
+				body: "You're all up to date!",
+			});
+
+			notif.show();
+		}
+	});
+
+	autoUpdater.on("error", (err) => {
+		const notif = new Notification({
+			title: "An error occurred when checking for updates",
+			subtitle: err.name,
+			body: err.message,
+		});
+
+		notif.show();
+	});
+
 	ipcMain.on("toggle-sidebar", () => {
 		sidebarCollapsed = !sidebarCollapsed;
 		mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
@@ -277,8 +355,33 @@ app.whenReady().then(() => {
 		return process.platform;
 	});
 
-	ipcMain.handle("get-chrome-version", () => {
-		return process.versions.chrome;
+	ipcMain.handle("settings-load", () => {
+		return loadSettings();
+	});
+
+	ipcMain.handle("settings-get", (_event, key: string) => {
+		const settings = loadSettings();
+		return settings[key] || "";
+	});
+
+	ipcMain.handle("settings-set", (_event, key: string, value: string) => {
+		const settings = loadSettings();
+		settings[key] = value;
+		saveSettings(settings);
+
+		if (key === "launchOnLogin" && process.platform !== "darwin") {
+			const launchOnLogin = value === "true";
+			try {
+				app.setLoginItemSettings({
+					openAtLogin: launchOnLogin,
+					name: "TaskBookly",
+				});
+			} catch (e) {
+				console.error("Unable to set login item:", e);
+			}
+		}
+
+		return true;
 	});
 
 	if (isDev()) {
