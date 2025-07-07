@@ -49,9 +49,8 @@ function App() {
 				<div id="topbar"></div>
 				<div id="appContent">
 					<div id="sidebar">
-						<button id="toggleSbBtn" onClick={handleToggleSidebar}>
-							<span className="material-symbols-rounded">menu</span>
-						</button>
+						<IcoButton id="toggleSbBtn" onClick={{ action: handleToggleSidebar }} icon="menu" />
+
 						<IcoButton onClick={{ jumpToSection: "focus" }} text="Focus" icon="lightbulb_circle" />
 						<IcoButton onClick={{ jumpToSection: "settings" }} text="Settings" icon="build" />
 					</div>

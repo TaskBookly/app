@@ -1,17 +1,20 @@
 import React from "react";
 import { jumpToSection } from "./nav";
 
+type HintType = "info" | "warning" | "error" | "success" | "processing";
+
 interface IcoButtonProps {
 	text?: string;
 	icon?: string;
 	disabled?: boolean;
 	onClick?: { jumpToSection?: string; action?: () => void };
+	id?: string;
 	className?: string;
 	tooltip?: string;
 }
 
-const Container: React.FC<{ name: string; header?: { title: string; icon: string }; className?: string; children?: React.ReactNode }> = ({ name, header, children, className = "" }) => (
-	<div id={name} className="container">
+const Container: React.FC<{ name: string; header?: { title: string; icon: string }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => (
+	<div data-container={name} id={id} className={`container ${className}`}>
 		{header ? (
 			<div className="containerHeader">
 				<span className="material-symbols-rounded">{header?.icon}</span>
@@ -19,11 +22,11 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: string
 			</div>
 		) : null}
 
-		<div className={`containerContent ${className}`}>{children}</div>
+		<div className="containerContent">{children}</div>
 	</div>
 );
 
-const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onClick, className = "", tooltip }) => {
+const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onClick, id, className, tooltip }) => {
 	const handleClick = () => {
 		if (onClick?.action) {
 			onClick.action();
@@ -34,10 +37,19 @@ const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onC
 	};
 
 	return (
-		<button data-sect={onClick?.jumpToSection} className={className} disabled={disabled} onClick={handleClick} data-tooltip={tooltip}>
+		<button data-sect={onClick?.jumpToSection} id={id} className={className} disabled={disabled} onClick={handleClick} data-tooltip={tooltip}>
 			{icon ? <span className="material-symbols-rounded buttonIcon">{icon}</span> : null}
 			{text ? <span className="buttonText">{text}</span> : null}
 		</button>
+	);
+};
+
+const Hint: React.FC<{ type: HintType; label: string }> = ({ type, label }) => {
+	return (
+		<div className={`hint hintType-${type}`}>
+			<span className="hintIcon material-symbols-rounded">{type === "info" ? "info" : type === "warning" ? "warning" : type === "error" ? "error" : type === "success" ? "check_circle" : type === "processing" ? "progress_activity" : "info"}</span>
+			<span className="hintLabel">{label}</span>
+		</div>
 	);
 };
 
@@ -218,9 +230,10 @@ interface ActionMenuProps {
 	options: ActionMenuOption[];
 	className?: string;
 	searchable?: boolean;
+	onOptionSelect?: (value: string) => void;
 }
 
-const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = "", searchable = false }) => {
+const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = "", searchable = false, onOptionSelect }) => {
 	const ref = React.useRef<HTMLDivElement>(null);
 	const buttonRef = React.useRef<HTMLDivElement>(null);
 	const [open, setOpen] = React.useState(false);
@@ -268,7 +281,11 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 						className={`dropdown-option`}
 						onClick={() => {
 							setOpen(false);
-							if (opt.onClick) opt.onClick();
+							if (onOptionSelect) {
+								onOptionSelect(opt.value);
+							} else if (opt.onClick) {
+								opt.onClick();
+							}
 						}}
 						role="menuitem"
 					>
@@ -281,6 +298,6 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 	);
 };
 
-export { Container, SelectionMenu, ActionMenu };
-export type { SelectionMenuOption, ActionMenuOption };
+export { Container, SelectionMenu, ActionMenu, Hint };
+export type { SelectionMenuOption, ActionMenuOption, HintType };
 export default IcoButton;

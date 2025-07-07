@@ -25,6 +25,7 @@
 	display: inline-block;
 	white-space: pre-line;
 	outline: 1.5px solid var(--color-outline);
+	text-align: center;
 }
 
 .app-tooltip[data-active="true"] {

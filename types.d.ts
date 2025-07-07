@@ -10,6 +10,15 @@ interface Window {
 			getNodeEnv: () => Promise<string>;
 			getPlatform: () => Promise<NodeJS.Platform>;
 		};
+		focus: {
+			start: () => void;
+			pause: () => void;
+			resume: () => void;
+			stop: () => void;
+			addTime: (seconds: number) => void;
+			useBreakCharge: () => Promise<boolean>;
+			onTimerUpdate: (callback: (data: TimerData) => void) => () => void;
+    };
 		settings: {
 			load: () => Promise<Record<string, string>>;
 			get: (key: string) => Promise<string>;

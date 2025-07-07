@@ -1,10 +1,13 @@
 import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, shell } from "electron";
+
 import path from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
 
 import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
+
+import FocusTimer from "./focus.js";
 
 import electronUpdPkg from "electron-updater";
 const { autoUpdater } = electronUpdPkg;
@@ -45,8 +48,186 @@ function saveSettings(settings: Record<string, string>): void {
 
 let sidebarCollapsed: boolean = false;
 
-app.on("ready", () => {
-	autoUpdater.autoDownload = false;
+let mainWindow: BrowserWindow;
+let focusTimer: FocusTimer;
+
+// Function to build the focus menu based on current state
+function buildFocusMenu(): MenuItemConstructorOptions {
+	const getPrimaryAction = () => {
+		switch (focusTimer.status) {
+			case "paused":
+				return {
+					label: "Resume",
+					action: "resume",
+					accelerator: "Option+Command+P",
+					click: () => {
+						focusTimer.resume();
+						updateMenu();
+					},
+				};
+			case "counting":
+				return {
+					label: "Pause",
+					action: "pause",
+					accelerator: "Option+Command+P",
+					click: () => {
+						focusTimer.pause();
+						updateMenu();
+					},
+					enabled: focusTimer.session === "work",
+				};
+			default:
+				return {
+					label: "Start",
+					action: "start",
+					accelerator: "Option+Command+S",
+					click: () => {
+						focusTimer.start();
+						updateMenu();
+					},
+				};
+		}
+	};
+
+	const primaryAction = getPrimaryAction();
+
+	return {
+		label: "Focus",
+		submenu: [
+			{
+				type: "normal",
+				label: primaryAction.label,
+				accelerator: primaryAction.accelerator,
+				enabled: primaryAction.enabled !== false,
+				click: primaryAction.click,
+			},
+			...(focusTimer.status !== "stopped"
+				? [
+						{
+							type: "normal" as const,
+							label: "Stop",
+							accelerator: "Option+Command+X",
+							click: () => {
+								focusTimer.stop();
+								updateMenu();
+							},
+						},
+				  ]
+				: []),
+			...(focusTimer.session === "break" && (focusTimer.status === "counting" || focusTimer.status === "paused")
+				? [
+						{ type: "separator" as const },
+						{
+							type: "normal" as const,
+							label: "Charge break",
+							enabled: !focusTimer.chargeUsedThisSession || focusTimer.chargesLeft > 0,
+						},
+				  ]
+				: []),
+			...(focusTimer.session === "work"
+				? [
+						{ type: "separator" as const },
+						{
+							type: "submenu" as const,
+							label: "Add Time",
+							submenu: [
+								{
+									type: "normal" as const,
+									label: "1 Minute",
+									click: () => focusTimer.addTime(60),
+								},
+								{
+									type: "normal" as const,
+									label: "2 Minutes",
+									click: () => focusTimer.addTime(120),
+								},
+								{
+									type: "normal" as const,
+									label: "3 Minutes",
+									click: () => focusTimer.addTime(180),
+								},
+								{
+									type: "normal" as const,
+									label: "4 Minutes",
+									click: () => focusTimer.addTime(240),
+								},
+								{
+									type: "normal" as const,
+									label: "5 Minutes",
+									click: () => focusTimer.addTime(300),
+								},
+								{
+									type: "normal" as const,
+									label: "10 Minutes",
+									click: () => focusTimer.addTime(600),
+								},
+							],
+						},
+				  ]
+				: []),
+		],
+	};
+}
+
+function updateMenu() {
+	if (process.platform === "darwin") {
+    const menuTemplate: MenuItemConstructorOptions[] = [
+      {
+        label: app.name,
+        submenu: [{ role: "about" }, { type: "separator" }, { label: "Settings...", accelerator: "Command+,", click: () => mainWindow.webContents.send("jumpto-section", "settings") }, { type: "separator" }, { role: "services" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }],
+      },
+      {
+        label: "Edit",
+        submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }],
+      },
+      {
+        label: "View",
+        submenu: [
+          {
+            type: "normal",
+            label: "Toggle Sidebar",
+            accelerator: "Ctrl+Tab",
+            click: () => {
+              sidebarCollapsed = !sidebarCollapsed;
+              mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+            },
+          },
+          { type: "separator" },
+          { role: "resetZoom" },
+          { role: "zoomIn" },
+          { role: "zoomOut" },
+          { type: "separator" },
+          { role: "togglefullscreen" },
+        ],
+      },
+      buildFocusMenu(),
+      {
+        role: "windowMenu",
+      },
+      // Debug menu for development environment
+      ...(isDev()
+        ? [
+            {
+              label: "Debug",
+              submenu: [{ role: "reload" as const }, { role: "forceReload" as const }, { type: "separator" as const }, { role: "toggleDevTools" as const }],
+            },
+          ]
+        : []),
+      {
+        role: "help",
+        submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }],
+      },
+    ];
+
+    const menu = Menu.buildFromTemplate(menuTemplate);
+    Menu.setApplicationMenu(menu);
+  } else {
+    Menu.setApplicationMenu(null);
+  }
+}
+
+app.whenReady().then(() => {
+  autoUpdater.autoDownload = false;
 	const settings = loadSettings();
 
 	if (settings.launchOnLogin === "true") {
@@ -59,8 +240,8 @@ app.on("ready", () => {
 	if (settings.autoCheckForUpdates === "true") {
 		autoUpdater.checkForUpdates();
 	}
-
-	const mainWindow = new BrowserWindow({
+  
+	mainWindow = new BrowserWindow({
 		title: "TaskBookly",
 		webPreferences: {
 			preload: getPreloadPath(),
@@ -78,80 +259,46 @@ app.on("ready", () => {
 		backgroundColor: "#0a3f4f",
 	});
 
+	focusTimer = new FocusTimer(mainWindow);
+
 	// MacOS Menu bar
-	if (process.platform === "darwin") {
-		const menuTemplate: MenuItemConstructorOptions[] = [
-			{
-				label: app.name,
-				submenu: [{ role: "about" }, { type: "separator" }, { label: "Settings...", accelerator: "Command+,", click: () => mainWindow.webContents.send("jumpto-section", "settings") }, { type: "separator" }, { role: "services" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }],
-			},
-			{
-				label: "File",
-				submenu: [{ label: "New Task...", accelerator: "Command+T" }],
-			},
-			{
-				label: "Edit",
-				submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }],
-			},
-			{
-				label: "View",
-				submenu: [
-					{
-						type: "normal",
-						label: "Toggle Sidebar",
-						accelerator: "Ctrl+Tab",
-						click: () => {
-							sidebarCollapsed = !sidebarCollapsed;
-							mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
-						},
-					},
-					{ type: "separator" },
-					{ role: "resetZoom" },
-					{ role: "zoomIn" },
-					{ role: "zoomOut" },
-					{ type: "separator" },
-					{ role: "togglefullscreen" },
-				],
-			},
-			{
-				label: "Focus",
-				submenu: [
-					{ type: "normal", label: "Pause", accelerator: "Option+Command+P" },
-					{ type: "normal", label: "Stop", accelerator: "Option+Command+S" },
-					{ type: "separator" },
-					{
-						type: "submenu",
-						label: "Add Time",
-						submenu: [
-							{ type: "normal", label: "1 Minute" },
-							{ type: "normal", label: "5 Minutes" },
-							{ type: "normal", label: "10 Minutes" },
-							{ type: "normal", label: "15 Minutes" },
-							{ type: "normal", label: "30 Minutes" },
-							{ type: "normal", label: "1 Hour" },
-						],
-					},
-					{ type: "normal", label: "Next Period" },
-				],
-			},
-			{
-				role: "windowMenu",
-			},
-			// Debug menu for development environment
-			...(isDev()
-				? [
-						{
-							label: "Debug",
-							submenu: [{ role: "reload" as const }, { role: "forceReload" as const }, { type: "separator" as const }, { role: "toggleDevTools" as const }],
-						},
-				  ]
-				: []),
-		];
-		const menu = Menu.buildFromTemplate(menuTemplate);
-		Menu.setApplicationMenu(menu);
-	} else {
-		Menu.setApplicationMenu(null);
-	}
+	updateMenu();
+
+	// Listen for timer updates and forward to renderer
+	focusTimer.on("timer-update", (data) => {
+		mainWindow.webContents.send("focus-timer-update", data);
+	});
+
+	ipcMain.on("focus-start", () => {
+		focusTimer.start();
+		updateMenu();
+	});
+
+	ipcMain.on("focus-pause", () => {
+		focusTimer.pause();
+		updateMenu();
+	});
+
+	ipcMain.on("focus-resume", () => {
+		focusTimer.resume();
+		updateMenu();
+	});
+
+	ipcMain.on("focus-stop", () => {
+		focusTimer.stop();
+		updateMenu();
+	});
+
+	ipcMain.on("focus-add-time", (_, seconds: number) => {
+		focusTimer.addTime(seconds);
+	});
+
+	ipcMain.handle("focus-use-charge", () => {
+		const result = focusTimer.useBreakCharge();
+		updateMenu();
+
+		return result;
+	});
 
 	autoUpdater.on("update-available", (data) => {
 		if (Notification.isSupported()) {
