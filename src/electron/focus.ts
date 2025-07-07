@@ -1,4 +1,4 @@
-import { BrowserWindow, Notification, ipcRenderer } from "electron";
+import { BrowserWindow, Notification } from "electron";
 import { EventEmitter } from "events";
 
 type SessionType = "none" | "work" | "break" | "transition";
@@ -73,7 +73,7 @@ class FocusTimer extends EventEmitter {
 
 	private static updateSessionDurations(): void {
 		FocusTimer.sessions = {
-			work: 0.25,
+			work: parseFloat(FocusTimer.settings.workPeriodDuration),
 			break: parseFloat(FocusTimer.settings.breakPeriodDuration),
 			transition: parseFloat(FocusTimer.settings.transitionPeriodDuration),
 		};
@@ -172,6 +172,7 @@ class FocusTimer extends EventEmitter {
 			const notif = new Notification({
 				title: `Your ${this.session} session has ended!`,
 				urgency: "critical",
+				silent: true,
 			});
 			notif.on("click", () => {
 				this.mainWindow.focus();
@@ -179,7 +180,11 @@ class FocusTimer extends EventEmitter {
 			});
 
 			notif.show();
-			ipcRenderer.invoke("sound-play", "notifs/sessionComplete.ogg");
+		}
+		if (this.session === "transition") {
+			this.mainWindow.webContents.send("play-sound", "notifs/sessionTransition.ogg");
+		} else {
+			this.mainWindow.webContents.send("play-sound", "notifs/sessionComplete.ogg");
 		}
 
 		this.nextSession();

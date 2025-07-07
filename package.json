@@ -4,6 +4,8 @@
 	"version": "0.2.0",
 	"license": "MIT",
 	"type": "module",
+	"productName": "TaskBookly",
+	"copyright": "(C) 2025 TaskBookly LLC",
 	"author": "TaskBookly LLC",
 	"description": "A task management and focus tool.",
 	"main": "dist-electron/main.js",
@@ -28,9 +30,7 @@
 	},
 	"build": {
 		"appId": "com.taskbookly.app",
-		"productName": "TaskBookly",
 		"artifactName": "${productName}.${ext}",
-		"copyright": "(C) 2025 TaskBookly LLC",
 		"files": [
 			"dist-electron",
 			"dist-react"
@@ -72,15 +72,7 @@
 			"allowToChangeInstallationDirectory": true,
 			"runAfterFinish": true,
 			"shortcutName": "TaskBookly"
-		},
-		"publish": [
-			{
-				"provider": "github",
-				"owner": "TaskBookly",
-				"repo": "app",
-				"draft": true
-			}
-		]
+		}
 	},
 	"dependencies": {
 		"electron-updater": "^6.6.2",

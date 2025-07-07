@@ -26,12 +26,15 @@ contextBridge.exposeInMainWorld("electron", {
 			return () => ipcRenderer.removeAllListeners("focus-timer-update");
 		},
 	},
-  settings: {
+	sound: {
+		onplaySound: (callback) => {
+			ipcRenderer.on("play-sound", (_event: any, soundPath: string) => callback(soundPath));
+		},
+	},
+	settings: {
 		load: () => ipcRenderer.invoke("settings-load"),
 		get: (key: string) => ipcRenderer.invoke("settings-get", key),
 		set: (key: string, value: string) => ipcRenderer.invoke("settings-set", key, value),
 	},
-	onJumpToSection: (callback) => {
-		ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section));
-	},
+	onJumpToSection: (callback) => ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section)),
 } satisfies Window["electron"]);

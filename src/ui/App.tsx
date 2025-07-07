@@ -22,6 +22,10 @@ function App() {
 			setSidebarClass(collapsed);
 		});
 
+		window.electron.sound.onplaySound((soundPath: string) => {
+			new Audio(`assets/audio/${soundPath}`).play();
+		});
+
 		// Cleanup function to clear timeouts when section component unmounts
 		return () => {
 			clearAllHideTimeouts();

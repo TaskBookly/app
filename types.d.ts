@@ -17,8 +17,11 @@ interface Window {
 			stop: () => void;
 			addTime: (seconds: number) => void;
 			useBreakCharge: () => Promise<boolean>;
-			onTimerUpdate: (callback: (data: TimerData) => void) => () => void;
-    };
+			onTimerUpdate: (callback: (data: TimerData) => void) => void;
+		};
+		sound: {
+			onplaySound: (callback: (soundPath: string) => void) => void;
+		};
 		settings: {
 			load: () => Promise<Record<string, string>>;
 			get: (key: string) => Promise<string>;
