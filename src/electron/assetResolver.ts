@@ -1,6 +1,6 @@
 import { app } from "electron";
 import path from "path";
-import { isDev } from "./util.js";
+import { isDev } from "./utils.js";
 
 export function getPublicAssetPath(assetPath: string): string {
 	if (isDev()) {
