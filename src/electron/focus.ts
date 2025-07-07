@@ -1,4 +1,4 @@
-import { BrowserWindow, Notification } from "electron";
+import { BrowserWindow, Notification, ipcRenderer } from "electron";
 import { EventEmitter } from "events";
 
 type SessionType = "none" | "work" | "break" | "transition";
@@ -18,14 +18,12 @@ interface TimerData {
 }
 
 class FocusTimer extends EventEmitter {
-	private static breakCharges: number = 3;
-	private static readonly sessions: FocusSessions = {
-		work: 0.5,
-		break: 10,
-		transition: 5,
-	};
-
 	private readonly mainWindow: BrowserWindow;
+
+	private static breakCharges: number = 3;
+	private static settings: Record<string, string> = {};
+
+	private static sessions: FocusSessions;
 
 	private _currentSession: SessionType;
 	private _sessionStatus: SessionStatus;
@@ -39,9 +37,13 @@ class FocusTimer extends EventEmitter {
 	private totalPausedDuration: number;
 	private totalAddedTime: number;
 
-	constructor(window: BrowserWindow) {
+	constructor(window: BrowserWindow, settings: Record<string, string> = {}) {
 		super(); // Initialize EventEmitter
 		this.mainWindow = window;
+
+		FocusTimer.settings = settings;
+		FocusTimer.updateSessionDurations();
+
 		this._currentSession = "none";
 		this._sessionStatus = "stopped";
 		this._timeLeftInSession = 0;
@@ -55,18 +57,32 @@ class FocusTimer extends EventEmitter {
 		this.totalAddedTime = 0;
 	}
 
-	private emitTimerUpdate(): void {
+	public static updateSettings(settings: Record<string, string>): void {
+		FocusTimer.settings = settings;
+	}
+
+	private emitTimerUpdate(eventType: "tick" | "action" | "sessionChange"): void {
 		const data: TimerData = {
 			session: this.session,
 			status: this.status,
 			timeLeft: this.timeLeft,
 			chargesLeft: this.chargesLeft,
 		};
-		this.emit("timer-update", data);
+		this.emit("timer-update", eventType, data);
+	}
+
+	private static updateSessionDurations(): void {
+		FocusTimer.sessions = {
+			work: 0.25,
+			break: parseFloat(FocusTimer.settings.breakPeriodDuration),
+			transition: parseFloat(FocusTimer.settings.transitionPeriodDuration),
+		};
 	}
 
 	public start(): void {
 		if (this.status === "stopped") {
+			FocusTimer.updateSessionDurations();
+
 			this.timeLeft = FocusTimer.sessions.work * 60; // Convert to seconds
 			this.session = "work";
 			this.status = "counting";
@@ -78,7 +94,7 @@ class FocusTimer extends EventEmitter {
 				this.tick();
 			}, 100);
 
-			this.emitTimerUpdate();
+			this.emitTimerUpdate("action");
 		}
 	}
 
@@ -87,7 +103,7 @@ class FocusTimer extends EventEmitter {
 			this.status = "counting";
 			// Add the paused duration to total paused time
 			this.totalPausedDuration += Date.now() - this.pausedTime;
-			this.emitTimerUpdate();
+			this.emitTimerUpdate("action");
 		}
 	}
 
@@ -95,7 +111,7 @@ class FocusTimer extends EventEmitter {
 		if (this.session === "work" && this.status === "counting") {
 			this.status = "paused";
 			this.pausedTime = Date.now();
-			this.emitTimerUpdate();
+			this.emitTimerUpdate("action");
 		}
 	}
 
@@ -111,7 +127,7 @@ class FocusTimer extends EventEmitter {
 		this.pausedTime = 0;
 		this.totalPausedDuration = 0;
 		this.totalAddedTime = 0;
-		this.emitTimerUpdate();
+		this.emitTimerUpdate("action");
 	}
 
 	public addTime(seconds: number): void {
@@ -121,7 +137,7 @@ class FocusTimer extends EventEmitter {
 			} else {
 				this.totalAddedTime++;
 			}
-			this.emitTimerUpdate();
+			this.emitTimerUpdate("action");
 		}
 	}
 
@@ -129,7 +145,7 @@ class FocusTimer extends EventEmitter {
 		if (!this.chargeUsedThisSession && this.session === "break" && FocusTimer.breakCharges > 0) {
 			this.chargeUsedThisSession = true;
 			FocusTimer.breakCharges--;
-			this.emitTimerUpdate();
+			this.emitTimerUpdate("action");
 			return true;
 		}
 		return false;
@@ -146,7 +162,7 @@ class FocusTimer extends EventEmitter {
 				this.onSessionComplete();
 			} else {
 				this.timeLeft = newTimeLeft;
-				this.emitTimerUpdate();
+				this.emitTimerUpdate("tick");
 			}
 		}
 	}
@@ -155,6 +171,7 @@ class FocusTimer extends EventEmitter {
 		if (Notification.isSupported()) {
 			const notif = new Notification({
 				title: `Your ${this.session} session has ended!`,
+				urgency: "critical",
 			});
 			notif.on("click", () => {
 				this.mainWindow.focus();
@@ -162,6 +179,7 @@ class FocusTimer extends EventEmitter {
 			});
 
 			notif.show();
+			ipcRenderer.invoke("sound-play", "notifs/sessionComplete.ogg");
 		}
 
 		this.nextSession();
@@ -171,9 +189,22 @@ class FocusTimer extends EventEmitter {
 		if (this.session !== "none") {
 			this.chargeUsedThisSession = false;
 
+			FocusTimer.updateSessionDurations();
+
 			if (this.session === "work" || this.session === "break") {
-				this.previousSession = this.session;
-				this.session = "transition";
+				// Check if transition periods are enabled
+				if (FocusTimer.settings["transitionPeriodsEnabled"] === "true") {
+					this.previousSession = this.session;
+					this.session = "transition";
+				} else {
+					// Skip transition and go directly to next session
+					this.previousSession = this.session;
+					if (this.session === "work") {
+						this.session = "break";
+					} else if (this.session === "break") {
+						this.session = "work";
+					}
+				}
 			} else if (this.session === "transition") {
 				if (this.previousSession === "work") {
 					this.session = "break";
@@ -187,7 +218,7 @@ class FocusTimer extends EventEmitter {
 			this.sessionStartTime = Date.now();
 			this.totalPausedDuration = 0;
 			this.totalAddedTime = 0;
-			this.emitTimerUpdate();
+			this.emitTimerUpdate("sessionChange");
 		}
 	}
 
