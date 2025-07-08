@@ -96,6 +96,7 @@ button {
 	font-size: 1em;
 	font-weight: 800;
 	font-family: inherit;
+	color: inherit;
 	background-color: var(--clr-surface-a20);
 	cursor: default;
 	display: inline-flex;
@@ -152,6 +153,18 @@ button.selected {
 
 button.selected::before {
 	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-primary-a50));
+}
+
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+textarea {
+	color: inherit;
+	font-family: inherit;
 }
 
 input[type="checkbox"] {
@@ -221,7 +234,6 @@ input[type="checkbox"]:checked:active::before {
 	height: 35px;
 	box-sizing: border-box;
 	background-color: var(--clr-surface-a20);
-	font-family: inherit;
 	font-weight: 700;
 	border-radius: 1em;
 	border: none;
