@@ -172,6 +172,134 @@ const Settings: React.FC = () => {
 							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
 						</div>
 					</Container>
+					<Container name="settings_hintTypes">
+						<Hint type="info" label="Info hint type" />
+						<Hint type="warning" label="Warning hint type" />
+						<Hint type="error" label="Error hint type" />
+						<Hint type="success" label="Success hint type" />
+						<Hint type="processing" label="Processing hint type" />
+					</Container>
+					<Container name="settings_configComponents">
+						<div>
+							<SelectionMenuConfig
+								name="SelectionMenuConfig (Empty)"
+								menu={{
+									options: [],
+								}}
+								value="_"
+							/>
+							<SelectionMenuConfig
+								name="SelectionMenuConfig"
+								menu={{
+									options: [
+										{ label: "Option 1", value: "_1" },
+										{ label: "Option 2", value: "_2" },
+										{ label: "Option 3", value: "_3" },
+									],
+								}}
+								value="_1"
+							/>
+							<SelectionMenuConfig
+								name="SelectionMenuConfig (Searchable)"
+								menu={{
+									options: [
+										{ label: "Option 1", value: "_1" },
+										{ label: "Option 2", value: "_2" },
+										{ label: "Option 3", value: "_3" },
+									],
+									searchable: true,
+								}}
+								value="_1"
+							/>
+							<ActionMenuConfig
+								name="ActionMenuConfig (Searchable)"
+								menu={{
+									button: { text: "Action" },
+									options: [
+										{
+											label: "Option 1",
+											value: "option1",
+											onClick: () => {},
+										},
+										{
+											label: "Option 2",
+											value: "option2",
+											onClick: () => {},
+										},
+										{
+											label: "Option 3",
+											value: "option3",
+											onClick: () => {},
+										},
+									],
+									searchable: true,
+								}}
+							/>
+							<SelectionMenuConfig
+								name="SelectionMenuConfig (Disabled)"
+								menu={{
+									options: [
+										{ label: "Option 1", value: "_1" },
+										{ label: "Option 2", value: "_2" },
+									],
+								}}
+								value="_1"
+								disabled
+							/>
+							<SwitchConfig name="SwitchConfig (Checked)" value={true} onChange={() => {}} />
+							<SwitchConfig name="SwitchConfig (Unchecked)" value={false} onChange={() => {}} />
+							<SwitchConfig name="SwitchConfig (Disabled; Checked)" value={true} onChange={() => {}} disabled />
+							<SwitchConfig name="SwitchConfig (Disabled; Unchecked)" value={false} onChange={() => {}} disabled />
+							<ActionMenuConfig
+								name="ActionMenuConfig"
+								menu={{
+									button: { text: "Action" },
+									options: [
+										{
+											label: "Option 1",
+											value: "option1",
+											icon: "star",
+											onClick: () => {},
+										},
+										{
+											label: "Option 2",
+											value: "option2",
+											icon: "edit",
+											onClick: () => {},
+										},
+										{
+											label: "Option 3",
+											value: "option3",
+											icon: "delete",
+											onClick: () => {},
+										},
+										{
+											label: "Option 4",
+											value: "option4",
+											icon: "info",
+											onClick: () => {},
+										},
+									],
+								}}
+							/>
+							<ActionMenuConfig
+								name="ActionMenuConfig (Disabled)"
+								menu={{
+									button: { text: "Action" },
+									options: [
+										{
+											label: "Option 1",
+											value: "option1",
+											onClick: () => {},
+										},
+									],
+								}}
+								disabled
+							/>
+							<InfoConfig name="InfoConfig" data="Key/value pair" copyButton />
+							<InfoConfig name="InfoConfig (No Copy)" data="Key/value pair (No copy)" />
+						</div>
+					</Container>
 				</>
 			),
 		},

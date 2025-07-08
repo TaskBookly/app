@@ -1,93 +1,36 @@
 :root {
-	--color-bg-main: #0a3f4f;
-	--color-bg-secondary: #022b3a;
-	--color-bg-accent: #115363;
-	--color-bg-hover: #1f7a8c;
-	--color-bg-header: #022735;
-	--color-outline: rgba(255, 255, 255, 0.15);
-	--color-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-	--color-text-main: #bfdbf7;
-	--color-text-secondary: #a0aec0;
-	--color-text-inverse: #fff;
-	--color-accent: #3fc1c9;
-	--color-glow-accent-50: rgba(31, 122, 140, 0.5);
-	--color-glow-accent-28: rgba(31, 122, 140, 0.28);
-	--color-glow-accent-35: rgba(31, 122, 140, 0.35);
-	--color-glow-accent-70: rgba(31, 122, 140, 0.7);
-	--color-glow-accent-10: rgba(31, 122, 140, 0.1);
-	--color-glow-accent-100: #1f7a8c;
-	--color-glow-white-50: rgba(255, 255, 255, 0.5);
-	--color-glow-white-25: rgba(255, 255, 255, 0.25);
-	--color-glow-white-10: rgba(255, 255, 255, 0.1);
-	--color-shadow-black-08: rgba(0, 0, 0, 0.08);
-	--color-shadow-black-10: rgba(0, 0, 0, 0.1);
-	--color-dropdown-empty: #888;
-	--color-button-active: #6fabc2;
+	/** Base colors */
+	--clr-text: #ffffff;
 
-	--color-hint-info-bg: var(--color-glow-accent-35);
-	--color-hint-info-text: var(--color-text-main);
-	--color-hint-warning-bg: #80762a;
-	--color-hint-warning-text: #fcfa8f;
-	--color-hint-glow-warning: rgba(252, 250, 143, 0.35);
-	--color-hint-error-bg: #b91c1c;
-	--color-hint-error-text: #ffc3c3;
-	--color-hint-glow-error: rgba(255, 0, 0, 0.8);
-	--color-hint-success-bg: #166534;
-	--color-hint-success-text: #bbf7d0;
-}
+	/** Theme primary colors */
+	--clr-primary-a0: #47bdfa;
+	--clr-primary-a10: #66c4fb;
+	--clr-primary-a20: #7fcbfb;
+	--clr-primary-a30: #94d3fc;
+	--clr-primary-a40: #a8dafd;
+	--clr-primary-a50: #bbe1fd;
 
-:root[data-theme="light"] {
-	--color-bg-main: #f6fafd;
-	--color-bg-secondary: #e6f0f3;
-	--color-bg-accent: #cbe7f0;
-	--color-bg-hover: #b3dbe6;
-	--color-bg-header: #e0f2f7;
-	--color-outline: rgba(0, 0, 0, 0.08);
-	--color-shadow: 2px 0 5px rgba(0, 0, 0, 0.06);
-	--color-text-main: #1a2a33;
-	--color-text-secondary: #4a5a6a;
-	--color-text-inverse: #fff;
-	--color-accent: #3fc1c9;
-	--color-glow-accent-50: rgba(31, 122, 140, 0.5);
-	--color-glow-accent-28: rgba(31, 122, 140, 0.18);
-	--color-glow-accent-35: rgba(31, 122, 140, 0.15);
-	--color-glow-accent-70: rgba(31, 122, 140, 0.2);
-	--color-glow-accent-10: rgba(31, 122, 140, 0.05);
-	--color-glow-accent-100: #1f7a8c;
-	--color-glow-white-50: rgba(255, 255, 255, 0.5);
-	--color-glow-white-25: rgba(255, 255, 255, 0.18);
-	--color-glow-white-10: rgba(255, 255, 255, 0.08);
-	--color-shadow-black-08: rgba(0, 0, 0, 0.04);
-	--color-shadow-black-10: rgba(0, 0, 0, 0.06);
-	--color-dropdown-empty: #888;
-	--color-button-active: #3fc1c9;
-}
+	/** Theme tonal surface colors */
+	--clr-surface-a0: #1b2125;
+	--clr-surface-a10: #303639;
+	--clr-surface-a20: #464c4f;
+	--clr-surface-a30: #5e6366;
+	--clr-surface-a40: #777b7e;
+	--clr-surface-a50: #919496;
+	--clr-surface-a60: #a9acaf;
+	--clr-surface-a70: #c1c3c6;
+	--clr-surface-a80: #d9dadc;
+	--clr-surface-a90: #f1f2f3;
+	--clr-surface-a100: #ffffff;
 
-:root[data-theme="catppuccin"] {
-	--color-bg-main: #313244;
-	--color-bg-secondary: #1e1e2e;
-	--color-bg-accent: #585b70;
-	--color-bg-hover: #cba6f7;
-	--color-bg-header: #1e1e2e;
-	--color-outline: rgba(255, 255, 255, 0.15);
-	--color-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-	--color-text-main: #cdd6f4;
-	--color-text-secondary: #a6adc8;
-	--color-text-inverse: #fff;
-	--color-accent: #89b4fa;
-	--color-glow-accent-50: rgba(203, 166, 247, 0.5);
-	--color-glow-accent-28: rgba(203, 166, 247, 0.28);
-	--color-glow-accent-35: rgba(203, 166, 247, 0.35);
-	--color-glow-accent-70: rgba(203, 166, 247, 0.7);
-	--color-glow-accent-10: rgba(203, 166, 247, 0.1);
-	--color-glow-accent-100: rgb(203, 166, 247);
-	--color-glow-white-50: rgba(255, 255, 255, 0.5);
-	--color-glow-white-25: rgba(255, 255, 255, 0.25);
-	--color-glow-white-10: rgba(255, 255, 255, 0.1);
-	--color-shadow-black-08: rgba(0, 0, 0, 0.08);
-	--color-shadow-black-10: rgba(0, 0, 0, 0.1);
-	--color-dropdown-empty: #888;
-	--color-button-active: #f5c2e7;
+	--clr-hint-info-bg: var(--clr-surface-a20);
+	--clr-hint-info-text: var(--clr-text-a0);
+	--clr-hint-warning-bg: #968a2b;
+	--clr-hint-warning-text: #fffebb;
+	--clr-hint-error-bg: #a11212;
+	--clr-hint-error-text: #ffdada;
+	--clr-hint-success-bg: #166534;
+	--clr-hint-success-text: #bbf7d0;
 }
 
 :root[data-theme="disco"] {

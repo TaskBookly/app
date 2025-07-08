@@ -107,7 +107,7 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 						{ type: "separator" as const },
 						{
 							type: "normal" as const,
-							label: "Charge break",
+							label: "Charge Break",
 							enabled: !focusTimer.chargeUsedThisSession || focusTimer.chargesLeft > 0,
 						},
 				  ]

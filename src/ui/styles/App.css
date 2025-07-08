@@ -1,22 +1,21 @@
 @import url("./theme.css");
 @import "./Tooltip.css";
 
-#rootFlex {
+#root {
 	display: flex;
 	flex-direction: column;
 	height: 100vh;
 	width: 100vw;
 	overflow: hidden;
-	background: var(--color-bg-main);
+	background-color: var(--clr-surface-a0);
 }
 
 #sidebar {
 	display: inline-flex;
 	flex-direction: column;
 	flex: 0 0 250px;
-	background-color: var(--color-bg-secondary);
+	background-color: var(--clr-surface-a10);
 	padding: 20px 1em;
-	box-shadow: var(--color-shadow);
 	gap: 1em;
 	overflow: auto;
 	box-sizing: border-box;
@@ -71,8 +70,7 @@
 	flex: 0 0 36px;
 	height: 36px;
 	width: 100vw;
-	background: var(--color-bg-header);
-	color: var(--color-text-main);
+	background-color: var(--clr-surface-a10);
 	display: flex;
 	align-items: center;
 	padding-left: 70px; /* leave space for window controls */
@@ -103,7 +101,7 @@
 #topbar .window-controls button {
 	width: 36px;
 	height: 36px;
-	background: none;
+	background-color: none;
 	border: none;
 	outline: none;
 	padding: 0;
@@ -156,11 +154,11 @@
 #sectionContainer > .section .container {
 	position: relative;
 	border-radius: 1em;
-	background-color: var(--color-bg-secondary);
+	background-color: var(--clr-surface-a10);
 	box-sizing: border-box;
 	margin-block: 20px;
 	overflow: hidden;
-	outline: 1.5px solid var(--color-outline);
+	outline: 1px solid var(--clr-surface-a20);
 
 	.containerContent {
 		display: flex;
@@ -176,8 +174,7 @@
 		left: 0;
 		padding: 10px 20px 10px 20px;
 		gap: 10px;
-		color: var(--color-text-main);
-		background-color: var(--color-bg-accent);
+		background-color: var(--clr-surface-a20);
 		padding-bottom: 10px;
 
 		span,
@@ -226,8 +223,8 @@
 
 .hint {
 	display: flex;
-	background: var(--color-glow-accent-35);
-	color: var(--color-text-main);
+	background-color: var(--clr-hint-info-bg);
+	color: var(--clr-hint-info-text);
 	padding: 1em 1em;
 	border-radius: 1em;
 	gap: 0.5em;
@@ -244,16 +241,16 @@
 }
 
 .hint.hintType-warning {
-	background: var(--color-hint-warning-bg);
-	color: var(--color-hint-warning-text);
+	background-color: var(--clr-hint-warning-bg);
+	color: var(--clr-hint-warning-text);
 }
 .hint.hintType-error {
-	background: var(--color-hint-error-bg);
-	color: var(--color-hint-error-text);
+	background-color: var(--clr-hint-error-bg);
+	color: var(--clr-hint-error-text);
 }
 .hint.hintType-success {
-	background: var(--color-hint-success-bg);
-	color: var(--color-hint-success-text);
+	background-color: var(--clr-hint-success-bg);
+	color: var(--clr-hint-success-text);
 }
 .hint.hintType-processing {
 	.hintIcon {
@@ -262,7 +259,7 @@
 }
 
 .setting:not(:last-child) {
-	border-bottom: 1.5px solid var(--color-bg-main);
+	border-bottom: 1.5px solid var(--clr-surface-a20);
 	margin-bottom: 1em;
 	padding-bottom: 1em;
 }
@@ -278,11 +275,10 @@
 
 	.settingLabel {
 		font-size: 1.2em;
-		color: var(--color-text-main);
 	}
 	.settingDesc {
 		font-size: 1em;
-		color: var(--color-text-secondary);
+		opacity: 70%;
 		margin: 0;
 		font-weight: 500;
 		white-space: pre-line;
@@ -302,20 +298,19 @@ div.groupList {
 }
 
 #chargingProgress {
-	background-color: var(--color-bg-main);
+	background-color: var(--clr-surface-a20);
 	height: 1.25em;
 	border-radius: 1em;
 	overflow: hidden;
 
 	div {
 		border-radius: 1em 0em 0em 1em;
-		outline: 2.5px solid var(--color-glow-white-50);
-		box-shadow: 0 0 1em 0 var(--color-glow-white-50);
+		outline: 2.5px solid var(--clr-primary-a30);
 		outline-offset: -2.5px;
 		transition: width 5s ease;
 		width: 34%;
 		height: 100%;
-		background-color: var(--color-bg-hover);
+		background-color: var(--clr-primary-a0);
 	}
 }
 
@@ -330,9 +325,9 @@ div.groupList {
 		flex-direction: row;
 		justify-content: center;
 		vertical-align: middle;
-		gap: 0.3em;
-		opacity: 60%;
+		gap: 0.5em;
 		font-size: 1em;
+		color: var(--clr-primary-a50);
 	}
 
 	label#sessionTimer {

@@ -1,17 +1,15 @@
 .app-tooltip {
 	position: fixed;
 	z-index: 9999;
-	background: var(--color-bg-main);
-	color: var(--color-text-main);
+	background-color: var(--clr-surface-a30);
 	border-radius: 8px;
-	box-shadow: 0 0 16px 4px var(--color-glow-accent-28);
 	padding: 7px 13px;
 	font-size: 0.97rem;
 	font-family: inherit;
 	pointer-events: none;
 	opacity: 0;
 	transform: translateY(6px) scale(0.98);
-	transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+	transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 	max-width: 220px;
 	min-width: 0;
 	min-height: 0;
@@ -20,18 +18,16 @@
 	user-select: none;
 	letter-spacing: 0.01em;
 	filter: none;
-	backdrop-filter: blur(1.5px);
 	will-change: opacity, transform;
 	display: inline-block;
 	white-space: pre-line;
-	outline: 1.5px solid var(--color-outline);
+	outline: 1px solid var(--clr-surface-a40);
 	text-align: center;
 }
 
 .app-tooltip[data-active="true"] {
 	opacity: 1;
 	transform: translateY(-2px) scale(1.03);
-	box-shadow: 0 2px 24px 6px var(--color-glow-accent-28);
 }
 
 .app-tooltip-arrow {
@@ -41,22 +37,51 @@
 	width: 0;
 	height: 0;
 	pointer-events: none;
+	z-index: 1;
 }
 
-.app-tooltip--bottom .app-tooltip-arrow {
-	top: -7px;
-	border-left: 8px solid transparent;
-	border-right: 8px solid transparent;
-	border-bottom: 7px solid var(--color-bg-accent);
+.app-tooltip-arrow::before,
+.app-tooltip-arrow::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 0;
+	height: 0;
+}
+
+.app-tooltip--bottom .app-tooltip-arrow::before {
+	top: -16px;
+	border-left: 7px solid transparent;
+	border-right: 7px solid transparent;
+	border-bottom: 8px solid var(--clr-surface-a40);
 	border-top: none;
+	z-index: 1;
+}
+.app-tooltip--bottom .app-tooltip-arrow::after {
+	top: -14px;
+	border-left: 9px solid transparent;
+	border-right: 9px solid transparent;
+	border-bottom: 9px solid var(--clr-surface-a30);
+	border-top: none;
+	z-index: 2;
 }
 
-.app-tooltip--top .app-tooltip-arrow {
-	bottom: -7px;
-	border-left: 8px solid transparent;
-	border-right: 8px solid transparent;
-	border-top: 7px solid var(--color-bg-accent);
+.app-tooltip--top .app-tooltip-arrow::before {
+	bottom: -37px;
+	border-left: 7px solid transparent;
+	border-right: 7px solid transparent;
+	border-top: 8px solid var(--clr-surface-a40);
 	border-bottom: none;
+	z-index: 1;
+}
+.app-tooltip--top .app-tooltip-arrow::after {
+	bottom: -35px;
+	border-left: 9px solid transparent;
+	border-right: 9px solid transparent;
+	border-top: 9px solid var(--clr-surface-a30);
+	border-bottom: none;
+	z-index: 2;
 }
 
 @media (max-width: 600px) {
