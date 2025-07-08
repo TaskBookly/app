@@ -112,8 +112,8 @@ const Settings: React.FC = () => {
 				<>
 					<Container name="settings_notifs">
 						<div>
-							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifs:focus")} onChange={(v) => setSetting("notifs:focus", v)} />
-							<SelectionMenuConfig name="Task deadlines" menu={{ options: notifOptions }} value={getSetting("notifs:tasks")} onChange={(v) => setSetting("notifs:tasks", v)} />
+							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
+							<SelectionMenuConfig name="Task deadlines" menu={{ options: notifOptions }} value={getSetting("notifsTasks")} onChange={(v) => setSetting("notifsTasks", v)} />
 						</div>
 					</Container>
 				</>
