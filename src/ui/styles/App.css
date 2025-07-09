@@ -1,5 +1,5 @@
 @import url("./theme.css");
-@import "./Tooltip.css";
+@import url("./Tooltip.css");
 
 #root {
 	display: flex;
