@@ -72,6 +72,12 @@
 			"allowToChangeInstallationDirectory": true,
 			"runAfterFinish": true,
 			"shortcutName": "TaskBookly"
+		},
+		"publish": {
+    "provider": "github",
+    "owner": "TaskBookly",
+    "repo": "app",
+    "releaseType": "draft"
 		}
 	},
 	"dependencies": {
