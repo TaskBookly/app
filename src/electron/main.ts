@@ -244,7 +244,7 @@ app.whenReady().then(() => {
 		minHeight: 250,
 		autoHideMenuBar: true, // Hide the default menu bar
 		titleBarStyle: "hiddenInset",
-		backgroundColor: "#0a3f4f",
+		backgroundColor: "#000000",
 	});
 
 	focusTimer = new FocusTimer(mainWindow, loadSettings());
@@ -279,6 +279,11 @@ app.whenReady().then(() => {
 
 	ipcMain.handle("focus-use-charge", () => {
 		return focusTimer.useBreakCharge();
+	});
+
+	ipcMain.handle("open-userdata", () => {
+		const userDataPath = app.getPath("userData");
+		shell.openPath(userDataPath);
 	});
 
 	autoUpdater.on("update-available", (data) => {

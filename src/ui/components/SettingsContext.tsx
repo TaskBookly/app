@@ -23,7 +23,7 @@ const defaultSettings: Setting[] = [
 	{ key: "transitionPeriodDuration", value: "3" },
 
 	// Platform-specific
-	...(platform === "windows" || platform === "linux" ? [{ key: "launchOnLogin", value: "false" }] : []),
+	...(platform === "windows" ? [{ key: "launchOnLogin", value: "false" }] : []),
 	...(platform === "mac" ? [{ key: "touchBar", value: "true" }] : []),
 ];
 

@@ -18,8 +18,7 @@ const Focus: React.FC = () => {
 			setTimeLeftInSession(data.timeLeft || 0);
 			setBreakChargesLeft(data.chargesLeft || 0);
 
-			// Calculate expected finish time
-			if (data.timeLeft && data.status === "counting") {
+			if (data.timeLeft && data.status !== "stopped") {
 				setSessionExpectedFinishDate(new Date(Date.now() + data.timeLeft * 1000));
 			}
 		});

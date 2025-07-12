@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, type SelectionMenuOption, Hint } from "../core";
 import Tabs, { type Tab } from "../Tabs";
-import InfoConfig, { SwitchConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
+import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
 import { useSettings } from "../SettingsContext";
 
 const Settings: React.FC = () => {
@@ -10,8 +10,13 @@ const Settings: React.FC = () => {
 	const [nodeEnv, setNodeEnv] = useState<string>("Loading...");
 	const [platform, setPlatform] = useState<NodeJS.Platform | null>(null);
 
+	const handleOpenSettingsDirectory = () => {
+		if (window.electron?.openUserData) {
+			window.electron.openUserData();
+		}
+	};
+
 	useEffect(() => {
-		// Fetch app version and node environment from electron
 		Promise.all([window.electron.build.getVersion(), window.electron.build.getNodeEnv(), window.electron.build.getPlatform()])
 			.then(([version, env, platform]) => {
 				setAppVersion(version);
@@ -49,6 +54,7 @@ const Settings: React.FC = () => {
 	];
 
 	const focusSessionWorkDurationOptions: SelectionMenuOption[] = [
+		{ label: "test", value: "0.33" },
 		{ label: "20 minutes", value: "20" },
 		{ label: "25 minutes", value: "25" },
 		{ label: "30 minutes", value: "30" },
@@ -72,18 +78,17 @@ const Settings: React.FC = () => {
 				<>
 					<Container name="settings_general">
 						<div>
-							<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows", "linux"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
+							<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
 							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
 							<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
 						</div>
 					</Container>
 					<Container name="settings_focus" header={{ title: "Focus", icon: "timer" }}>
 						{(() => {
-							const workDuration = parseInt(getSetting("workPeriodDuration")) || 25;
-							const breakDuration = parseInt(getSetting("breakPeriodDuration")) || 5;
+							const workDuration = parseInt(getSetting("workPeriodDuration"));
+							const breakDuration = parseInt(getSetting("breakPeriodDuration"));
 							const ratio = breakDuration / workDuration;
 
-							// Show warning if ratio is too low (≤ 0.17) OR too high (≥ 0.8)
 							if (ratio <= 0.17) {
 								return <Hint type="warning" label="Your breaks may be too short for sustained focus. Consider longer breaks." />;
 							}
@@ -170,6 +175,7 @@ const Settings: React.FC = () => {
 							<InfoConfig name="Version" data={appVersion} copyButton />
 							<InfoConfig name="Node environment" data={nodeEnv} copyButton />
 							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
+							<ButtonActionConfig name="UserData" button={{ text: "Open Folder", icon: "folder_open" }} onClick={handleOpenSettingsDirectory} />
 						</div>
 					</Container>
 					<Container name="settings_hintTypes">

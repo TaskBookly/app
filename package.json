@@ -19,14 +19,9 @@
 		"preview": "vite preview",
 		"publish": "electron-builder --publish=always",
 		"dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal",
-		"dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64",
 		"dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
-		"test:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal --config.mac.target=dir",
-		"test:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64 --config.linux.target=dir",
-		"test:win": "npm run transpile:electron && npm run build && electron-builder --win --x64 --config.win.target=dir",
-		"test-installer:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal --publish=never",
-		"test-installer:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64 --publish=never",
-		"test-installer:win": "npm run transpile:electron && npm run build && electron-builder --win --x64 --publish=never"
+		"test:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal --config.mac.target=dir --publish=never",
+		"test:win": "npm run transpile:electron && npm run build && electron-builder --win --x64 --config.win.target=dir --publish=never"
 	},
 	"build": {
 		"appId": "com.taskbookly.app",
@@ -48,16 +43,6 @@
 			},
 			"category": "public.app-category.productivity"
 		},
-		"linux": {
-			"icon": "build-resources/icons/linux/icon.png",
-			"target": {
-				"target": "AppImage",
-				"arch": [
-					"x64"
-				]
-			},
-			"category": "Utility"
-		},
 		"win": {
 			"icon": "build-resources/icons/windows/icon.png",
 			"target": {
@@ -74,10 +59,10 @@
 			"shortcutName": "TaskBookly"
 		},
 		"publish": {
-    "provider": "github",
-    "owner": "TaskBookly",
-    "repo": "app",
-    "releaseType": "draft"
+			"provider": "github",
+			"owner": "TaskBookly",
+			"repo": "app",
+			"releaseType": "draft"
 		}
 	},
 	"dependencies": {
@@ -93,7 +78,7 @@
 		"@vitejs/plugin-react": "^4.4.1",
 		"concurrently": "^9.1.2",
 		"cross-env": "^7.0.3",
-		"electron": "^37.1.0",
+		"electron": "^37.2.1",
 		"electron-builder": "^26.0.12",
 		"eslint": "^9.25.0",
 		"eslint-plugin-react-hooks": "^5.2.0",

@@ -28,5 +28,6 @@ interface Window {
 			set: (key: string, value: string) => Promise<boolean>;
 		};
 		onJumpToSection: (callback: (section: string) => void) => void;
+		openUserData: () => Promise<void>;
 	};
 }

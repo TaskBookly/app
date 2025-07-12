@@ -37,4 +37,5 @@ contextBridge.exposeInMainWorld("electron", {
 		set: (key: string, value: string) => ipcRenderer.invoke("settings-set", key, value),
 	},
 	onJumpToSection: (callback) => ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section)),
+	openUserData: () => ipcRenderer.invoke("open-userdata"),
 } satisfies Window["electron"]);

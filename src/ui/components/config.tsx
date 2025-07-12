@@ -2,13 +2,12 @@ import React from "react";
 import IcoButton, { type SelectionMenuOption, type ActionMenuOption, type HintType, Hint, SelectionMenu, ActionMenu } from "./core";
 
 // Platform type for availableOn
-export type Platform = "windows" | "mac" | "linux" | "all";
+export type Platform = "windows" | "mac";
 
 export function getPlatform(): Platform {
 	const ua = typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
 	if (ua.includes("win")) return "windows";
 	if (ua.includes("mac")) return "mac";
-	if (ua.includes("linux")) return "linux";
 	return "windows"; // fallback
 }
 
@@ -74,9 +73,9 @@ interface ActionMenuProps extends ConfigDefaults {
 	};
 }
 
-const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint, availableOn = ["all"], children }) => {
+const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint, availableOn = ["windows", "mac"], children }) => {
 	const platform = getPlatform();
-	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+	if (availableOn && !availableOn.includes(platform)) return null;
 
 	return copyButton ? (
 		<ButtonActionConfig name={name} description={data.toString()} button={{ icon: "content_copy", tooltip: "Copy value" }} onClick={() => navigator.clipboard.writeText(data.toString())}>
@@ -97,9 +96,9 @@ const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint,
 	);
 };
 
-const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["all"], children }) => {
+const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["windows", "mac"], children }) => {
 	const platform = getPlatform();
-	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+	if (availableOn && !availableOn.includes(platform)) return null;
 
 	return (
 		<div data-settingtype="switch" className="setting">
@@ -119,9 +118,9 @@ const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = fal
 	);
 };
 
-const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, disabled = false, button, hint, onClick = () => {}, availableOn = ["all"], children }) => {
+const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, disabled = false, button, hint, onClick = () => {}, availableOn = ["windows", "mac"], children }) => {
 	const platform = getPlatform();
-	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+	if (availableOn && !availableOn.includes(platform)) return null;
 
 	return (
 		<div data-settingtype="actionButton" className="setting">
@@ -141,9 +140,9 @@ const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, di
 	);
 };
 
-const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["all"], children }) => {
+const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["windows", "mac"], children }) => {
 	const platform = getPlatform();
-	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+	if (availableOn && !availableOn.includes(platform)) return null;
 
 	return (
 		<div data-settingtype="actionButton" className="setting">
@@ -163,9 +162,9 @@ const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, 
 	);
 };
 
-const ActionMenuConfig: React.FC<ActionMenuProps> = ({ name, description, menu, disabled = false, hint, availableOn = ["all"], children }) => {
+const ActionMenuConfig: React.FC<ActionMenuProps> = ({ name, description, menu, disabled = false, hint, availableOn = ["windows", "mac"], children }) => {
 	const platform = getPlatform();
-	if (availableOn && !availableOn.includes("all") && !availableOn.includes(platform)) return null;
+	if (availableOn && !availableOn.includes(platform)) return null;
 
 	return (
 		<div data-settingtype="actionButton" className="setting">
