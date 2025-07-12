@@ -240,8 +240,8 @@ app.whenReady().then(() => {
 			allowRunningInsecureContent: false, // Prevent insecure content
 			experimentalFeatures: false, // Disable experimental web features
 		},
-		minWidth: 500,
-		minHeight: 250,
+		minWidth: 600,
+		minHeight: 500,
 		autoHideMenuBar: true, // Hide the default menu bar
 		titleBarStyle: "hiddenInset",
 		backgroundColor: "#000000",

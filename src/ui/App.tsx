@@ -49,23 +49,21 @@ function App() {
 
 	return (
 		<SettingsProvider>
-			<div id="rootFlex">
-				<div id="topbar"></div>
-				<div id="appContent">
-					<div id="sidebar">
-						<IcoButton id="toggleSbBtn" onClick={{ action: handleToggleSidebar }} icon="menu" />
+			<div id="topbar"></div>
+			<div id="appContent">
+				<div id="sidebar">
+					<IcoButton id="toggleSbBtn" onClick={{ action: handleToggleSidebar }} icon="menu" />
 
-						<IcoButton onClick={{ jumpToSection: "focus" }} text="Focus" icon="lightbulb_circle" />
-						<IcoButton onClick={{ jumpToSection: "settings" }} text="Settings" icon="build" />
-					</div>
-
-					<div id="sectionContainer">
-						<Section name="focus" displayTitle="Focus"></Section>
-						<Section name="settings" displayTitle="App Settings"></Section>
-					</div>
+					<IcoButton onClick={{ jumpToSection: "focus" }} text="Focus" icon="lightbulb_circle" />
+					<IcoButton onClick={{ jumpToSection: "settings" }} text="Settings" icon="build" />
 				</div>
-				<TooltipPortal tooltip={tooltip} />
+
+				<div id="sectionContainer">
+					<Section name="focus" displayTitle="Focus"></Section>
+					<Section name="settings" displayTitle="App Settings"></Section>
+				</div>
 			</div>
+			<TooltipPortal tooltip={tooltip} />
 		</SettingsProvider>
 	);
 }

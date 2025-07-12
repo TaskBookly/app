@@ -13,18 +13,20 @@ interface IcoButtonProps {
 	tooltip?: string;
 }
 
-const Container: React.FC<{ name: string; header?: { title: string; icon: string }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => (
-	<div data-container={name} id={id} className={`container ${className}`}>
-		{header ? (
-			<div className="containerHeader">
-				<span className="material-symbols-rounded">{header?.icon}</span>
-				<label>{header?.title}</label>
-			</div>
-		) : null}
+const Container: React.FC<{ name: string; header?: { title: string; icon: string }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => {
+	return children ? (
+		<div data-container={name} id={id} className={`container ${className}`}>
+			{header ? (
+				<div className="containerHeader">
+					<span className="material-symbols-rounded">{header?.icon}</span>
+					<label>{header?.title}</label>
+				</div>
+			) : null}
 
-		<div className="containerContent">{children}</div>
-	</div>
-);
+			<div className="containerContent">{children}</div>
+		</div>
+	) : null;
+};
 
 const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onClick, id, className, tooltip }) => {
 	const handleClick = () => {
