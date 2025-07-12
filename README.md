@@ -10,27 +10,26 @@ A simple task management and focus tool.
 3. Download the installer for your operating system:
    - Windows -> `TaskBookly.exe` *(64-bit)*
    - macOS -> `TaskBookly.dmg` *(Universal - Intel & Apple Silicon)*
-   - Linux -> `TaskBookly.AppImage` *(64-bit)*
 4. Run the installer
 5. Follow the installation instructions
 
 # 📦 Acknowledgements
 TaskBookly could not have been made without these awesome packages:
 
-## Core Technologies
+## Technologies
 
 -   **Electron** - Desktop application framework
 -   **React** - User interface library
 -   **TypeScript** - Type-safe JavaScript
 -   **Vite** - Build tool and development server
-
-## Development Dependencies
-
 -   **electron-builder** - Application packaging and distribution
 -   **ESLint** - Code linting and formatting
 -   **cross-env** - Cross-platform environment variables
 -   **npm-run-all** - Parallel script execution
 -   **concurrently** - Concurrent command execution
+
+## Contributors
+-   **[@3hantom](https://github.com/3hantom)** - Notification SFXs
 
 # ⚖️ License
 
