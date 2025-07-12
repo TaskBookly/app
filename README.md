@@ -14,7 +14,7 @@ A simple task management and focus tool.
 5. Follow the installation instructions
 
 # 📦 Acknowledgements
-TaskBookly could not have been made without these awesome packages:
+TaskBookly would not be where it is without the help of these awesome packages and people:
 
 ## Technologies
 
