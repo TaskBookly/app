@@ -1,6 +1,6 @@
 name: Feature Request
 description: Suggest an idea for TaskBookly
-type: "enhancement"
+type: "suggestion"
 body:
     - type: checkboxes
       attributes:
