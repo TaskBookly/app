@@ -15,7 +15,7 @@ body:
       attributes:
           label: Is this feature for a specific operating system?
           options:
-              - No
+              - Nope
               - Windows
               - macOS
           default: 0
