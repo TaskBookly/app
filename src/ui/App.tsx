@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./styles/App.css";
 import Section, { jumpToSection, clearAllHideTimeouts } from "./components/nav.tsx";
 import IcoButton from "./components/core.tsx";
@@ -7,6 +7,7 @@ import { SettingsProvider } from "./components/SettingsContext";
 
 function App() {
 	const tooltip = useTooltip();
+	const [isMaximized, setIsMaximized] = useState(false);
 
 	useEffect(() => {
 		// Jumps to section automatically when the app loads
@@ -24,6 +25,16 @@ function App() {
 
 		window.electron.sound.onplaySound((soundPath: string) => {
 			new Audio(`assets/audio/${soundPath}`).play();
+		});
+
+		// Get initial window state
+		window.electron.window.isMaximized().then((maximized: boolean) => {
+			setIsMaximized(maximized);
+		});
+
+		// Listen for window state changes
+		window.electron.window.onStateChanged((state: { maximized: boolean }) => {
+			setIsMaximized(state.maximized);
 		});
 
 		// Cleanup function to clear timeouts when section component unmounts
@@ -47,9 +58,27 @@ function App() {
 		window.electron.sidebar.toggle();
 	};
 
+	const handleWindowMinimize = () => {
+		window.electron.window.minimize();
+	};
+
+	const handleWindowMaximize = () => {
+		window.electron.window.maximize();
+	};
+
+	const handleWindowClose = () => {
+		window.electron.window.close();
+	};
+
 	return (
 		<SettingsProvider>
-			<div id="topbar"></div>
+			<div id="titlebar">
+				<div id="windowControls">
+					<IcoButton onClick={{ action: handleWindowMinimize }} icon="minimize" />
+					<IcoButton onClick={{ action: handleWindowMaximize }} icon={isMaximized ? "fullscreen_exit" : "fullscreen"} />
+					<IcoButton onClick={{ action: handleWindowClose }} icon="close" />
+				</div>
+			</div>
 			<div id="appContent">
 				<div id="sidebar">
 					<IcoButton id="toggleSbBtn" onClick={{ action: handleToggleSidebar }} icon="menu" />

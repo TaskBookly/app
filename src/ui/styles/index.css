@@ -99,7 +99,7 @@ button {
 	z-index: 0;
 	outline: none;
 
-	.material-symbols-rounded {
+	.buttonIcon {
 		font-size: 1.5em;
 		transition: color 0.25s;
 	}

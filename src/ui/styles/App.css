@@ -26,7 +26,7 @@
 
 	button {
 		overflow: hidden;
-		.material-symbols-rounded {
+		.buttonIcon {
 			font-size: 2em;
 		}
 	}
@@ -67,14 +67,14 @@
 	pointer-events: auto;
 }
 
-#topbar {
+#titlebar {
+	position: relative;
 	flex: 0 0 36px;
 	height: 36px;
 	width: 100vw;
 	background-color: var(--clr-surface-a10);
 	display: flex;
 	align-items: center;
-	padding-left: 70px;
 	font-size: 1.1em;
 	font-weight: 600;
 	-webkit-app-region: drag;
@@ -84,31 +84,51 @@
 	left: 0;
 }
 
-#topbar button,
-#topbar .window-controls {
-	-webkit-app-region: no-drag;
-}
-
-#topbar .window-controls {
+#titlebar #windowControls {
 	position: absolute;
-	left: 0;
+	top: 0;
+	right: 0;
 	display: flex;
-	align-items: center;
+	align-items: start;
+	width: auto;
 	height: 100%;
-	gap: 0;
 	-webkit-app-region: no-drag;
-}
 
-#topbar .window-controls button {
-	width: 36px;
-	height: 36px;
-	background-color: none;
-	border: none;
-	outline: none;
-	padding: 0;
-	margin: 0;
-	cursor: pointer;
-	-webkit-app-region: no-drag;
+	button {
+		background-color: transparent;
+		height: 100%;
+		aspect-ratio: 1 / 1.5;
+		border-radius: 0px;
+		border: none;
+		cursor: default;
+		transition: background-color 0.2s;
+		padding: 10px;
+
+		.buttonIcon {
+			transition: scale 0.2s, opacity 0.2s;
+			opacity: 60%;
+		}
+	}
+
+	button::before {
+		display: none;
+	}
+
+	button:hover:not(:disabled) {
+		.buttonIcon {
+			opacity: 100%;
+		}
+		background-color: var(--clr-surface-a20);
+		scale: inherit;
+	}
+
+	button:active:not(:disabled) {
+		.buttonIcon {
+			scale: 0.85;
+		}
+		background-color: var(--clr-surface-a30);
+		scale: inherit;
+	}
 }
 
 #appContent {

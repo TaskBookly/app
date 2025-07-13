@@ -27,6 +27,13 @@ interface Window {
 			get: (key: string) => Promise<string>;
 			set: (key: string, value: string) => Promise<boolean>;
 		};
+		window: {
+			minimize: () => void;
+			maximize: () => void;
+			close: () => void;
+			isMaximized: () => Promise<boolean>;
+			onStateChanged: (callback: (state: { maximized: boolean }) => void) => void;
+		};
 		onJumpToSection: (callback: (section: string) => void) => void;
 		openUserData: () => Promise<void>;
 	};

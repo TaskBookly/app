@@ -245,6 +245,7 @@ app.whenReady().then(() => {
 		autoHideMenuBar: true,
 		titleBarStyle: "hiddenInset",
 		backgroundColor: "#000000",
+		fullscreenable: false,
 	});
 
 	focusTimer = new FocusTimer(mainWindow, loadSettings());
@@ -377,6 +378,36 @@ app.whenReady().then(() => {
 		return true;
 	});
 
+	// Window control handlers
+	ipcMain.on("window-minimize", () => {
+		mainWindow.minimize();
+	});
+
+	ipcMain.on("window-maximize", () => {
+		if (mainWindow.isMaximized()) {
+			mainWindow.restore();
+		} else {
+			mainWindow.maximize();
+		}
+	});
+
+	ipcMain.on("window-close", () => {
+		mainWindow.close();
+	});
+
+	ipcMain.handle("window-is-maximized", () => {
+		return mainWindow.isMaximized();
+	});
+
+	// Listen for window state changes
+	mainWindow.on("maximize", () => {
+		mainWindow.webContents.send("window-state-changed", { maximized: true });
+	});
+
+	mainWindow.on("unmaximize", () => {
+		mainWindow.webContents.send("window-state-changed", { maximized: false });
+	});
+
 	if (isDev()) {
 		mainWindow.loadURL("http://localhost:5123");
 	} else {
@@ -384,4 +415,8 @@ app.whenReady().then(() => {
 	}
 
 	updateMenu();
+});
+
+app.on("window-all-closed", () => {
+	app.quit();
 });
