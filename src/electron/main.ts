@@ -292,7 +292,7 @@ app.whenReady().then(() => {
 			const notif = new Notification({
 				title: "Update Available",
 				subtitle: `v${data.version}`,
-				body: "A new TaskBookly update is available to download.",
+				body: "A new TaskBookly update is available to download!",
 				silent: true,
 			});
 
@@ -300,30 +300,6 @@ app.whenReady().then(() => {
 			notif.show();
 			mainWindow.webContents.send("play-sound", "notifs/info.ogg");
 		}
-	});
-
-	autoUpdater.on("update-not-available", () => {
-		if (Notification.isSupported()) {
-			const notif = new Notification({
-				title: "No updates available",
-				body: "You're all up to date!",
-				silent: true,
-			});
-			notif.show();
-			mainWindow.webContents.send("play-sound", "notifs/info.ogg");
-		}
-	});
-
-	autoUpdater.on("error", (err) => {
-		const notif = new Notification({
-			title: "An error occurred when checking for updates",
-			subtitle: err.name,
-			body: err.message,
-			silent: true,
-		});
-
-		notif.show();
-		mainWindow.webContents.send("play-sound", "notifs/error.ogg");
 	});
 
 	ipcMain.on("toggle-sidebar", () => {
