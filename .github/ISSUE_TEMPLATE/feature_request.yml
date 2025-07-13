@@ -1,0 +1,31 @@
+name: Feature Request
+description: Suggest an idea for TaskBookly
+type: "enhancement"
+body:
+    - type: checkboxes
+      attributes:
+          label: Confirmation Checklist
+          description: Make sure the following apply before writing your suggestion.
+          options:
+              - label: I have searched Issues and did not find one that matches what I want to suggest
+                required: true
+              - label: This idea is not present on the latest version of TaskBookly
+                required: true
+    - type: dropdown
+      attributes:
+          label: Is this feature for a specific operating system?
+          options:
+              - No
+              - Windows
+              - macOS
+          default: 0
+      validations:
+          required: true
+    - type: textarea
+      attributes:
+          label: Suggestion
+          description: |
+              Please be as detailed as possible in your response.
+              Any concept art and alternative solutions is greatly appreciated!
+      validations:
+          required: true

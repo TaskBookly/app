@@ -13,8 +13,7 @@ body:
                 required: true
     - type: dropdown
       attributes:
-          label: Operating System(s)
-          description: What operating systems are you using?
+          label: What operating system(s) are you using?
           multiple: true
           options:
               - Windows
