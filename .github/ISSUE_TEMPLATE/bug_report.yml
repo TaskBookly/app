@@ -1,0 +1,38 @@
+name: Bug Report
+description: Report a bug in TaskBookly
+type: "bug"
+body:
+    - type: checkboxes
+      attributes:
+          label: Confirmation Checklist
+          description: Make sure the following apply before writing your issue.
+          options:
+              - label: I have searched Issues and did not find one that matches what I want to report
+                required: true
+              - label: This bug is present on the latest version of TaskBookly
+                required: true
+    - type: dropdown
+      attributes:
+          label: What operating system(s) are you reporting this bug to be present on?
+          multiple: true
+          options:
+              - Windows
+              - macOS
+          validations:
+              required: true
+    - type: textarea
+      attributes:
+          label: Expected Behavior
+          description: What did you expect to happen?
+          validations:
+              required: true
+    - type: textarea
+      attributes:
+          label: Actual Behavior
+          description: What ended up happening instead?
+          validations:
+              required: true
+    - type: textarea
+      attributes:
+          label: Additional Information
+          description: If there is any other information you would like to share, such as steps to produce the bug, please share it here.
