@@ -16,7 +16,7 @@ A simple task management and focus tool.
 # 📦 Acknowledgements
 TaskBookly would not be where it is without the help of these awesome packages and people:
 
-## Technologies
+## Technologies & Tools
 
 -   **Electron** - Desktop application framework
 -   **React** - User interface library
@@ -27,6 +27,7 @@ TaskBookly would not be where it is without the help of these awesome packages a
 -   **cross-env** - Cross-platform environment variables
 -   **npm-run-all** - Parallel script execution
 -   **concurrently** - Concurrent command execution
+-   **[Catppuccin](https://github.com/catppuccin/catppuccin)** - Catppuccin theme
 
 ## Contributors
 -   **[@3hantom](https://github.com/3hantom)** - Notification SFXs
