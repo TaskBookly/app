@@ -18,7 +18,24 @@ const Scaffolding: React.FC<{ children?: React.ReactNode }> = ({ children }) => 
 };
 
 const Container: React.FC<{ name: string; header?: { title: string; icon: string }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => {
-	return children ? (
+	const [isVisible, setIsVisible] = React.useState(true);
+	const contentRef = React.useRef<HTMLDivElement>(null);
+
+	React.useEffect(() => {
+		if (contentRef.current) {
+			const hasVisibleContent =
+				contentRef.current.children.length > 0 &&
+				Array.from(contentRef.current.children).some((child) => {
+					const element = child as HTMLElement;
+					return element.offsetHeight > 0 || element.offsetWidth > 0 || element.textContent?.trim();
+				});
+			setIsVisible(hasVisibleContent);
+		}
+	}, [children]);
+
+	if (!children || !isVisible) return null;
+
+	return (
 		<div data-container={name} id={id} className={`container ${className}`}>
 			{header ? (
 				<div className="containerHeader">
@@ -27,9 +44,11 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: string
 				</div>
 			) : null}
 
-			<div className="containerContent">{children}</div>
+			<div className="containerContent" ref={contentRef}>
+				{children}
+			</div>
 		</div>
-	) : null;
+	);
 };
 
 const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onClick, id, className, tooltip }) => {

@@ -132,7 +132,7 @@ const Settings: React.FC = () => {
 				<>
 					<Container name="settings_misc">
 						<Scaffolding>
-							<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["windows"]} />
+							<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["mac"]} />
 						</Scaffolding>
 					</Container>
 					<Container name="settings_reset">
