@@ -26,6 +26,6 @@ body:
           label: Suggestion
           description: |
               Please be as detailed as possible in your response.
-              Any concept art and alternative solutions is greatly appreciated!
+              Any concept art and alternative solutions are greatly appreciated!
       validations:
           required: true
