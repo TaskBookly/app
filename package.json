@@ -17,7 +17,7 @@
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
-		"publish": "electron-builder --publish=always",
+		"publish": "npm run transpile:electron && npm run build && electron-builder --mac --win --publish=always",
 		"dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal",
 		"dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
 		"test:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal --config.mac.target=dir --publish=never",

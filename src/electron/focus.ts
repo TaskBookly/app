@@ -139,7 +139,6 @@ class FocusTimer extends EventEmitter {
 			}
 
 			if (this.status === "paused") {
-				const now = Date.now();
 				const elapsedTime = Math.floor((this.pausedTime - this.sessionStartTime - this.totalPausedDuration) / 1000);
 				const sessionDuration = FocusTimer.sessions[this.session] * 60;
 				this.timeLeft = sessionDuration - elapsedTime + this.totalAddedTime;
