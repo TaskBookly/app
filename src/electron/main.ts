@@ -234,15 +234,15 @@ app.whenReady().then(() => {
 		webPreferences: {
 			preload: getPreloadPath(),
 			devTools: isDev(),
-			nodeIntegration: false, // Disable Node.js integration in renderer
-			contextIsolation: true, // Enable context isolation
-			webSecurity: true, // Enable web security
-			allowRunningInsecureContent: false, // Prevent insecure content
-			experimentalFeatures: false, // Disable experimental web features
+			nodeIntegration: false,
+			contextIsolation: true,
+			webSecurity: true,
+			allowRunningInsecureContent: false,
+			experimentalFeatures: false,
 		},
 		minWidth: 600,
 		minHeight: 500,
-		autoHideMenuBar: true, // Hide the default menu bar
+		autoHideMenuBar: true,
 		titleBarStyle: "hiddenInset",
 		backgroundColor: "#000000",
 	});
