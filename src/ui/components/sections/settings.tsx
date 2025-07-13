@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, type SelectionMenuOption, Hint } from "../core";
+import { Scaffolding, Container, type SelectionMenuOption, Hint } from "../core";
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
 import { useSettings } from "../SettingsContext";
@@ -77,11 +77,11 @@ const Settings: React.FC = () => {
 			content: (
 				<>
 					<Container name="settings_general">
-						<div>
+						<Scaffolding>
 							<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
 							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
 							<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
-						</div>
+						</Scaffolding>
 					</Container>
 					<Container name="settings_focus" header={{ title: "Focus", icon: "timer" }}>
 						{(() => {
@@ -98,13 +98,13 @@ const Settings: React.FC = () => {
 							return null;
 						})()}
 
-						<div>
+						<Scaffolding>
 							<SwitchConfig name="Transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
 							<SelectionMenuConfig name="Work period duration" menu={{ options: focusSessionWorkDurationOptions }} value={getSetting("workPeriodDuration")} onChange={(v) => setSetting("workPeriodDuration", v)} />
 							<SelectionMenuConfig name="Break period duration" menu={{ options: focusSessionBreakDurationOptions }} value={getSetting("breakPeriodDuration")} onChange={(v) => setSetting("breakPeriodDuration", v)} />
 
 							{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
-						</div>
+						</Scaffolding>
 					</Container>
 				</>
 			),
@@ -116,10 +116,10 @@ const Settings: React.FC = () => {
 			content: (
 				<>
 					<Container name="settings_notifs">
-						<div>
+						<Scaffolding>
 							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
 							<SelectionMenuConfig name="Task deadlines" menu={{ options: notifOptions }} value={getSetting("notifsTasks")} onChange={(v) => setSetting("notifsTasks", v)} />
-						</div>
+						</Scaffolding>
 					</Container>
 				</>
 			),
@@ -131,12 +131,12 @@ const Settings: React.FC = () => {
 			content: (
 				<>
 					<Container name="settings_misc">
-						<div>
+						<Scaffolding>
 							<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["windows"]} />
-						</div>
+						</Scaffolding>
 					</Container>
 					<Container name="settings_reset">
-						<div>
+						<Scaffolding>
 							<ActionMenuConfig
 								name="Reset all settings to default"
 								menu={{
@@ -159,7 +159,7 @@ const Settings: React.FC = () => {
 									],
 								}}
 							/>
-						</div>
+						</Scaffolding>
 					</Container>
 				</>
 			),
@@ -171,12 +171,12 @@ const Settings: React.FC = () => {
 			content: (
 				<>
 					<Container name="settings_clientData">
-						<div>
+						<Scaffolding>
 							<InfoConfig name="Version" data={appVersion} copyButton />
 							<InfoConfig name="Node environment" data={nodeEnv} copyButton />
 							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
 							<ButtonActionConfig name="UserData" button={{ text: "Open Folder", icon: "folder_open" }} onClick={handleOpenSettingsDirectory} />
-						</div>
+						</Scaffolding>
 					</Container>
 					<Container name="settings_hintTypes">
 						<Hint type="info" label="Info hint type" />
@@ -186,7 +186,7 @@ const Settings: React.FC = () => {
 						<Hint type="processing" label="Processing hint type" />
 					</Container>
 					<Container name="settings_configComponents">
-						<div>
+						<Scaffolding>
 							<SelectionMenuConfig
 								name="SelectionMenuConfig (Empty)"
 								menu={{
@@ -304,7 +304,7 @@ const Settings: React.FC = () => {
 							/>
 							<InfoConfig name="InfoConfig" data="Key/value pair" copyButton />
 							<InfoConfig name="InfoConfig (No Copy)" data="Key/value pair (No copy)" />
-						</div>
+						</Scaffolding>
 					</Container>
 				</>
 			),
