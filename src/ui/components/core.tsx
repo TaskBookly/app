@@ -13,8 +13,8 @@ interface IcoButtonProps {
 	tooltip?: string;
 }
 
-const Scaffolding: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-	return children ? <div>{children}</div> : null;
+const ContainerGroup: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+	return children ? <div className="containerGroup">{children}</div> : null;
 };
 
 const Container: React.FC<{ name: string; header?: { title: string; icon: string }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => {
@@ -323,6 +323,6 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 	);
 };
 
-export { Scaffolding, Container, SelectionMenu, ActionMenu, Hint };
+export { ContainerGroup, Container, SelectionMenu, ActionMenu, Hint };
 export type { SelectionMenuOption, ActionMenuOption, HintType };
 export default IcoButton;

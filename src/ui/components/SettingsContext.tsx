@@ -18,9 +18,13 @@ const defaultSettings: Setting[] = [
 	{ key: "theme", value: "dark" },
 	{ key: "autoCheckForUpdates", value: "true" },
 	{ key: "transitionPeriodsEnabled", value: "false" },
+	{ key: "breakChargingEnabled", value: "true" },
 	{ key: "workPeriodDuration", value: "25" },
 	{ key: "breakPeriodDuration", value: "10" },
 	{ key: "transitionPeriodDuration", value: "3" },
+	{ key: "breakChargeExtensionAmount", value: "10" },
+	{ key: "breakChargeCooldown", value: "0" },
+	{ key: "workTimePerCharge", value: "60" },
 
 	// Platform-specific
 	...(platform === "windows" ? [{ key: "launchOnLogin", value: "false" }] : []),

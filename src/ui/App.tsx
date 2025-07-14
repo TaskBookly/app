@@ -4,6 +4,7 @@ import Section, { jumpToSection, clearAllHideTimeouts } from "./components/nav.t
 import IcoButton from "./components/core.tsx";
 import { useTooltip, TooltipPortal } from "./components/Tooltip";
 import { SettingsProvider } from "./components/SettingsContext";
+import { getPlatform } from "./components/config.tsx";
 
 function App() {
 	const tooltip = useTooltip();
@@ -74,9 +75,13 @@ function App() {
 		<SettingsProvider>
 			<div id="titlebar">
 				<div id="windowControls">
-					<IcoButton onClick={{ action: handleWindowMinimize }} icon="minimize" />
-					<IcoButton onClick={{ action: handleWindowMaximize }} icon={isMaximized ? "fullscreen_exit" : "fullscreen"} />
-					<IcoButton onClick={{ action: handleWindowClose }} icon="close" />
+					{getPlatform() !== "mac" ? (
+						<>
+							<IcoButton onClick={{ action: handleWindowMinimize }} icon="minimize" />
+							<IcoButton onClick={{ action: handleWindowMaximize }} icon={isMaximized ? "fullscreen_exit" : "fullscreen"} />
+							<IcoButton onClick={{ action: handleWindowClose }} icon="close" />
+						</>
+					) : null}
 				</div>
 			</div>
 			<div id="appContent">

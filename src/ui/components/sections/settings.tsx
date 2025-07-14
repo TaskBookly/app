@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Scaffolding, Container, type SelectionMenuOption, Hint } from "../core";
+import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../core";
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
 import { useSettings } from "../SettingsContext";
@@ -54,7 +54,6 @@ const Settings: React.FC = () => {
 	];
 
 	const focusSessionWorkDurationOptions: SelectionMenuOption[] = [
-		{ label: "test", value: "0.33" },
 		{ label: "20 minutes", value: "20" },
 		{ label: "25 minutes", value: "25" },
 		{ label: "30 minutes", value: "30" },
@@ -69,6 +68,28 @@ const Settings: React.FC = () => {
 		{ label: "20 minutes", value: "20" },
 	];
 
+	const breakChargeExtensionAmountOptions: SelectionMenuOption[] = [
+		{ label: "5 minutes", value: "5" },
+		{ label: "10 minutes", value: "10" },
+		{ label: "15 minutes", value: "15" },
+	];
+
+	const breakChargeCooldownOptions: SelectionMenuOption[] = [
+		{ label: "No cooldown", value: "0" },
+		{ label: "1 break", value: "1" },
+		{ label: "2 breaks", value: "2" },
+		{ label: "3 breaks", value: "3" },
+		{ label: "4 breaks", value: "4" },
+		{ label: "5 breaks", value: "5" },
+	];
+
+	const workTimePerChargeOptions: SelectionMenuOption[] = [
+		{ label: "40 minutes", value: "40" },
+		{ label: "60 minutes", value: "60" },
+		{ label: "1.5 hours", value: "90" },
+		{ label: "2 hours", value: "120" },
+	];
+
 	const tabs: Tab[] = [
 		{
 			label: "General",
@@ -77,34 +98,42 @@ const Settings: React.FC = () => {
 			content: (
 				<>
 					<Container name="settings_general">
-						<Scaffolding>
+						<ContainerGroup>
 							<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
 							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
 							<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
-						</Scaffolding>
+						</ContainerGroup>
 					</Container>
 					<Container name="settings_focus" header={{ title: "Focus", icon: "timer" }}>
-						{(() => {
-							const workDuration = parseInt(getSetting("workPeriodDuration"));
-							const breakDuration = parseInt(getSetting("breakPeriodDuration"));
-							const ratio = breakDuration / workDuration;
-
-							if (ratio <= 0.17) {
-								return <Hint type="warning" label="Your breaks may be too short for sustained focus. Consider longer breaks." />;
-							}
-							if (ratio >= 0.75) {
-								return <Hint type="warning" label="Your breaks are unusually long compared to work time. Consider adjusting the balance." />;
-							}
-							return null;
-						})()}
-
-						<Scaffolding>
+						<ContainerGroup>
 							<SwitchConfig name="Transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
+							<SwitchConfig name="Break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
+						</ContainerGroup>
+						<ContainerGroup>
+							{(() => {
+								const workDuration = parseInt(getSetting("workPeriodDuration"));
+								const breakDuration = parseInt(getSetting("breakPeriodDuration"));
+								const ratio = breakDuration / workDuration;
+
+								if (ratio <= 0.17) {
+									return <Hint type="warning" label="Your breaks may be too short for sustained focus. Consider longer breaks." />;
+								}
+								if (ratio >= 0.75) {
+									return <Hint type="warning" label="Your breaks are unusually long compared to work time. Consider adjusting the balance." />;
+								}
+								return null;
+							})()}
 							<SelectionMenuConfig name="Work period duration" menu={{ options: focusSessionWorkDurationOptions }} value={getSetting("workPeriodDuration")} onChange={(v) => setSetting("workPeriodDuration", v)} />
 							<SelectionMenuConfig name="Break period duration" menu={{ options: focusSessionBreakDurationOptions }} value={getSetting("breakPeriodDuration")} onChange={(v) => setSetting("breakPeriodDuration", v)} />
-
 							{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
-						</Scaffolding>
+						</ContainerGroup>
+						{getSetting("breakChargingEnabled") === "true" ? (
+							<ContainerGroup>
+								<SelectionMenuConfig name="Charge extension amount" description="The amount of time charging breaks extends them by." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
+								<SelectionMenuConfig name="Charge cooldown time" description="The amount of break sessions needed to pass before another charge can be used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
+								<SelectionMenuConfig name="Work time per charge" description="The amount of work time required to earn another break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting("workTimePerCharge")} onChange={(v) => setSetting("workTimePerCharge", v)} />
+							</ContainerGroup>
+						) : null}
 					</Container>
 				</>
 			),
@@ -116,10 +145,9 @@ const Settings: React.FC = () => {
 			content: (
 				<>
 					<Container name="settings_notifs">
-						<Scaffolding>
+						<ContainerGroup>
 							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
-							<SelectionMenuConfig name="Task deadlines" menu={{ options: notifOptions }} value={getSetting("notifsTasks")} onChange={(v) => setSetting("notifsTasks", v)} />
-						</Scaffolding>
+						</ContainerGroup>
 					</Container>
 				</>
 			),
@@ -131,12 +159,12 @@ const Settings: React.FC = () => {
 			content: (
 				<>
 					<Container name="settings_misc">
-						<Scaffolding>
+						<ContainerGroup>
 							<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["mac"]} />
-						</Scaffolding>
+						</ContainerGroup>
 					</Container>
 					<Container name="settings_reset">
-						<Scaffolding>
+						<ContainerGroup>
 							<ActionMenuConfig
 								name="Reset all settings to default"
 								menu={{
@@ -159,7 +187,7 @@ const Settings: React.FC = () => {
 									],
 								}}
 							/>
-						</Scaffolding>
+						</ContainerGroup>
 					</Container>
 				</>
 			),
@@ -171,12 +199,12 @@ const Settings: React.FC = () => {
 			content: (
 				<>
 					<Container name="settings_clientData">
-						<Scaffolding>
+						<ContainerGroup>
 							<InfoConfig name="Version" data={appVersion} copyButton />
 							<InfoConfig name="Node environment" data={nodeEnv} copyButton />
 							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
 							<ButtonActionConfig name="UserData" button={{ text: "Open Folder", icon: "folder_open" }} onClick={handleOpenSettingsDirectory} />
-						</Scaffolding>
+						</ContainerGroup>
 					</Container>
 					<Container name="settings_hintTypes">
 						<Hint type="info" label="Info hint type" />
@@ -186,7 +214,7 @@ const Settings: React.FC = () => {
 						<Hint type="processing" label="Processing hint type" />
 					</Container>
 					<Container name="settings_configComponents">
-						<Scaffolding>
+						<ContainerGroup>
 							<SelectionMenuConfig
 								name="SelectionMenuConfig (Empty)"
 								menu={{
@@ -304,7 +332,7 @@ const Settings: React.FC = () => {
 							/>
 							<InfoConfig name="InfoConfig" data="Key/value pair" copyButton />
 							<InfoConfig name="InfoConfig (No Copy)" data="Key/value pair (No copy)" />
-						</Scaffolding>
+						</ContainerGroup>
 					</Container>
 				</>
 			),

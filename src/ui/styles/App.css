@@ -280,9 +280,14 @@
 	}
 }
 
-.setting:not(:last-child) {
+.containerGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+}
+
+.containerGroup:not(:last-child) {
 	border-bottom: 1.5px solid var(--clr-surface-a20);
-	margin-bottom: 1em;
 	padding-bottom: 1em;
 }
 
