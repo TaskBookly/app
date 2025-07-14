@@ -276,11 +276,7 @@ class FocusTimer extends EventEmitter {
 			notif.show();
 		}
 		if (FocusTimer.settings.notifsFocus === "soundOnly" || FocusTimer.settings.notifsFocus === "all") {
-			if (this.session === "transition") {
-				this.mainWindow.webContents.send("play-sound", "notifs/sessionTransition.ogg");
-			} else {
-				this.mainWindow.webContents.send("play-sound", "notifs/sessionComplete.ogg");
-			}
+			this.mainWindow.webContents.send("play-sound", "notifs/sessionComplete.ogg");
 		}
 
 		this.nextSession();
