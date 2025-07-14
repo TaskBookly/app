@@ -1,5 +1,5 @@
 import { app } from "electron";
-import { isDev } from "./util.js";
+import { isDev } from "./utils.js";
 import path from "path";
 
 export function getPreloadPath(): string {

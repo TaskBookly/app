@@ -1,32 +1,32 @@
 @import url("./theme.css");
-@import "./Tooltip.css";
+@import url("./Tooltip.css");
 
-#rootFlex {
+#root {
 	display: flex;
 	flex-direction: column;
 	height: 100vh;
 	width: 100vw;
 	overflow: hidden;
-	background: var(--color-bg-main);
+	background-color: var(--clr-surface-a10);
 }
 
 #sidebar {
 	display: inline-flex;
 	flex-direction: column;
 	flex: 0 0 250px;
-	background-color: var(--color-bg-secondary);
+	background-color: var(--clr-surface-a10);
 	padding: 20px 1em;
-	box-shadow: var(--color-shadow);
 	gap: 1em;
 	overflow: auto;
 	box-sizing: border-box;
+	min-height: 100vh;
 	max-height: 100vh;
 	transition: flex-basis 0.3s ease;
 	position: relative;
 
 	button {
 		overflow: hidden;
-		.material-symbols-rounded {
+		.buttonIcon {
 			font-size: 2em;
 		}
 	}
@@ -67,15 +67,14 @@
 	pointer-events: auto;
 }
 
-#topbar {
+#titlebar {
+	position: relative;
 	flex: 0 0 36px;
 	height: 36px;
 	width: 100vw;
-	background: var(--color-bg-header);
-	color: var(--color-text-main);
+	background-color: var(--clr-surface-a10);
 	display: flex;
 	align-items: center;
-	padding-left: 70px; /* leave space for window controls */
 	font-size: 1.1em;
 	font-weight: 600;
 	-webkit-app-region: drag;
@@ -85,31 +84,51 @@
 	left: 0;
 }
 
-#topbar button,
-#topbar .window-controls {
-	-webkit-app-region: no-drag;
-}
-
-#topbar .window-controls {
+#titlebar #windowControls {
 	position: absolute;
-	left: 0;
+	top: 0;
+	right: 0;
 	display: flex;
-	align-items: center;
+	align-items: start;
+	width: auto;
 	height: 100%;
-	gap: 0;
 	-webkit-app-region: no-drag;
-}
 
-#topbar .window-controls button {
-	width: 36px;
-	height: 36px;
-	background: none;
-	border: none;
-	outline: none;
-	padding: 0;
-	margin: 0;
-	cursor: pointer;
-	-webkit-app-region: no-drag;
+	button {
+		background-color: transparent;
+		height: 100%;
+		aspect-ratio: 1 / 1.5;
+		border-radius: 0px;
+		border: none;
+		cursor: default;
+		transition: background-color 0.2s;
+		padding: 10px;
+
+		.buttonIcon {
+			transition: scale 0.2s, opacity 0.2s;
+			opacity: 60%;
+		}
+	}
+
+	button::before {
+		display: none;
+	}
+
+	button:hover:not(:disabled) {
+		.buttonIcon {
+			opacity: 100%;
+		}
+		background-color: var(--clr-surface-a20);
+		scale: inherit;
+	}
+
+	button:active:not(:disabled) {
+		.buttonIcon {
+			scale: 0.85;
+		}
+		background-color: var(--clr-surface-a30);
+		scale: inherit;
+	}
 }
 
 #appContent {
@@ -128,6 +147,10 @@
 	overflow: hidden;
 	position: relative;
 	container-type: inline-size;
+	background-color: var(--clr-surface-a0);
+	border-top-left-radius: 20px;
+	outline: 1px solid var(--clr-surface-a20);
+	outline-offset: -1px;
 
 	.sectionLabel {
 		font-size: 3em;
@@ -138,8 +161,9 @@
 
 #sectionContainer > .section {
 	position: relative;
-	padding: 20px 25px;
-	max-height: 100vh;
+	padding: 25px;
+	height: 100%;
+	max-height: 100%;
 	box-sizing: border-box;
 	overflow: auto;
 }
@@ -156,14 +180,17 @@
 #sectionContainer > .section .container {
 	position: relative;
 	border-radius: 1em;
-	background-color: var(--color-bg-secondary);
+	background-color: var(--clr-surface-a10);
 	box-sizing: border-box;
-	margin-block: 20px;
+	margin-top: 20px;
 	overflow: hidden;
-	outline: 1.5px solid var(--color-outline);
+	outline: 1px solid var(--clr-surface-a20);
 
 	.containerContent {
+		display: flex;
+		flex-direction: column;
 		padding: 20px;
+		gap: 1em;
 	}
 
 	.containerHeader {
@@ -173,8 +200,7 @@
 		left: 0;
 		padding: 10px 20px 10px 20px;
 		gap: 10px;
-		color: var(--color-text-main);
-		background-color: var(--color-bg-accent);
+		background-color: var(--clr-surface-a20);
 		padding-bottom: 10px;
 
 		span,
@@ -191,7 +217,6 @@
 }
 
 .tabCont {
-	margin-block: 20px;
 	display: flex;
 	flex-direction: column;
 
@@ -202,6 +227,7 @@
 		overflow-y: visible;
 		display: flex;
 		gap: 1em;
+
 		button {
 			width: 100%;
 		}
@@ -221,12 +247,12 @@
 	align-items: center;
 }
 
-.setting > .settingHint {
+.hint {
 	display: flex;
-	background: var(--color-glow-accent-35);
-	color: var(--color-text-main);
+	background-color: var(--clr-hint-info-bg);
+	color: var(--clr-hint-info-text);
 	padding: 1em 1em;
-	border-radius: 0.6em;
+	border-radius: 1em;
 	gap: 0.5em;
 	align-items: start;
 
@@ -240,29 +266,32 @@
 	}
 }
 
-.setting > .settingHint.settingHint-warning {
-	background: var(--color-hint-warning-bg);
-	color: var(--color-hint-warning-text);
-	box-shadow: 0 0 20px 0 var(--color-hint-glow-warning);
+.hint.hintType-warning {
+	background-color: var(--clr-hint-warning-bg);
+	color: var(--clr-hint-warning-text);
 }
-.setting > .settingHint.settingHint-error {
-	background: var(--color-hint-error-bg);
-	color: var(--color-hint-error-text);
-	box-shadow: 0 0 20px 0 var(--color-hint-glow-error);
+.hint.hintType-error {
+	background-color: var(--clr-hint-error-bg);
+	color: var(--clr-hint-error-text);
 }
-.setting > .settingHint.settingHint-success {
-	background: var(--color-hint-success-bg);
-	color: var(--color-hint-success-text);
+.hint.hintType-success {
+	background-color: var(--clr-hint-success-bg);
+	color: var(--clr-hint-success-text);
 }
-.setting > .settingHint.settingHint-processing {
+.hint.hintType-processing {
 	.hintIcon {
 		animation: spin 1s linear infinite;
 	}
 }
 
-.setting:not(:last-child) {
-	border-bottom: 1.5px solid var(--color-bg-main);
-	margin-bottom: 1em;
+.containerGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+}
+
+.containerGroup:not(:last-child) {
+	border-bottom: 1.5px solid var(--clr-surface-a20);
 	padding-bottom: 1em;
 }
 
@@ -277,14 +306,144 @@
 
 	.settingLabel {
 		font-size: 1.2em;
-		color: var(--color-text-main);
 	}
 	.settingDesc {
 		font-size: 1em;
-		color: var(--color-text-secondary);
+		opacity: 70%;
 		margin: 0;
 		font-weight: 500;
 		white-space: pre-line;
+	}
+}
+
+div.buttonGroup {
+	display: flex;
+	justify-content: center;
+	gap: 1em;
+}
+
+div.groupList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+}
+
+#chargingProgress {
+	background-color: var(--clr-surface-a20);
+	height: 1.25em;
+	border-radius: 1em;
+	overflow: visible;
+
+	div {
+		border-radius: 1em 0em 0em 1em;
+		outline: 2.5px solid var(--clr-primary-a30);
+		outline-offset: -2.5px;
+		transition: width 5s ease;
+		width: 34%;
+		height: 100%;
+		background-color: var(--clr-primary-a0);
+	}
+}
+
+/* Charging effect styles */
+#chargingProgress {
+	transition: all 0.3s ease;
+}
+
+.charging-effect {
+	position: relative;
+	overflow: hidden;
+	background: linear-gradient(90deg, var(--clr-primary-a0) 0%, var(--clr-primary-a30) 50%, var(--clr-primary-a0) 100%);
+	animation: chargeGlow 2s ease-in-out infinite alternate, chargingShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes chargeGlow {
+	0% {
+		box-shadow: 0 0 5px rgba(71, 189, 250, 0.3);
+	}
+	100% {
+		box-shadow: 0 0 20px rgba(71, 189, 250, 0.8), 0 0 40px rgba(71, 189, 250, 0.4);
+	}
+}
+
+@keyframes chargingShimmer {
+	0%,
+	100% {
+		filter: brightness(1);
+	}
+	50% {
+		filter: brightness(1.3);
+	}
+}
+
+.charging-effect::before {
+	content: "";
+	position: absolute;
+	top: -2px;
+	left: -2px;
+	right: -2px;
+	bottom: -2px;
+	background: linear-gradient(45deg, var(--clr-primary-a0), var(--clr-primary-a30), var(--clr-primary-a0));
+	border-radius: 1em;
+	z-index: -1;
+	animation: electricPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes electricPulse {
+	0%,
+	100% {
+		opacity: 0.6;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.05);
+	}
+}
+
+.charging-effect::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+	animation: chargingStreak 2s ease-in-out infinite;
+}
+
+@keyframes chargingStreak {
+	0% {
+		left: -100%;
+	}
+	100% {
+		left: 100%;
+	}
+}
+
+#timerCont {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	text-align: center;
+
+	label#sessionType {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		vertical-align: middle;
+		gap: 0.5em;
+		font-size: 1em;
+		color: var(--clr-primary-a50);
+	}
+
+	label#sessionTimer {
+		font-size: 3.5em;
+		font-weight: 900;
+	}
+
+	label#sessionEndTime {
+		opacity: 60%;
 	}
 }
 

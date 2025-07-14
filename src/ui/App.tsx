@@ -1,12 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./styles/App.css";
-import Section, { jumpToSection } from "./components/nav.tsx";
+import Section, { jumpToSection, clearAllHideTimeouts } from "./components/nav.tsx";
 import IcoButton from "./components/core.tsx";
 import { useTooltip, TooltipPortal } from "./components/Tooltip";
 import { SettingsProvider } from "./components/SettingsContext";
+import { getPlatform } from "./components/config.tsx";
 
 function App() {
 	const tooltip = useTooltip();
+	const [isMaximized, setIsMaximized] = useState(false);
 
 	useEffect(() => {
 		// Jumps to section automatically when the app loads
@@ -21,6 +23,25 @@ function App() {
 		window.electron.sidebar.onState((collapsed: boolean) => {
 			setSidebarClass(collapsed);
 		});
+
+		window.electron.sound.onplaySound((soundPath: string) => {
+			new Audio(`assets/audio/${soundPath}`).play();
+		});
+
+		// Get initial window state
+		window.electron.window.isMaximized().then((maximized: boolean) => {
+			setIsMaximized(maximized);
+		});
+
+		// Listen for window state changes
+		window.electron.window.onStateChanged((state: { maximized: boolean }) => {
+			setIsMaximized(state.maximized);
+		});
+
+		// Cleanup function to clear timeouts when section component unmounts
+		return () => {
+			clearAllHideTimeouts();
+		};
 	}, []);
 
 	const setSidebarClass = (collapsed: boolean) => {
@@ -38,27 +59,45 @@ function App() {
 		window.electron.sidebar.toggle();
 	};
 
+	const handleWindowMinimize = () => {
+		window.electron.window.minimize();
+	};
+
+	const handleWindowMaximize = () => {
+		window.electron.window.maximize();
+	};
+
+	const handleWindowClose = () => {
+		window.electron.window.close();
+	};
+
 	return (
 		<SettingsProvider>
-			<div id="rootFlex">
-				<div id="topbar"></div>
-				<div id="appContent">
-					<div id="sidebar">
-						<button id="toggleSbBtn" onClick={handleToggleSidebar}>
-							<span className="material-symbols-rounded">menu</span>
-						</button>
-						<IcoButton onClick={{ jumpToSection: "focus" }} text="Focus" icon="lightbulb_circle" />
-						<IcoButton onClick={{ jumpToSection: "tasks" }} text="To-do" icon="priority" disabled={true} />
-						<IcoButton onClick={{ jumpToSection: "settings" }} text="Settings" icon="build" />
-					</div>
-
-					<div id="sectionContainer">
-						<Section name="focus" displayTitle="Focus"></Section>
-						<Section name="settings" displayTitle="App Settings"></Section>
-					</div>
+			<div id="titlebar">
+				<div id="windowControls">
+					{getPlatform() !== "mac" ? (
+						<>
+							<IcoButton onClick={{ action: handleWindowMinimize }} icon="minimize" />
+							<IcoButton onClick={{ action: handleWindowMaximize }} icon={isMaximized ? "fullscreen_exit" : "fullscreen"} />
+							<IcoButton onClick={{ action: handleWindowClose }} icon="close" />
+						</>
+					) : null}
 				</div>
-				<TooltipPortal tooltip={tooltip} />
 			</div>
+			<div id="appContent">
+				<div id="sidebar">
+					<IcoButton id="toggleSbBtn" onClick={{ action: handleToggleSidebar }} icon="menu" />
+
+					<IcoButton onClick={{ jumpToSection: "focus" }} text="Focus" icon="lightbulb_circle" />
+					<IcoButton onClick={{ jumpToSection: "settings" }} text="Settings" icon="build" />
+				</div>
+
+				<div id="sectionContainer">
+					<Section name="focus" displayTitle="Focus"></Section>
+					<Section name="settings" displayTitle="App Settings"></Section>
+				</div>
+			</div>
+			<TooltipPortal tooltip={tooltip} />
 		</SettingsProvider>
 	);
 }

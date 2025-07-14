@@ -1,12 +1,13 @@
 {
 	"name": "taskbookly",
-	"productName": "TaskBookly",
 	"private": true,
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"license": "MIT",
 	"type": "module",
+	"productName": "TaskBookly",
+	"copyright": "(C) 2025 TaskBookly LLC",
 	"author": "TaskBookly LLC",
-	"description": "A task management and focus tool application.",
+	"description": "A task management and focus tool.",
 	"main": "dist-electron/main.js",
 	"scripts": {
 		"transpile:electron": "tsc -p src/electron/tsconfig.json",
@@ -16,19 +17,14 @@
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
+		"publish": "npm run transpile:electron && npm run build && electron-builder --mac --win --publish=always",
 		"dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal",
-		"dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64",
 		"dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
-		"test:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal --config.mac.target=dir",
-		"test:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64 --config.linux.target=dir",
-		"test:win": "npm run transpile:electron && npm run build && electron-builder --win --x64 --config.win.target=dir",
-		"test-installer:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal --publish=never",
-		"test-installer:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64 --publish=never",
-		"test-installer:win": "npm run transpile:electron && npm run build && electron-builder --win --x64 --publish=never"
+		"test:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal --config.mac.target=dir --publish=never",
+		"test:win": "npm run transpile:electron && npm run build && electron-builder --win --x64 --config.win.target=dir --publish=never"
 	},
 	"build": {
 		"appId": "com.taskbookly.app",
-		"copyright": "(C) 2025 TaskBookly LLC",
 		"artifactName": "${productName}.${ext}",
 		"files": [
 			"dist-electron",
@@ -39,31 +35,50 @@
 		],
 		"mac": {
 			"icon": "build-resources/icons/mac/icon.png",
-			"target": "dmg",
+			"target": {
+				"target": "dmg",
+				"arch": [
+					"universal"
+				]
+			},
 			"category": "public.app-category.productivity"
-		},
-		"linux": {
-			"icon": "build-resources/icons/linux/icon.png",
-			"target": "AppImage",
-			"category": "Utility"
 		},
 		"win": {
 			"icon": "build-resources/icons/windows/icon.png",
-			"target": "nsis"
+			"target": {
+				"target": "nsis",
+				"arch": [
+					"x64"
+				]
+			}
+		},
+		"nsis": {
+			"oneClick": false,
+			"allowToChangeInstallationDirectory": true,
+			"runAfterFinish": true,
+			"shortcutName": "TaskBookly"
+		},
+		"publish": {
+			"provider": "github",
+			"owner": "TaskBookly",
+			"repo": "app",
+			"releaseType": "draft"
 		}
 	},
 	"dependencies": {
+		"electron-updater": "^6.6.2",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.25.0",
+		"@types/node": "^24.0.10",
 		"@types/react": "^19.1.2",
 		"@types/react-dom": "^19.1.2",
 		"@vitejs/plugin-react": "^4.4.1",
 		"concurrently": "^9.1.2",
 		"cross-env": "^7.0.3",
-		"electron": "^36.3.1",
+		"electron": "^37.2.1",
 		"electron-builder": "^26.0.12",
 		"eslint": "^9.25.0",
 		"eslint-plugin-react-hooks": "^5.2.0",
