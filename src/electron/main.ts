@@ -252,7 +252,7 @@ app.whenReady().then(() => {
 		fullscreenable: false,
 	});
 
-	focusTimer = new FocusTimer(mainWindow, loadSettings());
+	focusTimer = new FocusTimer(mainWindow, settings);
 
 	// Force initial data update to ensure UI shows current values
 	focusTimer.forceDataUpdate();
