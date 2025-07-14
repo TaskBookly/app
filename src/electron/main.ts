@@ -246,7 +246,8 @@ app.whenReady().then(() => {
 		minWidth: 600,
 		minHeight: 500,
 		autoHideMenuBar: true,
-		titleBarStyle: "hiddenInset",
+		frame: false,
+		titleBarStyle: process.platform === "darwin" ? "hiddenInset" : undefined,
 		backgroundColor: "#000000",
 		fullscreenable: false,
 	});
