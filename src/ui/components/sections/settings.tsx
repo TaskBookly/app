@@ -31,9 +31,7 @@ const Settings: React.FC = () => {
 	}, []);
 
 	const themeOptions: SelectionMenuOption[] = [
-		{ label: "Light", value: "light" },
 		{ label: "Dark", value: "dark" },
-		{ label: "Catppuccin", value: "catppuccin" },
 		{ label: "Discoo mode!! 🪩🪩🪩", value: "disco" },
 	];
 
