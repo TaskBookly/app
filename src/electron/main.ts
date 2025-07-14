@@ -107,8 +107,11 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 						{ type: "separator" as const },
 						{
 							type: "normal" as const,
-							label: "Charge Break",
-							enabled: !focusTimer.chargeUsedThisSession || focusTimer.chargesLeft > 0,
+							label: "Use Break Charge",
+							enabled: !focusTimer.chargeUsedThisSession && focusTimer.chargesLeft > 0 && !focusTimer.isOnCooldown,
+							click: () => {
+								focusTimer.useBreakCharge();
+							},
 						},
 				  ]
 				: []),
@@ -250,6 +253,9 @@ app.whenReady().then(() => {
 
 	focusTimer = new FocusTimer(mainWindow, loadSettings());
 
+	// Force initial data update to ensure UI shows current values
+	focusTimer.forceDataUpdate();
+
 	// Listen for timer updates and forward to renderer
 	focusTimer.on("timer-update", (eventType, data) => {
 		if (eventType !== "tick") {
@@ -272,6 +278,10 @@ app.whenReady().then(() => {
 
 	ipcMain.on("focus-stop", () => {
 		focusTimer.stop();
+	});
+
+	ipcMain.on("focus-request-data-update", () => {
+		focusTimer.forceDataUpdate();
 	});
 
 	ipcMain.on("focus-add-time", (_, seconds: number) => {
@@ -339,6 +349,11 @@ app.whenReady().then(() => {
 
 		FocusTimer.updateSettings(settings);
 
+		// Force data update when break charge related settings change
+		if (key === "breakChargingEnabled" || key === "workTimePerCharge" || key === "breakChargeExtensionAmount" || key === "breakChargeCooldown") {
+			focusTimer.forceDataUpdate();
+		}
+
 		if (key === "launchOnLogin" && process.platform !== "darwin") {
 			const launchOnLogin = value === "true";
 			try {
@@ -394,5 +409,12 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+	// Cleanup secret data manager before quitting
+	if (focusTimer) {
+		const secretDataManager = (focusTimer as any).secretDataManager;
+		if (secretDataManager && secretDataManager.cleanup) {
+			secretDataManager.cleanup();
+		}
+	}
 	app.quit();
 });

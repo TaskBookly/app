@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld("electron", {
 		stop: () => ipcRenderer.send("focus-stop"),
 		addTime: (seconds: number) => ipcRenderer.send("focus-add-time", seconds),
 		useBreakCharge: () => ipcRenderer.invoke("focus-use-charge"),
+		requestDataUpdate: () => ipcRenderer.send("focus-request-data-update"),
 		onTimerUpdate: (callback) => {
 			ipcRenderer.on("focus-timer-update", (_event: any, data: any) => callback(data));
 			// Return cleanup function

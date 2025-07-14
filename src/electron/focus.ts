@@ -1,5 +1,6 @@
 import { BrowserWindow, Notification } from "electron";
 import { EventEmitter } from "events";
+import SecretDataManager from "./bChargingManager.js";
 
 type SessionType = "none" | "work" | "break" | "transition";
 type SessionStatus = "counting" | "paused" | "stopped";
@@ -15,12 +16,17 @@ interface TimerData {
 	status: SessionStatus;
 	timeLeft: number;
 	chargesLeft: number;
+	timeLeftTillNextCharge: number;
+	chargeProgressPercentage: number;
+	isOnCooldown: boolean;
+	cooldownBreaksLeft: number;
+	chargeUsedThisSession: boolean;
 }
 
 class FocusTimer extends EventEmitter {
 	private readonly mainWindow: BrowserWindow;
+	private readonly secretDataManager: SecretDataManager;
 
-	private static breakCharges: number = 3;
 	private static settings: Record<string, string> = {};
 
 	private static sessions: FocusSessions;
@@ -36,13 +42,21 @@ class FocusTimer extends EventEmitter {
 	private pausedTime: number;
 	private totalPausedDuration: number;
 	private totalAddedTime: number;
+	private lastWorkTimeUpdate: number = 0;
 
 	constructor(window: BrowserWindow, settings: Record<string, string> = {}) {
 		super(); // Initialize EventEmitter
 		this.mainWindow = window;
+		this.secretDataManager = SecretDataManager.getInstance();
 
 		FocusTimer.settings = settings;
 		FocusTimer.updateSessionDurations();
+
+		// Initialize charge progress with current settings
+		if (FocusTimer.settings.breakChargingEnabled === "true") {
+			const workTimePerCharge = parseInt(FocusTimer.settings.workTimePerCharge || "60");
+			this.secretDataManager.initializeChargeProgress(workTimePerCharge);
+		}
 
 		this._currentSession = "none";
 		this._sessionStatus = "stopped";
@@ -59,14 +73,47 @@ class FocusTimer extends EventEmitter {
 
 	public static updateSettings(settings: Record<string, string>): void {
 		FocusTimer.settings = settings;
+
+		// Recalculate charge progress if break charging is enabled
+		if (FocusTimer.settings.breakChargingEnabled === "true") {
+			const workTimePerCharge = parseInt(FocusTimer.settings.workTimePerCharge || "60");
+			const secretDataManager = SecretDataManager.getInstance();
+			secretDataManager.initializeChargeProgress(workTimePerCharge);
+		}
+	}
+
+	// Force update of timer data (used for initialization)
+	public forceDataUpdate(): void {
+		this.secretDataManager.forceUpdate();
+		this.emitTimerUpdate("action");
 	}
 
 	private emitTimerUpdate(eventType: "tick" | "action" | "sessionChange"): void {
+		const secretData = this.secretDataManager.getChargeData();
+		const workTimePerCharge = parseFloat(FocusTimer.settings.workTimePerCharge || "60") * 60; // Convert to seconds
+		const breakChargeCooldown = parseInt(FocusTimer.settings.breakChargeCooldown || "1");
+
+		// Calculate progress percentage properly
+		let chargeProgressPercentage = 0;
+		if (workTimePerCharge > 0) {
+			chargeProgressPercentage = (secretData.totalWorkTimeAccumulated / workTimePerCharge) * 100;
+			chargeProgressPercentage = Math.min(Math.max(chargeProgressPercentage, 0), 100); // Clamp between 0-100
+		}
+
+		// Check if user is on cooldown
+		const isOnCooldown = secretData.breakChargesSinceLastUse < breakChargeCooldown;
+		const cooldownBreaksLeft = Math.max(0, breakChargeCooldown - secretData.breakChargesSinceLastUse);
+
 		const data: TimerData = {
 			session: this.session,
 			status: this.status,
 			timeLeft: this.timeLeft,
-			chargesLeft: this.chargesLeft,
+			chargesLeft: secretData.currentCharges,
+			timeLeftTillNextCharge: secretData.timeLeftTillNextCharge,
+			chargeProgressPercentage: chargeProgressPercentage,
+			isOnCooldown: isOnCooldown,
+			cooldownBreaksLeft: cooldownBreaksLeft,
+			chargeUsedThisSession: this.chargeUsedThisSession,
 		};
 		this.emit("timer-update", eventType, data);
 	}
@@ -89,6 +136,7 @@ class FocusTimer extends EventEmitter {
 			this.sessionStartTime = Date.now();
 			this.totalPausedDuration = 0;
 			this.totalAddedTime = 0;
+			this.lastWorkTimeUpdate = Date.now();
 
 			this.intervalId = setInterval(() => {
 				this.tick();
@@ -103,12 +151,25 @@ class FocusTimer extends EventEmitter {
 			this.status = "counting";
 			// Add the paused duration to total paused time
 			this.totalPausedDuration += Date.now() - this.pausedTime;
+			// Reset work time tracking
+			this.lastWorkTimeUpdate = Date.now();
 			this.emitTimerUpdate("action");
 		}
 	}
 
 	public pause(): void {
 		if (this.session === "work" && this.status === "counting") {
+			// Track work time up to pause point
+			if (FocusTimer.settings.breakChargingEnabled === "true") {
+				const now = Date.now();
+				const workTimeToAdd = Math.max(0, (now - this.lastWorkTimeUpdate) / 1000);
+				if (workTimeToAdd > 0) {
+					this.secretDataManager.addWorkTime(workTimeToAdd);
+					const workTimePerCharge = parseInt(FocusTimer.settings.workTimePerCharge || "60");
+					this.secretDataManager.updateChargeProgress(workTimePerCharge);
+				}
+			}
+
 			this.status = "paused";
 			this.pausedTime = Date.now();
 			this.emitTimerUpdate("action");
@@ -149,9 +210,13 @@ class FocusTimer extends EventEmitter {
 	}
 
 	public useBreakCharge(): boolean {
-		if (!this.chargeUsedThisSession && this.session === "break" && FocusTimer.breakCharges > 0) {
+		const cooldownPeriod = parseInt(FocusTimer.settings.breakChargeCooldown || "0");
+		const extensionAmount = parseInt(FocusTimer.settings.breakChargeExtensionAmount || "5") * 60; // Convert to seconds
+
+		if (!this.chargeUsedThisSession && this.session === "break" && this.secretDataManager.useCharge(cooldownPeriod)) {
 			this.chargeUsedThisSession = true;
-			FocusTimer.breakCharges--;
+			// Extend the current break time
+			this.totalAddedTime += extensionAmount;
 			this.emitTimerUpdate("action");
 			return true;
 		}
@@ -165,7 +230,29 @@ class FocusTimer extends EventEmitter {
 			const sessionDuration = FocusTimer.sessions[this.session] * 60;
 			const newTimeLeft = sessionDuration - elapsedTime + this.totalAddedTime;
 
-			if (newTimeLeft < 1) {
+			// Track work time for break charges (only update every 5 seconds to reduce I/O)
+			if (this.session === "work" && FocusTimer.settings.breakChargingEnabled === "true") {
+				const timeSinceLastUpdate = now - this.lastWorkTimeUpdate;
+				if (timeSinceLastUpdate >= 5000) {
+					// Update every 5 seconds
+					const workTimeToAdd = Math.max(0, timeSinceLastUpdate / 1000); // Ensure non-negative
+					this.secretDataManager.addWorkTime(workTimeToAdd);
+					const workTimePerCharge = parseInt(FocusTimer.settings.workTimePerCharge || "60");
+					this.secretDataManager.updateChargeProgress(workTimePerCharge);
+					this.lastWorkTimeUpdate = now;
+				}
+			}
+
+			if (newTimeLeft <= 0) {
+				// Handle any remaining work time before session ends
+				if (this.session === "work" && FocusTimer.settings.breakChargingEnabled === "true") {
+					const remainingWorkTime = (now - this.lastWorkTimeUpdate) / 1000;
+					if (remainingWorkTime > 0) {
+						this.secretDataManager.addWorkTime(remainingWorkTime);
+						const workTimePerCharge = parseInt(FocusTimer.settings.workTimePerCharge || "60");
+						this.secretDataManager.updateChargeProgress(workTimePerCharge);
+					}
+				}
 				this.onSessionComplete();
 			} else {
 				this.timeLeft = newTimeLeft;
@@ -203,6 +290,11 @@ class FocusTimer extends EventEmitter {
 		if (this.session !== "none") {
 			this.chargeUsedThisSession = false;
 
+			// Increment break sessions count if transitioning from break
+			if (this.session === "break") {
+				this.secretDataManager.incrementBreakSessionsSinceLastUse();
+			}
+
 			FocusTimer.updateSessionDurations();
 
 			if (this.session === "work" || this.session === "break") {
@@ -232,6 +324,7 @@ class FocusTimer extends EventEmitter {
 			this.sessionStartTime = Date.now();
 			this.totalPausedDuration = 0;
 			this.totalAddedTime = 0;
+			this.lastWorkTimeUpdate = Date.now();
 			this.emitTimerUpdate("sessionChange");
 		}
 	}
@@ -249,7 +342,13 @@ class FocusTimer extends EventEmitter {
 	}
 
 	public get chargesLeft(): number {
-		return FocusTimer.breakCharges;
+		return this.secretDataManager.getCurrentCharges();
+	}
+
+	public get isOnCooldown(): boolean {
+		const breakChargeCooldown = parseInt(FocusTimer.settings.breakChargeCooldown || "1");
+		const secretData = this.secretDataManager.getChargeData();
+		return secretData.breakChargesSinceLastUse < breakChargeCooldown;
 	}
 
 	public get chargeUsedThisSession(): boolean {

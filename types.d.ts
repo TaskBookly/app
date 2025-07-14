@@ -17,6 +17,7 @@ interface Window {
 			stop: () => void;
 			addTime: (seconds: number) => void;
 			useBreakCharge: () => Promise<boolean>;
+			requestDataUpdate: () => void;
 			onTimerUpdate: (callback: (data: TimerData) => void) => void;
 		};
 		sound: {
@@ -37,4 +38,16 @@ interface Window {
 		onJumpToSection: (callback: (section: string) => void) => void;
 		openUserData: () => Promise<void>;
 	};
+}
+
+interface TimerData {
+	session: "none" | "work" | "break" | "transition";
+	status: "counting" | "paused" | "stopped";
+	timeLeft: number;
+	chargesLeft: number;
+	timeLeftTillNextCharge: number;
+	chargeProgressPercentage: number;
+	isOnCooldown: boolean;
+	cooldownBreaksLeft: number;
+	chargeUsedThisSession: boolean;
 }
