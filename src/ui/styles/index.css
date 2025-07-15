@@ -240,7 +240,7 @@ input[type="checkbox"]:checked:active::before {
 	z-index: 1000;
 	background-color: var(--clr-surface-a10);
 	border-radius: 1em;
-	box-shadow: 0 8px 32px var(--clr-surface-a10), 0 3px 80px var(--clr-surface-a10);
+	box-shadow: 0 8px 32px var(--clr-surface-a30), 0 3px 80px var(--clr-surface-a30);
 	max-height: 12em;
 	min-width: 160px;
 	width: max-content;
