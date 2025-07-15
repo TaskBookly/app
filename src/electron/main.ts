@@ -53,6 +53,7 @@ let focusTimer: FocusTimer;
 
 // Function to build the focus menu based on current state
 function buildFocusMenu(): MenuItemConstructorOptions {
+	const settings = loadSettings();
 	const getPrimaryAction = () => {
 		switch (focusTimer.status) {
 			case "paused":
@@ -102,7 +103,7 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 						},
 				  ]
 				: []),
-			...(focusTimer.session === "break" && (focusTimer.status === "counting" || focusTimer.status === "paused")
+			...(settings.breakChargingEnabled === "true" && focusTimer.session === "break" && (focusTimer.status === "counting" || focusTimer.status === "paused")
 				? [
 						{ type: "separator" as const },
 						{
@@ -252,12 +253,10 @@ app.whenReady().then(() => {
 		fullscreenable: false,
 	});
 
-	focusTimer = new FocusTimer(mainWindow, loadSettings());
+	focusTimer = new FocusTimer(mainWindow, settings);
 
-	// Force initial data update to ensure UI shows current values
 	focusTimer.forceDataUpdate();
 
-	// Listen for timer updates and forward to renderer
 	focusTimer.on("timer-update", (eventType, data) => {
 		if (eventType !== "tick") {
 			updateMenu();

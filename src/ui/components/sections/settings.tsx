@@ -31,8 +31,9 @@ const Settings: React.FC = () => {
 	}, []);
 
 	const themeOptions: SelectionMenuOption[] = [
+		{ label: "Light", value: "light" },
 		{ label: "Dark", value: "dark" },
-		{ label: "Discoo mode!! 🪩🪩🪩", value: "disco" },
+		{ label: "Catppuccin", value: "catppuccin" },
 	];
 
 	const notifOptions: SelectionMenuOption[] = [
@@ -83,7 +84,7 @@ const Settings: React.FC = () => {
 
 	const workTimePerChargeOptions: SelectionMenuOption[] = [
 		{ label: "40 minutes", value: "40" },
-		{ label: "60 minutes", value: "60" },
+		{ label: "1 hour", value: "60" },
 		{ label: "1.5 hours", value: "90" },
 		{ label: "2 hours", value: "120" },
 	];

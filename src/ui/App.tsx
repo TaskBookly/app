@@ -77,9 +77,9 @@ function App() {
 				<div id="windowControls">
 					{getPlatform() !== "mac" ? (
 						<>
-							<IcoButton onClick={{ action: handleWindowMinimize }} icon="minimize" />
-							<IcoButton onClick={{ action: handleWindowMaximize }} icon={isMaximized ? "fullscreen_exit" : "fullscreen"} />
-							<IcoButton onClick={{ action: handleWindowClose }} icon="close" />
+							<IcoButton id="wc_minimize" onClick={{ action: handleWindowMinimize }} icon="minimize" />
+							<IcoButton id="wc_maximize" onClick={{ action: handleWindowMaximize }} icon={isMaximized ? "collapse_content" : "expand_content"} />
+							<IcoButton id="wc_close" onClick={{ action: handleWindowClose }} icon="close" />
 						</>
 					) : null}
 				</div>

@@ -115,7 +115,7 @@ button::before {
 	inset: 0;
 	border-radius: 1em;
 	padding: 1px;
-	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-surface-a30));
+	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-button-surface-highlights));
 	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
@@ -139,12 +139,13 @@ button:active:not(:disabled, .selected) {
 	scale: 0.95;
 }
 button.selected {
+	color: var(--clr-text-button-selected);
 	background-color: var(--clr-primary-a10);
 	scale: 1.05;
 }
 
 button.selected::before {
-	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-primary-a50));
+	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-button-selected-surface-highlights));
 }
 
 input[type="text"],
@@ -192,7 +193,7 @@ input[type="checkbox"]::after {
 	inset: 0;
 	border-radius: 1em;
 	padding: 1px;
-	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-surface-a30));
+	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-button-surface-highlights));
 	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
@@ -201,10 +202,10 @@ input[type="checkbox"]::after {
 
 input[type="checkbox"]:checked::before {
 	transform: translateX(1.5em);
-	background-color: var(--clr-surface-a100);
+	background-color: #fff;
 }
 input[type="checkbox"]:checked::after {
-	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-primary-a50));
+	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-button-selected-surface-highlights));
 }
 
 input[type="checkbox"]:active::before {
@@ -239,7 +240,7 @@ input[type="checkbox"]:checked:active::before {
 	z-index: 1000;
 	background-color: var(--clr-surface-a10);
 	border-radius: 1em;
-	box-shadow: 0 8px 32px var(--clr-surface-a10), 0 3px 80px var(--clr-surface-a10);
+	box-shadow: 0 8px 32px var(--clr-surface-a30), 0 3px 80px var(--clr-surface-a30);
 	max-height: 12em;
 	min-width: 160px;
 	width: max-content;
@@ -300,6 +301,7 @@ input[type="checkbox"]:checked:active::before {
 }
 
 .dropdown-option.selected {
+	color: var(--clr-text-button-selected);
 	background-color: var(--clr-primary-a20);
 }
 .dropdown-option.selected::before {
@@ -312,7 +314,7 @@ input[type="checkbox"]:checked:active::before {
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: 1;
-	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-primary-a50));
+	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-button-selected-surface-highlights));
 }
 
 .dropdown-empty {

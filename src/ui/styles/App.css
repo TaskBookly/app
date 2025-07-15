@@ -122,6 +122,12 @@
 		scale: inherit;
 	}
 
+	#wc_close:hover:not(:disabled),
+	#wc_close:active:not(:disabled) {
+		color: white;
+		background-color: red;
+	}
+
 	button:active:not(:disabled) {
 		.buttonIcon {
 			scale: 0.85;
@@ -335,7 +341,7 @@ div.groupList {
 	overflow: visible;
 
 	div {
-		border-radius: 1em 0em 0em 1em;
+		border-radius: 1em;
 		outline: 2.5px solid var(--clr-primary-a30);
 		outline-offset: -2.5px;
 		transition: width 5s ease;
@@ -345,7 +351,6 @@ div.groupList {
 	}
 }
 
-/* Charging effect styles */
 #chargingProgress {
 	transition: all 0.3s ease;
 }
