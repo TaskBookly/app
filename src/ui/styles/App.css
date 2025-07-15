@@ -122,6 +122,12 @@
 		scale: inherit;
 	}
 
+	#wc_close:hover:not(:disabled),
+	#wc_close:active:not(:disabled) {
+		color: white;
+		background-color: red;
+	}
+
 	button:active:not(:disabled) {
 		.buttonIcon {
 			scale: 0.85;
