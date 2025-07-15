@@ -28,10 +28,18 @@ class SecretDataManager {
 
 		this.filePath = path.join(userDataPath, "bCharge.enc");
 
-		// Generate strong encryption key from multiple sources
-		const keyMaterial = [app.getPath("exe"), app.getVersion(), hostname(), platform(), arch()].join("|");
+		// Generate persistent encryption key using stable identifiers
+		// This ensures data survives app reinstallation and version updates
+		// Remove app.getPath("exe") and app.getVersion() as they change during reinstallation
+		const keyMaterial = [
+			userDataPath, // Stable across reinstalls
+			hostname(), // Computer hostname
+			platform(), // OS platform
+			arch(), // CPU architecture
+			"taskbookly-stable-v1", // App identifier
+		].join("|");
 
-		this.encryptionKey = scryptSync(keyMaterial, "taskbookly-v2-salt", 32);
+		this.encryptionKey = scryptSync(keyMaterial, "taskbookly-stable-salt", 32);
 
 		this.data = this.loadData();
 	}
@@ -130,7 +138,7 @@ class SecretDataManager {
 		const hash = buffer.slice(16, 48);
 		const encrypted = buffer.slice(48);
 
-		// Try new HMAC approach first
+		// Try new stable key format first
 		const hmacNew = createHash("sha256");
 		hmacNew.update(this.encryptionKey);
 		hmacNew.update(encrypted);
@@ -145,6 +153,32 @@ class SecretDataManager {
 			const expectedHashOld = hmacOld.digest();
 
 			if (!hash.equals(expectedHashOld)) {
+				// Try legacy key format (with exe path and version)
+				try {
+					const legacyKeyMaterial = [app.getPath("exe"), app.getVersion(), hostname(), platform(), arch()].join("|");
+					const legacyKey = scryptSync(legacyKeyMaterial, "taskbookly-v2-salt", 32);
+
+					const hmacLegacy = createHash("sha256");
+					hmacLegacy.update(legacyKey);
+					hmacLegacy.update(encrypted);
+					const expectedHashLegacy = hmacLegacy.digest();
+
+					if (hash.equals(expectedHashLegacy)) {
+						// Successfully validated with legacy key, decrypt and re-save with new key
+						const decipher = createDecipheriv("aes-256-cbc", legacyKey, iv);
+						const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
+
+						// Re-encrypt with new stable key for future use
+						setTimeout(() => {
+							this.saveData();
+						}, 100);
+
+						return decrypted;
+					}
+				} catch (error) {
+					// Legacy key attempt failed, continue with original error
+				}
+
 				throw new Error("Data integrity check failed");
 			}
 		}
