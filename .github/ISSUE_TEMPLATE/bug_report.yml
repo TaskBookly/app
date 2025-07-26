@@ -7,7 +7,7 @@ body:
           label: Confirmation Checklist
           description: Make sure the following apply before writing your issue.
           options:
-              - label: I have searched Issues and did not find one that matches what I want to report
+              - label: I have searched the issue tracker and did not find an open issue that matches what I want to report
                 required: true
               - label: This bug is present on the latest version of TaskBookly
                 required: true
@@ -24,8 +24,6 @@ body:
       attributes:
           label: Expected Behavior
           description: What did you expect to happen?
-      validations:
-          required: true
     - type: textarea
       attributes:
           label: Actual Behavior
