@@ -94,7 +94,7 @@
 	--clr-surface-a100: #f5e0dc;
 
 	--clr-button-surface-highlights: var(--clr-surface-a30);
-	--clr-button-selected-surface-highlights: #74c7ec;
+	--clr-button-selected-surface-highlights: var(--clr-primary-a40);
 	--clr-text-button-selected: #1e1e2e;
 
 	/** Theme hint colors */
