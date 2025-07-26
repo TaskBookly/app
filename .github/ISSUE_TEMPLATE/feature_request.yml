@@ -7,9 +7,9 @@ body:
           label: Confirmation Checklist
           description: Make sure the following apply before writing your suggestion.
           options:
-              - label: I have searched Issues and did not find one that matches what I want to suggest
+              - label: I have searched the issue tracker and did not find one that matches what I want to suggest
                 required: true
-              - label: This idea is not present on the latest version of TaskBookly
+              - label: My idea doesn't already exist on the latest version of TaskBookly
                 required: true
     - type: dropdown
       attributes:
