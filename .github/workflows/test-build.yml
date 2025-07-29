@@ -1,0 +1,152 @@
+name: Build App
+
+permissions:
+    contents: read
+
+on:
+    workflow_dispatch:
+        inputs:
+            platform:
+                description: "Platform"
+                required: true
+                type: choice
+                options:
+                    - all
+                    - win
+                    - mac
+                default: "mac"
+            build_type:
+                description: "Build Type"
+                required: true
+                type: choice
+                options:
+                    - portable
+                    - installer
+                default: "portable"
+
+jobs:
+    build-windows:
+        if: ${{ inputs.platform == 'all' || inputs.platform == 'win' }}
+        runs-on: windows-latest
+        timeout-minutes: 45
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Transpile Electron
+              run: npm run transpile:electron
+
+            - name: Build React app
+              run: npm run build
+
+            - name: Build Windows executable
+              run: |
+                  if ("${{ inputs.build_type }}" -eq "portable") {
+                      npx electron-builder --win --x64 --config.win.target=portable --publish=never
+                  } else {
+                      npx electron-builder --win --x64 --config.win.target=nsis --publish=never
+                  }
+              shell: powershell
+
+            - name: Upload Windows artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: windows-${{ inputs.build_type }}-build
+                  path: |
+                      dist/*.exe
+                      dist/*.zip
+                  retention-days: 2
+                  if-no-files-found: error
+
+    build-mac:
+        if: ${{ inputs.platform == 'all' || inputs.platform == 'mac' }}
+        runs-on: macos-latest
+        timeout-minutes: 45
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Transpile Electron
+              run: npm run transpile:electron
+
+            - name: Build React app
+              run: npm run build
+
+            - name: Build macOS executable
+              run: |
+                  if [ "${{ inputs.build_type }}" = "portable" ]; then
+                      npx electron-builder --mac --universal --config.mac.target=dir --publish=never
+                  else
+                      npx electron-builder --mac --universal --config.mac.target=dmg --publish=never
+                  fi
+
+            - name: Upload macOS artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: macos-${{ inputs.build_type }}-build
+                  path: |
+                      dist/*.dmg
+                      dist/mac/
+                  retention-days: 2
+                  if-no-files-found: error
+
+    build-summary:
+        needs: [build-windows, build-mac]
+        if: always()
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Build Summary
+              run: |
+                  echo "## Test Build Summary" >> $GITHUB_STEP_SUMMARY
+                  echo "**Platform:** ${{ inputs.platform }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Build Type:** ${{ inputs.build_type }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+
+                  if [ "${{ needs.build-windows.result }}" = "success" ] || [ "${{ needs.build-windows.result }}" = "skipped" ]; then
+                      if [ "${{ needs.build-windows.result }}" = "success" ]; then
+                          echo "✅ Windows build completed successfully" >> $GITHUB_STEP_SUMMARY
+                      else
+                          echo "⏭️ Windows build skipped" >> $GITHUB_STEP_SUMMARY
+                      fi
+                  else
+                      echo "❌ Windows build failed" >> $GITHUB_STEP_SUMMARY
+                  fi
+
+                  if [ "${{ needs.build-mac.result }}" = "success" ] || [ "${{ needs.build-mac.result }}" = "skipped" ]; then
+                      if [ "${{ needs.build-mac.result }}" = "success" ]; then
+                          echo "✅ macOS build completed successfully" >> $GITHUB_STEP_SUMMARY
+                      else
+                          echo "⏭️ macOS build skipped" >> $GITHUB_STEP_SUMMARY
+                      fi
+                  else
+                      echo "❌ macOS build failed" >> $GITHUB_STEP_SUMMARY
+                  fi
+
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Artifacts expire in 2 days**" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "Download artifacts from the [Actions tab](../../actions) of this repository." >> $GITHUB_STEP_SUMMARY
