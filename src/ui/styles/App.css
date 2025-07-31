@@ -84,6 +84,11 @@
 	left: 0;
 }
 
+#titlebar #windowIcon {
+	margin-left: 5px;
+	height: 100%;
+}
+
 #titlebar #windowControls {
 	position: absolute;
 	top: 0;

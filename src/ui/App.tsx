@@ -75,6 +75,7 @@ function App() {
 	return (
 		<SettingsProvider>
 			<div id="titlebar">
+				<img id="windowIcon" src="assets/icons/branding/logo-icon-white.svg" />
 				<div id="windowControls">
 					{platform !== "darwin" ? (
 						<>
