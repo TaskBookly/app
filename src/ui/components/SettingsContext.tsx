@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { getPlatform } from "./config";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { getDefaultSettings } from "../../electron/settings";
 
 type Setting = { key: string; value: string };
 type SettingsContextType = {
@@ -10,79 +10,74 @@ type SettingsContextType = {
 	defaultSettings: Setting[];
 };
 
-const platform = getPlatform();
-
-const defaultSettings: Setting[] = [
-	{ key: "notifsFocus", value: "all" },
-	{ key: "notifsTasks", value: "notifsOnly" },
-	{ key: "theme", value: "dark" },
-	{ key: "autoCheckForUpdates", value: "true" },
-	{ key: "transitionPeriodsEnabled", value: "false" },
-	{ key: "breakChargingEnabled", value: "true" },
-	{ key: "workPeriodDuration", value: "25" },
-	{ key: "breakPeriodDuration", value: "10" },
-	{ key: "transitionPeriodDuration", value: "3" },
-	{ key: "breakChargeExtensionAmount", value: "10" },
-	{ key: "breakChargeCooldown", value: "0" },
-	{ key: "workTimePerCharge", value: "60" },
-
-	// Platform-specific
-	...(platform === "windows" ? [{ key: "launchOnLogin", value: "false" }] : []),
-	...(platform === "mac" ? [{ key: "touchBar", value: "true" }] : []),
-];
+const getDefaultSettingsArray = async (): Promise<Setting[]> => {
+	if (typeof window !== "undefined" && window.electron) {
+		const platform = await window.electron.build.getPlatform();
+		const defaultsObj = getDefaultSettings(platform);
+		return Object.entries(defaultsObj).map(([key, value]) => ({ key, value }));
+	}
+	return [];
+};
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [settings, setSettingsState] = useState<Setting[]>(() => defaultSettings);
+	const [defaultSettings, setDefaultSettings] = useState<Setting[]>([]);
+	const [settings, setSettingsState] = useState<Setting[]>([]);
 
 	useEffect(() => {
+		const initializeDefaults = async () => {
+			const defaults = await getDefaultSettingsArray();
+			setDefaultSettings(defaults);
+			setSettingsState(defaults);
+		};
+		initializeDefaults();
+	}, []);
+
+	useEffect(() => {
+		if (defaultSettings.length === 0) return;
+
 		const loadStoredSettings = async () => {
 			try {
 				if (typeof window !== "undefined" && window.electron) {
 					const stored = await window.electron.settings.load();
-					const merged = defaultSettings.map((def) => {
+					const merged = defaultSettings.map((def: Setting) => {
 						const found = stored[def.key];
 						return found !== undefined ? { key: def.key, value: found } : def;
 					});
-					const extras = Object.entries(stored)
-						.filter(([key]) => !defaultSettings.some((def) => def.key === key))
-						.map(([key, value]) => ({ key, value }));
-					setSettingsState([...merged, ...extras]);
+					setSettingsState(merged);
 				}
 			} catch (error) {
 				console.error("Failed to load settings:", error);
 			}
 		};
 		loadStoredSettings();
-	}, []);
+	}, [defaultSettings]);
 
-	const getSetting = React.useCallback(
+	const getSetting = useCallback(
 		(key: string) => {
-			const found = settings.find((s) => s.key === key)?.value;
-			return typeof found === "string" ? found : defaultSettings.find((s) => s.key === key)?.value || "";
+			const found = settings.find((s: Setting) => s.key === key)?.value;
+			return typeof found === "string" ? found : defaultSettings.find((s: Setting) => s.key === key)?.value || "";
 		},
-		[settings]
+		[settings, defaultSettings]
 	);
 
 	const setSetting = async (key: string, value: string) => {
 		setSettingsState((prev) => {
-			let updated: Setting[];
 			const exists = prev.some((s) => s.key === key);
 			if (exists) {
-				updated = prev.map((s) => (s.key === key ? { ...s, value } : s));
+				return prev.map((s) => (s.key === key ? { ...s, value } : s));
 			} else {
-				updated = [...prev, { key, value }];
+				return [...prev, { key, value }];
 			}
-			if (typeof window !== "undefined" && window.electron) {
-				window.electron.settings.set(key, value);
-			}
-			return updated;
 		});
+
+		if (typeof window !== "undefined" && window.electron) {
+			await window.electron.settings.set(key, value);
+		}
 	};
 
-	// Theme effect
-	React.useEffect(() => {
+	useEffect(() => {
 		document.documentElement.setAttribute("data-theme", getSetting("theme"));
 	}, [getSetting]);
 

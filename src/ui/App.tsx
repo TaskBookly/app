@@ -4,15 +4,16 @@ import Section, { jumpToSection, clearAllHideTimeouts } from "./components/nav.t
 import IcoButton from "./components/core.tsx";
 import { useTooltip, TooltipPortal } from "./components/Tooltip";
 import { SettingsProvider } from "./components/SettingsContext";
-import { getPlatform } from "./components/config.tsx";
 
 function App() {
 	const tooltip = useTooltip();
 	const [isMaximized, setIsMaximized] = useState(false);
+	const [platform, setPlatform] = useState<string>("");
 
 	useEffect(() => {
-		// Jumps to section automatically when the app loads
 		jumpToSection("focus");
+
+		window.electron.build.getPlatform().then(setPlatform);
 
 		window.electron.onJumpToSection((section: string) => {
 			jumpToSection(section);
@@ -75,7 +76,7 @@ function App() {
 		<SettingsProvider>
 			<div id="titlebar">
 				<div id="windowControls">
-					{getPlatform() !== "mac" ? (
+					{platform !== "darwin" ? (
 						<>
 							<IcoButton id="wc_minimize" onClick={{ action: handleWindowMinimize }} icon="minimize" />
 							<IcoButton id="wc_maximize" onClick={{ action: handleWindowMaximize }} icon={isMaximized ? "collapse_content" : "expand_content"} />
