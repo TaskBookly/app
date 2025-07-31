@@ -279,7 +279,7 @@
 	color: var(--clr-hint-info-text);
 	padding: 1em 1em;
 	border-radius: 1em;
-	gap: 0.5em;
+	gap: 0.75em;
 	align-items: start;
 
 	.hintLabel {
