@@ -231,10 +231,6 @@ app.whenReady().then(() => {
 		fullscreenable: false,
 	});
 
-	if (app.getLoginItemSettings().wasOpenedAtLogin) {
-		mainWindow.minimize();
-	}
-
 	focusTimer = new FocusTimer(mainWindow, settings);
 
 	focusTimer.forceDataUpdate();
@@ -341,17 +337,6 @@ app.whenReady().then(() => {
 		// Force data update when break charge related settings change
 		if (key === "breakChargingEnabled" || key === "workTimePerCharge" || key === "breakChargeExtensionAmount" || key === "breakChargeCooldown") {
 			focusTimer.forceDataUpdate();
-		}
-
-		if (key === "launchOnLogin" && process.platform !== "darwin") {
-			const launchOnLogin = value === "true";
-			try {
-				app.setLoginItemSettings({
-					openAtLogin: launchOnLogin,
-				});
-			} catch (e) {
-				console.error("Unable to set login item:", e);
-			}
 		}
 
 		return true;

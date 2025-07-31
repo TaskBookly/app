@@ -14,9 +14,7 @@ export const DEFAULT_SETTINGS_CONFIG = {
 };
 
 export const PLATFORM_SPECIFIC_SETTINGS = {
-	win32: {
-		launchOnLogin: "false",
-	},
+	win32: {},
 	darwin: {
 		touchBar: "true",
 	},
