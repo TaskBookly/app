@@ -2,12 +2,9 @@
 @import url("./Tooltip.css");
 
 ::-webkit-scrollbar {
-	transition-duration: 0.3s;
-
 	width: 10px;
 	height: 10px;
 	border-radius: 8px;
-	padding-block: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
