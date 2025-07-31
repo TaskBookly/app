@@ -398,16 +398,15 @@ app.whenReady().then(() => {
 			If you continue to encounter this error, please open a new Issue on our GitHub Repository
 			`,
 			title: "Fatal Error",
-			buttons: ["Reload", "Open Issue...", "Close"],
+			buttons: ["Restart", "Close & Open Issue...", "Close"],
 			cancelId: 2,
 		});
 		if (response === 0) {
-			mainWindow.webContents.reload();
+			app.relaunch();
 		} else if (response === 1) {
 			shell.openExternal("https://github.com/TaskBookly/app/issues/new");
-		} else if (response === 2) {
-			app.quit();
 		}
+		app.quit();
 	});
 
 	if (isDev()) {
