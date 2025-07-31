@@ -207,10 +207,6 @@ app.whenReady().then(() => {
 	autoUpdater.autoDownload = false;
 	const settings = loadSettings();
 
-	if (settings.launchOnLogin === "true") {
-		mainWindow.minimize();
-	}
-
 	if (settings.autoCheckForUpdates === "true") {
 		autoUpdater.checkForUpdates();
 	}
@@ -234,6 +230,10 @@ app.whenReady().then(() => {
 		backgroundColor: "#000000",
 		fullscreenable: false,
 	});
+
+	if (settings.launchOnLogin === "true") {
+		mainWindow.minimize();
+	}
 
 	focusTimer = new FocusTimer(mainWindow, settings);
 
