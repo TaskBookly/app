@@ -231,7 +231,7 @@ app.whenReady().then(() => {
 		fullscreenable: false,
 	});
 
-	if (settings.launchOnLogin === "true") {
+	if (app.getLoginItemSettings().wasOpenedAtLogin) {
 		mainWindow.minimize();
 	}
 
