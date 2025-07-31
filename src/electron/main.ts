@@ -208,10 +208,7 @@ app.whenReady().then(() => {
 	const settings = loadSettings();
 
 	if (settings.launchOnLogin === "true") {
-		app.setLoginItemSettings({
-			openAtLogin: true,
-			args: ["--minimized"],
-		});
+		mainWindow.minimize();
 	}
 
 	if (settings.autoCheckForUpdates === "true") {
@@ -351,7 +348,6 @@ app.whenReady().then(() => {
 			try {
 				app.setLoginItemSettings({
 					openAtLogin: launchOnLogin,
-					name: "TaskBookly",
 				});
 			} catch (e) {
 				console.error("Unable to set login item:", e);
