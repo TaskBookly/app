@@ -28,8 +28,14 @@ contextBridge.exposeInMainWorld("electron", {
 		},
 	},
 	sound: {
-		onplaySound: (callback) => {
-			ipcRenderer.on("play-sound", (_event: any, soundPath: string) => callback(soundPath));
+		onplaySound: (callback) => ipcRenderer.on("play-sound", (_event: any, soundPath: string) => callback(soundPath)),
+	},
+	system: {
+		getTheme: () => ipcRenderer.invoke("sys-theme"),
+		onThemeChange: (callback) => {
+			ipcRenderer.on("sys-theme-changed", (_event: any, theme: string) => callback(theme));
+			// Return cleanup function
+			return () => ipcRenderer.removeAllListeners("sys-theme-changed");
 		},
 	},
 	settings: {

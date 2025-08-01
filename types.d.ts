@@ -23,6 +23,10 @@ interface Window {
 		sound: {
 			onplaySound: (callback: (soundPath: string) => void) => void;
 		};
+		system: {
+			getTheme: () => Promise<string>;
+			onThemeChange: (callback: (theme: string) => void) => void;
+		};
 		settings: {
 			load: () => Promise<Record<string, string>>;
 			get: (key: string) => Promise<string>;

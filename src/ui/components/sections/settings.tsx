@@ -31,6 +31,7 @@ const Settings: React.FC = () => {
 	}, []);
 
 	const themeOptions: SelectionMenuOption[] = [
+		{ label: "System", value: "system" },
 		{ label: "Light", value: "light" },
 		{ label: "Dark", value: "dark" },
 		{ label: "Catppuccin", value: "catppuccin" },
@@ -99,7 +100,7 @@ const Settings: React.FC = () => {
 					<Container name="settings_general">
 						<ContainerGroup>
 							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
-							<SelectionMenuConfig hint={{ type: "info", label: "More themes coming soon! :>" }} name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
+							<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_focus" header={{ title: "Focus", icon: "timer" }}>

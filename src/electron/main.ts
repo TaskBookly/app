@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell, nativeTheme } from "electron";
 
 import path from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
@@ -273,6 +273,14 @@ app.whenReady().then(() => {
 	ipcMain.handle("open-userdata", () => {
 		const userDataPath = app.getPath("userData");
 		shell.openPath(userDataPath);
+	});
+
+	ipcMain.handle("sys-theme", () => {
+		return nativeTheme.shouldUseDarkColors ? "dark" : "light";
+	});
+
+	nativeTheme.on("updated", () => {
+		mainWindow.webContents.send("sys-theme-changed", nativeTheme.shouldUseDarkColors ? "dark" : "light");
 	});
 
 	autoUpdater.on("update-available", (data) => {
