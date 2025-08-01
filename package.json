@@ -1,7 +1,7 @@
 {
 	"name": "taskbookly",
 	"private": true,
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"license": "MIT",
 	"type": "module",
 	"productName": "TaskBookly",
@@ -78,7 +78,7 @@
 		"@vitejs/plugin-react": "^4.4.1",
 		"concurrently": "^9.1.2",
 		"cross-env": "^7.0.3",
-		"electron": "^37.2.4",
+		"electron": "^37.2.5",
 		"electron-builder": "^26.0.12",
 		"eslint": "^9.25.0",
 		"eslint-plugin-react-hooks": "^5.2.0",

@@ -98,9 +98,8 @@ const Settings: React.FC = () => {
 				<>
 					<Container name="settings_general">
 						<ContainerGroup>
-							<SwitchConfig name="Launch upon login" description="We'll open TaskBookly for you and minimize it upon logging in so it's out of your way." availableOn={["windows"]} value={getSetting("launchOnLogin") === "true"} onChange={() => setSetting("launchOnLogin", getSetting("launchOnLogin") === "true" ? "false" : "true")} />
 							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
-							<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
+							<SelectionMenuConfig hint={{ type: "info", label: "More themes coming soon! :>" }} name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_focus" header={{ title: "Focus", icon: "timer" }}>
@@ -128,9 +127,9 @@ const Settings: React.FC = () => {
 						</ContainerGroup>
 						{getSetting("breakChargingEnabled") === "true" ? (
 							<ContainerGroup>
-								<SelectionMenuConfig name="Charge extension amount" description="The amount of time charging breaks extends them by." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
-								<SelectionMenuConfig name="Charge cooldown time" description="The amount of break sessions needed to pass before another charge can be used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
-								<SelectionMenuConfig name="Work time per charge" description="The amount of work time required to earn another break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting("workTimePerCharge")} onChange={(v) => setSetting("workTimePerCharge", v)} />
+								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
+								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
+								<SelectionMenuConfig name="Work time per charge" description="The amount of work time needed to earn a break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting("workTimePerCharge")} onChange={(v) => setSetting("workTimePerCharge", v)} />
 							</ContainerGroup>
 						) : null}
 					</Container>

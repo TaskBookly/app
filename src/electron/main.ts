@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, shell } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell } from "electron";
 
 import path from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
@@ -6,17 +6,16 @@ import { fileURLToPath } from "url";
 
 import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
+import { getDefaultSettings } from "./settings.js";
 
 import FocusTimer from "./focus.js";
 
 import electronUpdPkg from "electron-updater";
 const { autoUpdater } = electronUpdPkg;
 
-// Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read package.json to get version (go up from dist-electron to project root)
 const packagePath = path.join(__dirname, "..", "package.json");
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 const appVersion = packageJson.version;
@@ -25,13 +24,29 @@ const settingsPath = path.join(app.getPath("userData"), "settings.json");
 
 function loadSettings(): Record<string, string> {
 	try {
+		const defaultSettings = getDefaultSettings(process.platform);
+		let loadedSettings: Record<string, string> = {};
+
 		if (existsSync(settingsPath)) {
-			return JSON.parse(readFileSync(settingsPath, "utf8"));
+			try {
+				loadedSettings = JSON.parse(readFileSync(settingsPath, "utf8"));
+			} catch (error) {
+				console.error("Error parsing settings file:", error);
+			}
 		}
+
+		const cleanedSettings: Record<string, string> = {};
+		for (const [key, defaultValue] of Object.entries(defaultSettings)) {
+			cleanedSettings[key] = loadedSettings[key] !== undefined ? loadedSettings[key] : defaultValue;
+		}
+
+		saveSettings(cleanedSettings);
+
+		return cleanedSettings;
 	} catch (error) {
 		console.error("Error loading settings:", error);
+		return getDefaultSettings(process.platform);
 	}
-	return {};
 }
 
 function saveSettings(settings: Record<string, string>): void {
@@ -59,14 +74,12 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 			case "paused":
 				return {
 					label: "Resume",
-					action: "resume",
 					accelerator: "Option+Command+P",
 					click: () => focusTimer.resume(),
 				};
 			case "counting":
 				return {
 					label: "Pause",
-					action: "pause",
 					accelerator: "Option+Command+P",
 					click: () => focusTimer.pause(),
 					enabled: focusTimer.session === "work",
@@ -74,7 +87,6 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 			default:
 				return {
 					label: "Start",
-					action: "start",
 					accelerator: "Option+Command+S",
 					click: () => focusTimer.start(),
 				};
@@ -82,82 +94,58 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 	};
 
 	const primaryAction = getPrimaryAction();
+	const menuItems: MenuItemConstructorOptions[] = [
+		{
+			type: "normal",
+			label: primaryAction.label,
+			accelerator: primaryAction.accelerator,
+			enabled: primaryAction.enabled !== false,
+			click: primaryAction.click,
+		},
+	];
+
+	if (focusTimer.status !== "stopped") {
+		menuItems.push({
+			type: "normal",
+			label: "Stop",
+			accelerator: "Option+Command+X",
+			click: () => focusTimer.stop(),
+		});
+	}
+
+	if (settings.breakChargingEnabled === "true" && focusTimer.session === "break" && (focusTimer.status === "counting" || focusTimer.status === "paused")) {
+		menuItems.push(
+			{ type: "separator" },
+			{
+				type: "normal",
+				label: "Use Break Charge",
+				enabled: !focusTimer.chargeUsedThisSession && focusTimer.chargesLeft > 0 && !focusTimer.isOnCooldown,
+				click: () => focusTimer.useBreakCharge(),
+			}
+		);
+	}
+
+	if (focusTimer.session === "work") {
+		menuItems.push(
+			{ type: "separator" },
+			{
+				type: "submenu",
+				label: "Add Time",
+				submenu: [
+					{ type: "normal", label: "1 Minute", click: () => focusTimer.addTime(60) },
+					{ type: "normal", label: "2 Minutes", click: () => focusTimer.addTime(120) },
+					{ type: "normal", label: "3 Minutes", click: () => focusTimer.addTime(180) },
+					{ type: "normal", label: "4 Minutes", click: () => focusTimer.addTime(240) },
+					{ type: "normal", label: "5 Minutes", click: () => focusTimer.addTime(300) },
+					{ type: "normal", label: "10 Minutes", click: () => focusTimer.addTime(600) },
+				],
+			}
+		);
+	}
 
 	return {
 		label: "Focus",
-		submenu: [
-			{
-				type: "normal",
-				label: primaryAction.label,
-				accelerator: primaryAction.accelerator,
-				enabled: primaryAction.enabled !== false,
-				click: primaryAction.click,
-			},
-			...(focusTimer.status !== "stopped"
-				? [
-						{
-							type: "normal" as const,
-							label: "Stop",
-							accelerator: "Option+Command+X",
-							click: () => focusTimer.stop(),
-						},
-				  ]
-				: []),
-			...(settings.breakChargingEnabled === "true" && focusTimer.session === "break" && (focusTimer.status === "counting" || focusTimer.status === "paused")
-				? [
-						{ type: "separator" as const },
-						{
-							type: "normal" as const,
-							label: "Use Break Charge",
-							enabled: !focusTimer.chargeUsedThisSession && focusTimer.chargesLeft > 0 && !focusTimer.isOnCooldown,
-							click: () => {
-								focusTimer.useBreakCharge();
-							},
-						},
-				  ]
-				: []),
-			...(focusTimer.session === "work"
-				? [
-						{ type: "separator" as const },
-						{
-							type: "submenu" as const,
-							label: "Add Time",
-							submenu: [
-								{
-									type: "normal" as const,
-									label: "1 Minute",
-									click: () => focusTimer.addTime(60),
-								},
-								{
-									type: "normal" as const,
-									label: "2 Minutes",
-									click: () => focusTimer.addTime(120),
-								},
-								{
-									type: "normal" as const,
-									label: "3 Minutes",
-									click: () => focusTimer.addTime(180),
-								},
-								{
-									type: "normal" as const,
-									label: "4 Minutes",
-									click: () => focusTimer.addTime(240),
-								},
-								{
-									type: "normal" as const,
-									label: "5 Minutes",
-									click: () => focusTimer.addTime(300),
-								},
-								{
-									type: "normal" as const,
-									label: "10 Minutes",
-									click: () => focusTimer.addTime(600),
-								},
-							],
-						},
-				  ]
-				: []),
-		],
+		submenu: menuItems,
 	};
 }
 
@@ -193,23 +181,20 @@ function updateMenu() {
 				],
 			},
 			buildFocusMenu(),
-			{
-				role: "windowMenu",
-			},
-			// Debug menu for development environment
-			...(isDev()
-				? [
-						{
-							label: "Debug",
-							submenu: [{ role: "reload" as const }, { role: "forceReload" as const }, { type: "separator" as const }, { role: "toggleDevTools" as const }],
-						},
-				  ]
-				: []),
-			{
-				role: "help",
-				submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }],
-			},
+			{ role: "windowMenu" },
 		];
+
+		if (isDev()) {
+			menuTemplate.push({
+				label: "Debug",
+				submenu: [{ role: "reload" }, { role: "forceReload" }, { type: "separator" }, { role: "toggleDevTools" }, { type: "separator" }, { type: "submenu", label: "More Options", submenu: [{ type: "normal", label: "Crash Renderer", click: () => mainWindow.webContents.forcefullyCrashRenderer() }] }],
+			});
+		}
+
+		menuTemplate.push({
+			role: "help",
+			submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Report an Issue...", click: () => shell.openExternal("https://github.com/TaskBookly/app/issues/new") }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }],
+		});
 
 		const menu = Menu.buildFromTemplate(menuTemplate);
 		Menu.setApplicationMenu(menu);
@@ -221,13 +206,6 @@ function updateMenu() {
 app.whenReady().then(() => {
 	autoUpdater.autoDownload = false;
 	const settings = loadSettings();
-
-	if (settings.launchOnLogin === "true") {
-		app.setLoginItemSettings({
-			openAtLogin: true,
-			name: "TaskBookly",
-		});
-	}
 
 	if (settings.autoCheckForUpdates === "true") {
 		autoUpdater.checkForUpdates();
@@ -343,6 +321,13 @@ app.whenReady().then(() => {
 	});
 
 	ipcMain.handle("settings-set", (_event, key: string, value: string) => {
+		const defaultSettings = getDefaultSettings(process.platform);
+
+		if (!(key in defaultSettings)) {
+			console.warn(`Attempted to set unknown setting: ${key}`);
+			return false;
+		}
+
 		const settings = loadSettings();
 		settings[key] = value;
 		saveSettings(settings);
@@ -352,18 +337,6 @@ app.whenReady().then(() => {
 		// Force data update when break charge related settings change
 		if (key === "breakChargingEnabled" || key === "workTimePerCharge" || key === "breakChargeExtensionAmount" || key === "breakChargeCooldown") {
 			focusTimer.forceDataUpdate();
-		}
-
-		if (key === "launchOnLogin" && process.platform !== "darwin") {
-			const launchOnLogin = value === "true";
-			try {
-				app.setLoginItemSettings({
-					openAtLogin: launchOnLogin,
-					name: "TaskBookly",
-				});
-			} catch (e) {
-				console.error("Unable to set login item:", e);
-			}
 		}
 
 		return true;
@@ -399,6 +372,28 @@ app.whenReady().then(() => {
 		mainWindow.webContents.send("window-state-changed", { maximized: false });
 	});
 
+	mainWindow.webContents.on("render-process-gone", async (_, error) => {
+		const { response } = await dialog.showMessageBox({
+			type: "error",
+			message: "This is.. awkward",
+			detail: `
+			TaskBookly encountered a fatal error and crashed :(
+			Reason: ${error.reason} (Exit Code: ${error.exitCode})
+
+			If you continue to encounter this error, please open a new Issue on our GitHub Repository
+			`,
+			title: "Fatal Error",
+			buttons: ["Restart", "Close & Open Issue...", "Close"],
+			cancelId: 2,
+		});
+		if (response === 0) {
+			app.relaunch();
+		} else if (response === 1) {
+			shell.openExternal("https://github.com/TaskBookly/app/issues/new");
+		}
+		app.quit();
+	});
+
 	if (isDev()) {
 		mainWindow.loadURL("http://localhost:5123");
 	} else {
@@ -409,12 +404,15 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
-	// Cleanup secret data manager before quitting
 	if (focusTimer) {
 		const secretDataManager = (focusTimer as any).secretDataManager;
-		if (secretDataManager && secretDataManager.cleanup) {
+		if (secretDataManager?.cleanup) {
 			secretDataManager.cleanup();
 		}
 	}
 	app.quit();
 });
+
+const handleExit = () => process.exit(0);
+process.on("SIGINT", handleExit);
+process.on("SIGTERM", handleExit);
