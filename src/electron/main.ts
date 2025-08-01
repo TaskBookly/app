@@ -412,7 +412,3 @@ app.on("window-all-closed", () => {
 	}
 	app.quit();
 });
-
-const handleExit = () => process.exit(0);
-process.on("SIGINT", handleExit);
-process.on("SIGTERM", handleExit);
