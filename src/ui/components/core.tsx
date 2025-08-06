@@ -9,6 +9,7 @@ type HintType = "info" | "warning" | "error" | "success" | "processing";
 interface IcoButtonProps {
 	text?: string;
 	icon?: IconProp;
+	iconWidthAuto?: boolean;
 	disabled?: boolean;
 	onClick?: { jumpToSection?: string; action?: () => void };
 	id?: string;
@@ -54,7 +55,7 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: IconPr
 	);
 };
 
-const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onClick, id, className, tooltip }) => {
+const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, iconWidthAuto = false, disabled = false, onClick, id, className, tooltip }) => {
 	const handleClick = () => {
 		if (onClick?.action) {
 			onClick.action();
@@ -66,7 +67,7 @@ const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onC
 
 	return (
 		<button data-sect={onClick?.jumpToSection} id={id} className={className} disabled={disabled} onClick={handleClick} data-tooltip={tooltip}>
-			{icon ? <FontAwesomeIcon widthAuto className="buttonIcon" icon={icon} /> : null}
+			{icon ? <FontAwesomeIcon className="buttonIcon" icon={icon} widthAuto={iconWidthAuto ? true : false} /> : null}
 			{text ? <span className="buttonText">{text}</span> : null}
 		</button>
 	);

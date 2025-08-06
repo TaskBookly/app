@@ -41,27 +41,32 @@
 
 	button {
 		overflow: hidden;
-		align-items: center;
-		.buttonIcon {
-			font-size: 1.5em;
-		}
-	}
-
-	button:not(#toggleSbBtn) {
-		justify-content: space-between;
 		display: flex;
+		justify-content: space-between;
 		width: 100%;
-	}
-
-	button:not(.selected) span {
-		opacity: 80%;
+		height: min-content;
+		padding-block: 1em;
 	}
 
 	#toggleSbBtn {
-		width: min-content;
+		width: 65px;
+		max-height: 40px;
+	}
+
+	#sbIcon {
+		width: 65px;
+		height: auto;
+		max-width: 100%;
+		color: var(--clr-primary-a20);
+	}
+
+	.buttonIcon {
+		font-size: 1.5em;
 	}
 
 	.buttonText {
+		position: absolute;
+		right: 1em;
 		transition: opacity 0.3s ease;
 		white-space: nowrap;
 	}
@@ -258,6 +263,7 @@
 
 		button {
 			width: 100%;
+			white-space: nowrap;
 		}
 	}
 }
