@@ -4,6 +4,7 @@ import Section, { jumpToSection, clearAllHideTimeouts } from "./components/nav.t
 import IcoButton from "./components/core.tsx";
 import { useTooltip, TooltipPortal } from "./components/Tooltip";
 import { SettingsProvider } from "./components/SettingsContext";
+import { faBars, faClose, faLightbulb, faWindowMaximize, faWindowMinimize, faWindowRestore, faWrench } from "@fortawesome/free-solid-svg-icons";
 
 function App() {
 	const tooltip = useTooltip();
@@ -76,21 +77,21 @@ function App() {
 		<SettingsProvider>
 			<div id="titlebar">
 				<div id="windowControls">
-					{platform !== "darwin" ? (
+					{platform == "darwin" ? (
 						<>
-							<IcoButton id="wc_minimize" onClick={{ action: handleWindowMinimize }} icon="minimize" />
-							<IcoButton id="wc_maximize" onClick={{ action: handleWindowMaximize }} icon={isMaximized ? "collapse_content" : "expand_content"} />
-							<IcoButton id="wc_close" onClick={{ action: handleWindowClose }} icon="close" />
+							<IcoButton id="wc_minimize" onClick={{ action: handleWindowMinimize }} icon={faWindowMinimize} />
+							<IcoButton id="wc_maximize" onClick={{ action: handleWindowMaximize }} icon={isMaximized ? faWindowRestore : faWindowMaximize} />
+							<IcoButton id="wc_close" onClick={{ action: handleWindowClose }} icon={faClose} />
 						</>
 					) : null}
 				</div>
 			</div>
 			<div id="appContent">
 				<div id="sidebar">
-					<IcoButton id="toggleSbBtn" onClick={{ action: handleToggleSidebar }} icon="menu" />
+					<IcoButton id="toggleSbBtn" onClick={{ action: handleToggleSidebar }} icon={faBars} />
 
-					<IcoButton onClick={{ jumpToSection: "focus" }} text="Focus" icon="lightbulb_circle" />
-					<IcoButton onClick={{ jumpToSection: "settings" }} text="Settings" icon="build" />
+					<IcoButton onClick={{ jumpToSection: "focus" }} text="Focus" icon={faLightbulb} />
+					<IcoButton onClick={{ jumpToSection: "settings" }} text="Settings" icon={faWrench} />
 				</div>
 
 				<div id="sectionContainer">

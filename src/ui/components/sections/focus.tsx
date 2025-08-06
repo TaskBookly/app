@@ -3,6 +3,8 @@ import IcoButton, { Container, ActionMenu, type ActionMenuOption } from "../core
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
+import { faAnglesRight, faBolt, faBriefcase, faMugSaucer, faPause, faPlay, faPlus, faStop } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Focus: React.FC = () => {
 	const { getSetting } = useSettings();
@@ -94,12 +96,10 @@ const Focus: React.FC = () => {
 			{timerStatus !== "stopped" ? (
 				<Container name="focus_time">
 					<div id="timerCont">
-						<label id="sessionType">
-							<span id="sessionTypeIcon" className="material-symbols-rounded">
-								{currentSession === "work" ? "business_center" : currentSession === "break" ? "coffee" : "switch_access_2"}
-							</span>
+						<div id="sessionType">
+							<FontAwesomeIcon icon={currentSession === "work" ? faBriefcase : currentSession === "break" ? faMugSaucer : faAnglesRight} widthAuto />
 							{currentSession === "work" ? "WORKING" : currentSession === "break" ? "TAKING A BREAK" : "TRANSITIONING"}
-						</label>
+						</div>
 
 						<label id="sessionTimer">{formatAsTime(timeLeftInSession)}</label>
 						<label id="sessionEndTime">{`Ending at ${formatAsClockTime(sessionExpectedFinishDate)}`}</label>
@@ -112,25 +112,25 @@ const Focus: React.FC = () => {
 					<div className="buttonGroup">
 						{timerStatus === "counting" ? (
 							<>
-								<IcoButton text="Pause" icon="pause" disabled={currentSession === "break" || currentSession === "transition"} onClick={{ action: handlePause }} />
-								<IcoButton text="Stop" icon="stop" onClick={{ action: handleStop }} />
+								<IcoButton text="Pause" icon={faPause} disabled={currentSession === "break" || currentSession === "transition"} onClick={{ action: handlePause }} />
+								<IcoButton text="Stop" icon={faStop} onClick={{ action: handleStop }} />
 							</>
 						) : timerStatus === "paused" ? (
 							<>
-								<IcoButton text="Resume" icon="resume" onClick={{ action: handleResume }} />
-								<IcoButton text="Stop" icon="stop" onClick={{ action: handleStop }} />
+								<IcoButton text="Resume" icon={faPlay} onClick={{ action: handleResume }} />
+								<IcoButton text="Stop" icon={faStop} onClick={{ action: handleStop }} />
 							</>
 						) : (
-							<IcoButton text="Start" icon="play_arrow" onClick={{ action: handleStart }} />
+							<IcoButton text="Start" icon={faPlay} onClick={{ action: handleStart }} />
 						)}
 
-						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value) => handleAddTime(parseInt(value))} button={<IcoButton icon="timer_arrow_up" text="Add time" />} /> : null}
+						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value) => handleAddTime(parseInt(value))} button={<IcoButton icon={faPlus} text="Add time" />} /> : null}
 					</div>
 				</div>
 			</Container>
 			{getSetting("breakChargingEnabled") === "true" ? (
 				<Container name="focus_breakCharging">
-					<ButtonActionConfig name="Break charging" description="You'll receive 'Break charges' after enough hours of working. These charges can be used once per break period and will extend them by a few minutes as a reward for working hard!" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Use break charge", icon: "electric_bolt" }} onClick={handleUseBreakCharge}>
+					<ButtonActionConfig name="Break charging" description="You'll receive 'Break charges' after enough hours of working. These charges can be used once per break period and will extend them by a few minutes as a reward for working hard!" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Use break charge", icon: faBolt }} onClick={handleUseBreakCharge}>
 						<div className="groupList">
 							<h3 style={{ margin: 0, marginBlockEnd: "-5px" }}>
 								You have <b>{Math.max(0, breakChargesLeft)}</b> {breakChargesLeft === 1 ? "charge" : "charges"} left.

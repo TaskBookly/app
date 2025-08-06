@@ -99,8 +99,13 @@ button {
 	z-index: 0;
 	outline: none;
 
-	.buttonIcon {
-		font-size: 1.5em;
+	svg:not(:only-child) {
+		opacity: 70%;
+		font-size: 0.9em;
+	}
+
+	svg {
+		font-size: 1.25em;
 		transition: color 0.25s;
 	}
 
@@ -278,21 +283,25 @@ input[type="checkbox"]:checked:active::before {
 	align-items: center;
 	font-weight: 700;
 	background-color: none;
-	gap: 0.5em;
+	gap: 1em;
 	justify-content: space-between;
 	position: relative;
 	transition: background-color 0.15s, color 0.15s;
 	margin: 0;
 	overflow: hidden;
 
-	span.dd-check {
-		font-size: 1.2em;
+	svg.dd-check {
+		font-size: 0.9em;
 	}
 
 	span.dd-label {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	svg.dd-icon {
+		opacity: 70%;
 	}
 }
 

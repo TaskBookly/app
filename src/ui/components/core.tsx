@@ -1,11 +1,14 @@
 import React from "react";
 import { jumpToSection } from "./nav";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faAngleDown, faCheck, faCircleCheck, faCircleInfo, faCircleQuestion, faCircleXmark, faCompass, faWarning } from "@fortawesome/free-solid-svg-icons";
 
 type HintType = "info" | "warning" | "error" | "success" | "processing";
 
 interface IcoButtonProps {
 	text?: string;
-	icon?: string;
+	icon?: IconProp;
 	disabled?: boolean;
 	onClick?: { jumpToSection?: string; action?: () => void };
 	id?: string;
@@ -17,7 +20,7 @@ const ContainerGroup: React.FC<{ children?: React.ReactNode }> = ({ children }) 
 	return children ? <div className="containerGroup">{children}</div> : null;
 };
 
-const Container: React.FC<{ name: string; header?: { title: string; icon: string }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => {
+const Container: React.FC<{ name: string; header?: { title: string; icon: IconProp }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => {
 	const [isVisible, setIsVisible] = React.useState(true);
 	const contentRef = React.useRef<HTMLDivElement>(null);
 
@@ -39,8 +42,8 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: string
 		<div data-container={name} id={id} className={`container ${className}`}>
 			{header ? (
 				<div className="containerHeader">
-					<span className="material-symbols-rounded">{header?.icon}</span>
-					<label>{header?.title}</label>
+					<FontAwesomeIcon icon={header.icon} widthAuto />
+					<label>{header.title}</label>
 				</div>
 			) : null}
 
@@ -63,7 +66,7 @@ const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onC
 
 	return (
 		<button data-sect={onClick?.jumpToSection} id={id} className={className} disabled={disabled} onClick={handleClick} data-tooltip={tooltip}>
-			{icon ? <span className="material-symbols-rounded buttonIcon">{icon}</span> : null}
+			{icon ? <FontAwesomeIcon widthAuto className="buttonIcon" icon={icon} /> : null}
 			{text ? <span className="buttonText">{text}</span> : null}
 		</button>
 	);
@@ -72,7 +75,7 @@ const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, disabled = false, onC
 const Hint: React.FC<{ type: HintType; label: string }> = ({ type, label }) => {
 	return (
 		<div className={`hint hintType-${type}`}>
-			<span className="hintIcon material-symbols-rounded">{type === "info" ? "info" : type === "warning" ? "warning" : type === "error" ? "error" : type === "success" ? "check_circle" : type === "processing" ? "progress_activity" : "info"}</span>
+			<FontAwesomeIcon className="hintIcon" icon={type === "info" ? faCircleInfo : type === "warning" ? faWarning : type === "error" ? faCircleXmark : type === "success" ? faCircleCheck : type === "processing" ? faCompass : faCircleQuestion} />
 			<span className="hintLabel">{label}</span>
 		</div>
 	);
@@ -214,9 +217,7 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 			>
 				<button type="button" className={`custom-dropdown${open ? " selected" : ""}`} disabled={disabled} aria-haspopup="listbox" aria-expanded={open}>
 					<span>{selectedLabel}</span>
-					<span className="material-symbols-rounded" style={{ marginLeft: "auto" }}>
-						expand_more
-					</span>
+					<FontAwesomeIcon icon={faAngleDown} />
 				</button>
 			</div>
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove}>
@@ -235,7 +236,7 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 						aria-selected={opt.value === value}
 					>
 						<span className="dd-label">{opt.label}</span>
-						{opt.value === value && <span className="material-symbols-rounded dd-check">check</span>}
+						{opt.value === value && <FontAwesomeIcon className="dd-check" icon={faCheck} widthAuto />}
 					</div>
 				))}
 			</DropdownMenu>
@@ -246,7 +247,7 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 interface ActionMenuOption {
 	label: string;
 	value: string;
-	icon?: string;
+	icon?: IconProp;
 	onClick?: () => void;
 }
 
@@ -315,7 +316,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 						role="menuitem"
 					>
 						<span className="dd-label">{opt.label}</span>
-						{opt.icon && <span className="material-symbols-rounded dd-icon">{opt.icon}</span>}
+						{opt.icon && <FontAwesomeIcon className="dd-icon" icon={opt.icon} />}
 					</div>
 				))}
 			</DropdownMenu>

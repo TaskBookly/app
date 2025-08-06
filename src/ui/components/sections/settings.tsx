@@ -3,6 +3,7 @@ import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../co
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
 import { useSettings } from "../SettingsContext";
+import { faBell, faEllipsis, faFolderOpen, faGears, faInfo, faLayerGroup, faPencil, faStar, faStopwatch, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const Settings: React.FC = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
@@ -94,7 +95,7 @@ const Settings: React.FC = () => {
 		{
 			label: "General",
 			key: "general",
-			icon: "settings",
+			icon: faGears,
 			content: (
 				<>
 					<Container name="settings_general">
@@ -103,7 +104,7 @@ const Settings: React.FC = () => {
 							<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
 						</ContainerGroup>
 					</Container>
-					<Container name="settings_focus" header={{ title: "Focus", icon: "timer" }}>
+					<Container name="settings_focus" header={{ title: "Focus", icon: faStopwatch }}>
 						<ContainerGroup>
 							<SwitchConfig name="Transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
 							<SwitchConfig name="Break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
@@ -140,7 +141,7 @@ const Settings: React.FC = () => {
 		{
 			label: "Notifications",
 			key: "notifs",
-			icon: "notifications_unread",
+			icon: faBell,
 			content: (
 				<>
 					<Container name="settings_notifs">
@@ -154,7 +155,7 @@ const Settings: React.FC = () => {
 		{
 			label: "Misc",
 			key: "misc",
-			icon: "pending",
+			icon: faEllipsis,
 			content: (
 				<>
 					<Container name="settings_misc">
@@ -192,9 +193,9 @@ const Settings: React.FC = () => {
 			),
 		},
 		{
-			label: "Client",
-			key: "client",
-			icon: "monitor",
+			label: "App Details",
+			key: "appDetails",
+			icon: faLayerGroup,
 			content: (
 				<>
 					<Container name="settings_clientData">
@@ -202,7 +203,7 @@ const Settings: React.FC = () => {
 							<InfoConfig name="Version" data={appVersion} copyButton />
 							<InfoConfig name="Node environment" data={nodeEnv} copyButton />
 							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
-							<ButtonActionConfig name="UserData" button={{ text: "Open Folder", icon: "folder_open" }} onClick={handleOpenSettingsDirectory} />
+							<ButtonActionConfig name="App Data" button={{ text: "Open Folder", icon: faFolderOpen }} onClick={handleOpenSettingsDirectory} />
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_hintTypes">
@@ -291,25 +292,25 @@ const Settings: React.FC = () => {
 										{
 											label: "Option 1",
 											value: "option1",
-											icon: "star",
+											icon: faStar,
 											onClick: () => {},
 										},
 										{
 											label: "Option 2",
 											value: "option2",
-											icon: "edit",
+											icon: faPencil,
 											onClick: () => {},
 										},
 										{
 											label: "Option 3",
 											value: "option3",
-											icon: "delete",
+											icon: faTrash,
 											onClick: () => {},
 										},
 										{
 											label: "Option 4",
 											value: "option4",
-											icon: "info",
+											icon: faInfo,
 											onClick: () => {},
 										},
 									],

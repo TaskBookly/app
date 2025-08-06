@@ -1,5 +1,7 @@
 import React from "react";
 import IcoButton, { type SelectionMenuOption, type ActionMenuOption, type HintType, Hint, SelectionMenu, ActionMenu } from "./core";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
 // Platform type for availableOn
 export type Platform = "windows" | "mac";
@@ -44,7 +46,7 @@ interface ButtonActionProps extends ConfigDefaults {
 	onClick?: () => void;
 	button: {
 		text?: string;
-		icon?: string;
+		icon?: IconProp;
 		tooltip?: string;
 	};
 }
@@ -64,7 +66,7 @@ interface ActionMenuProps extends ConfigDefaults {
 	menu: {
 		button: {
 			text?: string;
-			icon?: string;
+			icon?: IconProp;
 			tooltip?: string;
 		};
 		options: ActionMenuOption[];
@@ -78,7 +80,7 @@ const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint,
 	if (availableOn && !availableOn.includes(platform)) return null;
 
 	return copyButton ? (
-		<ButtonActionConfig name={name} description={data.toString()} button={{ icon: "content_copy", tooltip: "Copy value" }} onClick={() => navigator.clipboard.writeText(data.toString())}>
+		<ButtonActionConfig name={name} description={data.toString()} button={{ icon: faCopy, tooltip: "Copy value" }} onClick={() => navigator.clipboard.writeText(data.toString())}>
 			{children}
 		</ButtonActionConfig>
 	) : (

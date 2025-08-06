@@ -41,8 +41,9 @@
 
 	button {
 		overflow: hidden;
+		align-items: center;
 		.buttonIcon {
-			font-size: 2em;
+			font-size: 1.5em;
 		}
 	}
 
@@ -228,16 +229,17 @@
 		gap: 10px;
 		background-color: var(--clr-surface-a20);
 		padding-bottom: 10px;
+		align-items: center;
 
-		span,
+		svg,
 		label {
 			font-size: 1.25em;
 			vertical-align: middle;
 			display: flex;
-			align-items: center;
 		}
-		span {
-			font-size: 1.75em;
+		svg {
+			font-size: 1em;
+			opacity: 70%;
 		}
 	}
 }
@@ -280,7 +282,7 @@
 	padding: 1em 1em;
 	border-radius: 1em;
 	gap: 0.75em;
-	align-items: start;
+	align-items: center;
 
 	.hintLabel {
 		opacity: 80%;
@@ -288,6 +290,7 @@
 	}
 
 	.hintIcon {
+		font-size: 1.25em;
 		opacity: 70%;
 	}
 }
@@ -306,7 +309,7 @@
 }
 .hint.hintType-processing {
 	.hintIcon {
-		animation: spin 1s linear infinite;
+		animation: spin 2s linear infinite;
 	}
 }
 
@@ -451,15 +454,20 @@ div.groupList {
 	flex-direction: column;
 	justify-content: center;
 	text-align: center;
+	vertical-align: middle;
 
-	label#sessionType {
+	div#sessionType {
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
-		vertical-align: middle;
+		align-items: center;
 		gap: 0.5em;
 		font-size: 1em;
 		color: var(--clr-primary-a50);
+
+		svg {
+			font-size: 1.25em;
+		}
 	}
 
 	label#sessionTimer {
