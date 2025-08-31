@@ -88,6 +88,18 @@
 	pointer-events: auto;
 }
 
+@media (max-width: 749px) {
+	#sidebar {
+		flex-basis: 97px !important;
+	}
+
+	#sidebar .buttonText,
+	#sidebar button .buttonText {
+		opacity: 0 !important;
+		pointer-events: none !important;
+	}
+}
+
 #titlebar {
 	position: relative;
 	flex: 0 0 36px;
