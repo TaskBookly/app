@@ -77,7 +77,7 @@ function App() {
 		<SettingsProvider>
 			<div id="titlebar">
 				<div id="windowControls">
-					{platform == "darwin" ? (
+					{platform !== "darwin" ? (
 						<>
 							<IcoButton id="wc_minimize" onClick={{ action: handleWindowMinimize }} icon={faWindowMinimize} />
 							<IcoButton id="wc_maximize" onClick={{ action: handleWindowMaximize }} icon={isMaximized ? faWindowRestore : faWindowMaximize} />

@@ -3,7 +3,7 @@ import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../co
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
 import { useSettings } from "../SettingsContext";
-import { faBell, faEllipsis, faFolderOpen, faGears, faInfo, faLayerGroup, faPencil, faStar, faStopwatch, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faBell, faBolt, faFolderOpen, faGears, faHardDrive, faInfo, faLayerGroup, faLightbulb, faPencil, faStar, faTimeline, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const Settings: React.FC = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
@@ -98,72 +98,16 @@ const Settings: React.FC = () => {
 			icon: faGears,
 			content: (
 				<>
-					<Container name="settings_general">
+					<Container name="settings_general_software" header={{ title: "Software", icon: faHardDrive }}>
 						<ContainerGroup>
 							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
-							<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
 						</ContainerGroup>
 					</Container>
-					<Container name="settings_focus" header={{ title: "Focus", icon: faStopwatch }}>
-						<ContainerGroup>
-							<SwitchConfig name="Transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
-							<SwitchConfig name="Break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
-						</ContainerGroup>
-						<ContainerGroup>
-							{(() => {
-								const workDuration = parseInt(getSetting("workPeriodDuration"));
-								const breakDuration = parseInt(getSetting("breakPeriodDuration"));
-								const ratio = breakDuration / workDuration;
-
-								if (ratio <= 0.17) {
-									return <Hint type="warning" label="Your breaks may be too short for sustained focus. Consider longer breaks." />;
-								}
-								if (ratio >= 0.75) {
-									return <Hint type="warning" label="Your breaks are unusually long compared to work time. Consider adjusting the balance." />;
-								}
-								return null;
-							})()}
-							<SelectionMenuConfig name="Work period duration" menu={{ options: focusSessionWorkDurationOptions }} value={getSetting("workPeriodDuration")} onChange={(v) => setSetting("workPeriodDuration", v)} />
-							<SelectionMenuConfig name="Break period duration" menu={{ options: focusSessionBreakDurationOptions }} value={getSetting("breakPeriodDuration")} onChange={(v) => setSetting("breakPeriodDuration", v)} />
-							{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
-						</ContainerGroup>
-						{getSetting("breakChargingEnabled") === "true" ? (
-							<ContainerGroup>
-								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
-								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
-								<SelectionMenuConfig name="Work time per charge" description="The amount of work time needed to earn a break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting("workTimePerCharge")} onChange={(v) => setSetting("workTimePerCharge", v)} />
-							</ContainerGroup>
-						) : null}
+					<Container name="settings_general_misc">
+						<SelectionMenuConfig name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
+						<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["mac"]} />
 					</Container>
-				</>
-			),
-		},
-		{
-			label: "Notifications",
-			key: "notifs",
-			icon: faBell,
-			content: (
-				<>
-					<Container name="settings_notifs">
-						<ContainerGroup>
-							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
-						</ContainerGroup>
-					</Container>
-				</>
-			),
-		},
-		{
-			label: "Misc",
-			key: "misc",
-			icon: faEllipsis,
-			content: (
-				<>
-					<Container name="settings_misc">
-						<ContainerGroup>
-							<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["mac"]} />
-						</ContainerGroup>
-					</Container>
-					<Container name="settings_reset">
+					<Container name="settings_general_reset">
 						<ContainerGroup>
 							<ActionMenuConfig
 								name="Reset all settings to default"
@@ -187,6 +131,64 @@ const Settings: React.FC = () => {
 									],
 								}}
 							/>
+						</ContainerGroup>
+					</Container>
+				</>
+			),
+		},
+		{
+			label: "Focus",
+			key: "focus",
+			icon: faLightbulb,
+			content: (
+				<>
+					<Container name="settings_focus_features">
+						<ContainerGroup>
+							<SwitchConfig name="Transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
+							<SwitchConfig name="Break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
+						</ContainerGroup>
+					</Container>
+					<Container name="settings_focus_durations" header={{ title: "Period lengths", icon: faTimeline }}>
+						<ContainerGroup>
+							{(() => {
+								const workDuration = parseInt(getSetting("workPeriodDuration"));
+								const breakDuration = parseInt(getSetting("breakPeriodDuration"));
+								const ratio = breakDuration / workDuration;
+
+								if (ratio <= 0.17) {
+									return <Hint type="warning" label="Your breaks may be too short for sustained focus. Consider longer breaks." />;
+								}
+								if (ratio >= 0.75) {
+									return <Hint type="warning" label="Your breaks are unusually long compared to work time. Consider adjusting the balance." />;
+								}
+								return null;
+							})()}
+							<SelectionMenuConfig name="Work period duration" menu={{ options: focusSessionWorkDurationOptions }} value={getSetting("workPeriodDuration")} onChange={(v) => setSetting("workPeriodDuration", v)} />
+							<SelectionMenuConfig name="Break period duration" menu={{ options: focusSessionBreakDurationOptions }} value={getSetting("breakPeriodDuration")} onChange={(v) => setSetting("breakPeriodDuration", v)} />
+							{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
+						</ContainerGroup>
+					</Container>
+					{getSetting("breakChargingEnabled") === "true" ? (
+						<Container name="settings_focus_breakCharging" header={{ title: "Break charging", icon: faBolt }}>
+							<ContainerGroup>
+								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
+								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
+								<SelectionMenuConfig name="Work time per charge" description="The amount of work time needed to earn a break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting("workTimePerCharge")} onChange={(v) => setSetting("workTimePerCharge", v)} />
+							</ContainerGroup>
+						</Container>
+					) : null}
+				</>
+			),
+		},
+		{
+			label: "Notifications",
+			key: "notifs",
+			icon: faBell,
+			content: (
+				<>
+					<Container name="settings_notifs">
+						<ContainerGroup>
+							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
 						</ContainerGroup>
 					</Container>
 				</>

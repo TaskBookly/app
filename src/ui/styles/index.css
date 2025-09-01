@@ -52,17 +52,14 @@
 :root {
 	font-family: "M PLUS Rounded 1c", sans-serif;
 	line-height: 1.5;
-	font-weight: 800;
+	font-weight: 700;
 	color-scheme: light dark;
-	font-synthesis: none;
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
 	user-select: none;
 	-webkit-user-select: none;
-	img {
-		-webkit-user-drag: none;
-	}
+}
+
+img {
+	-webkit-user-drag: none;
 }
 
 body {
@@ -89,7 +86,7 @@ button {
 	position: relative;
 	padding: 0.6em 1em;
 	font-size: 1em;
-	font-weight: 800;
+	font-weight: 700;
 	font-family: inherit;
 	color: inherit;
 	background-color: var(--clr-surface-a20);
