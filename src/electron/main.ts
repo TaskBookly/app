@@ -16,6 +16,10 @@ const { autoUpdater } = electronUpdPkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+if (process.platform === "win32") {
+	app.setAppUserModelId("com.taskbookly.app");
+}
+
 const packagePath = path.join(__dirname, "..", "package.json");
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 const appVersion = packageJson.version;

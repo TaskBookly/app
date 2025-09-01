@@ -54,4 +54,5 @@ interface TimerData {
 	isOnCooldown: boolean;
 	cooldownBreaksLeft: number;
 	chargeUsedThisSession: boolean;
+	expectedFinish?: number;
 }

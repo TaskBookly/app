@@ -39,7 +39,9 @@ const Focus: React.FC = () => {
 			setCooldownBreaksLeft(data.cooldownBreaksLeft || 0);
 			setChargeUsedThisSession(data.chargeUsedThisSession || false);
 
-			if (data.timeLeft && data.status !== "stopped") {
+			if (typeof data.expectedFinish === "number" && data.status !== "stopped") {
+				setSessionExpectedFinishDate(new Date(data.expectedFinish));
+			} else if (data.timeLeft && data.status !== "stopped") {
 				setSessionExpectedFinishDate(new Date(Date.now() + data.timeLeft * 1000));
 			}
 		});
@@ -49,6 +51,19 @@ const Focus: React.FC = () => {
 
 		return cleanup;
 	}, []);
+
+	useEffect(() => {
+		let id: number | undefined;
+		if (timerStatus === "paused") {
+			id = window.setInterval(() => {
+				setSessionExpectedFinishDate(new Date(Date.now() + timeLeftInSession * 1000));
+			}, 1000);
+		}
+
+		return () => {
+			if (id !== undefined) clearInterval(id);
+		};
+	}, [timerStatus, timeLeftInSession]);
 
 	const workSessionAddTimeOptions: ActionMenuOption[] = [
 		{ label: "1 minute", value: "60" },
