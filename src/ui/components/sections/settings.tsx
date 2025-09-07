@@ -148,7 +148,7 @@ const Settings: React.FC = () => {
 							<SwitchConfig name="Break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
 						</ContainerGroup>
 					</Container>
-					<Container name="settings_focus_durations" header={{ title: "Period lengths", icon: faTimeline }}>
+					<Container name="settings_focus_durations" header={{ title: "Period Lengths", icon: faTimeline }}>
 						<ContainerGroup>
 							{(() => {
 								const workDuration = parseInt(getSetting("workPeriodDuration"));
@@ -169,7 +169,7 @@ const Settings: React.FC = () => {
 						</ContainerGroup>
 					</Container>
 					{getSetting("breakChargingEnabled") === "true" ? (
-						<Container name="settings_focus_breakCharging" header={{ title: "Break charging", icon: faBolt }}>
+						<Container name="settings_focus_breakCharging" header={{ title: "Break Charging", icon: faBolt }}>
 							<ContainerGroup>
 								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
 								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
