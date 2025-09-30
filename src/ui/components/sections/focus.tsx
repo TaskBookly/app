@@ -3,7 +3,7 @@ import IcoButton, { Container, ActionMenu, type ActionMenuOption } from "../core
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faMugSaucer, faPause, faPlay, faPlus, faStop } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faMugSaucer, faPause, faPlay, faPlus, faStop } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Focus: React.FC = () => {
@@ -149,9 +149,7 @@ const Focus: React.FC = () => {
 							<h3 style={{ margin: 0, marginBlockEnd: "-5px" }}>
 								You have <b>{Math.max(0, breakChargesLeft)}</b> {breakChargesLeft === 1 ? "charge" : "charges"} left.
 							</h3>
-							<label className="sub" style={{ opacity: "70%" }}>
-								{timeLeftTillNextCharge < 60 ? <b>Less than 1 minute</b> : timeLeftTillNextCharge === 60 ? <b>1 minute</b> : Math.ceil(timeLeftTillNextCharge / 60) === 1 ? <b>1 minute</b> : <b>{Math.ceil(timeLeftTillNextCharge / 60)} minutes</b>} of work left till your next break charge is ready!
-							</label>
+							<label>{timeLeftTillNextCharge < 60 ? <b>Less than 1 minute</b> : timeLeftTillNextCharge === 60 ? <b>1 minute</b> : Math.ceil(timeLeftTillNextCharge / 60) === 1 ? <b>1 minute</b> : <b>{Math.ceil(timeLeftTillNextCharge / 60)} minutes</b>} of work left till your next break charge is ready!</label>
 						</div>
 						<div id="chargingProgress">
 							<div
@@ -162,8 +160,8 @@ const Focus: React.FC = () => {
 							></div>
 						</div>
 						{getCooldownMessage() ? (
-							<label className="sub" style={{ marginTop: "8px", display: "block", opacity: "70%" }}>
-								{getCooldownMessage()}
+							<label style={{ marginTop: "8px", display: "block" }}>
+								<FontAwesomeIcon icon={faHourglassHalf} /> {getCooldownMessage()}
 							</label>
 						) : null}
 					</ButtonActionConfig>

@@ -27,7 +27,7 @@ function App() {
 		});
 
 		window.electron.sound.onplaySound((soundPath: string) => {
-			new Audio(`assets/audio/${soundPath}`).play();
+			new Audio(`./assets/audio/${soundPath}`).play();
 		});
 
 		// Get initial window state

@@ -43,8 +43,9 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: IconPr
 		<div data-container={name} id={id} className={`container ${className}`}>
 			{header ? (
 				<div className="containerHeader">
+					<h2>{header.title}</h2>
+
 					<FontAwesomeIcon icon={header.icon} widthAuto />
-					<label>{header.title}</label>
 				</div>
 			) : null}
 

@@ -1,59 +1,20 @@
 @import url("./theme.css");
 
 @font-face {
-	font-family: "M PLUS Rounded 1c";
-	src: url("/assets/fonts/MPLUSRounded1c-Thin.ttf") format("truetype");
-	font-weight: 100;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: "M PLUS Rounded 1c";
-	src: url("/assets/fonts/MPLUSRounded1c-Light.ttf") format("truetype");
-	font-weight: 300;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: "M PLUS Rounded 1c";
-	src: url("/assets/fonts/MPLUSRounded1c-Regular.ttf") format("truetype");
-	font-weight: 400;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: "M PLUS Rounded 1c";
-	src: url("/assets/fonts/MPLUSRounded1c-Medium.ttf") format("truetype");
-	font-weight: 500;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: "M PLUS Rounded 1c";
-	src: url("/assets/fonts/MPLUSRounded1c-Bold.ttf") format("truetype");
-	font-weight: 700;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: "M PLUS Rounded 1c";
-	src: url("/assets/fonts/MPLUSRounded1c-ExtraBold.ttf") format("truetype");
-	font-weight: 800;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: "M PLUS Rounded 1c";
-	src: url("/assets/fonts/MPLUSRounded1c-Black.ttf") format("truetype");
-	font-weight: 900;
+	font-family: "Albert Sans";
+	src: url("../assets/fonts/AlbertSans-VariableFont.woff2") format("woff2-variations");
+	font-weight: 100 900;
 	font-style: normal;
 }
 
 :root {
-	font-family: "M PLUS Rounded 1c", sans-serif;
+	font-family: "Albert Sans", sans-serif;
 	line-height: 1.5;
-	font-weight: 700;
+	font-weight: 600;
 	color-scheme: light dark;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
 	user-select: none;
 	-webkit-user-select: none;
 }
@@ -74,10 +35,6 @@ body {
 h1 {
 	font-size: 3.2em;
 	line-height: 1.1;
-}
-
-label.sub {
-	font-weight: 500;
 }
 
 button {
