@@ -3,13 +3,16 @@ import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../co
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
 import { useSettings } from "../SettingsContext";
-import { faBell, faBolt, faFolderOpen, faGears, faHardDrive, faInfo, faLayerGroup, faLightbulb, faPencil, faStar, faTimeline, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faBell, faBolt, faFolderOpen, faGears, faHardDrive, faInfoCircle, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
 const Settings: React.FC = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
 	const [appVersion, setAppVersion] = useState<string>("Loading...");
 	const [nodeEnv, setNodeEnv] = useState<string>("Loading...");
 	const [platform, setPlatform] = useState<NodeJS.Platform | null>(null);
+	const [electronVersion, setElectronVersion] = useState<string>("Loading...");
+	const [chromeVersion, setChromeVersion] = useState<string>("Loading...");
 
 	const handleOpenSettingsDirectory = () => {
 		if (window.electron?.openUserData) {
@@ -29,6 +32,20 @@ const Settings: React.FC = () => {
 				setAppVersion("Unknown");
 				setNodeEnv("Unknown");
 			});
+	}, []);
+
+	useEffect(() => {
+		(async () => {
+			try {
+				const [elec, chrome] = await Promise.all([window.electron.build.getElectronVersion(), window.electron.build.getChromeVersion()]);
+				setElectronVersion(elec);
+				setChromeVersion(chrome);
+			} catch (err) {
+				console.debug("Extended app info not available:", err);
+				setElectronVersion("Unknown");
+				setChromeVersion("Unknown");
+			}
+		})();
 	}, []);
 
 	const themeOptions: SelectionMenuOption[] = [
@@ -195,146 +212,27 @@ const Settings: React.FC = () => {
 			),
 		},
 		{
-			label: "App Details",
+			label: "About",
 			key: "appDetails",
-			icon: faLayerGroup,
+			icon: faInfoCircle,
 			content: (
 				<>
-					<Container name="settings_clientData">
+					<Container name="settings_about_appPackage">
 						<ContainerGroup>
 							<InfoConfig name="Version" data={appVersion} copyButton />
-							<InfoConfig name="Node environment" data={nodeEnv} copyButton />
-							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
-							<ButtonActionConfig name="App Data" button={{ text: "Open Folder", icon: faFolderOpen }} onClick={handleOpenSettingsDirectory} />
+							<ButtonActionConfig name="User Data" button={{ text: "Open Folder", icon: faFolderOpen }} onClick={handleOpenSettingsDirectory} />
 						</ContainerGroup>
 					</Container>
-					<Container name="settings_hintTypes">
-						<Hint type="info" label="Info hint type" />
-						<Hint type="warning" label="Warning hint type" />
-						<Hint type="error" label="Error hint type" />
-						<Hint type="success" label="Success hint type" />
-						<Hint type="processing" label="Processing hint type" />
-					</Container>
-					<Container name="settings_configComponents">
+					<Container name="settings_about_appAboutMisc">
 						<ContainerGroup>
-							<SelectionMenuConfig
-								name="SelectionMenuConfig (Empty)"
-								menu={{
-									options: [],
-								}}
-								value="_"
-							/>
-							<SelectionMenuConfig
-								name="SelectionMenuConfig"
-								menu={{
-									options: [
-										{ label: "Option 1", value: "_1" },
-										{ label: "Option 2", value: "_2" },
-										{ label: "Option 3", value: "_3" },
-									],
-								}}
-								value="_1"
-							/>
-							<SelectionMenuConfig
-								name="SelectionMenuConfig (Searchable)"
-								menu={{
-									options: [
-										{ label: "Option 1", value: "_1" },
-										{ label: "Option 2", value: "_2" },
-										{ label: "Option 3", value: "_3" },
-									],
-									searchable: true,
-								}}
-								value="_1"
-							/>
-							<ActionMenuConfig
-								name="ActionMenuConfig (Searchable)"
-								menu={{
-									button: { text: "Action" },
-									options: [
-										{
-											label: "Option 1",
-											value: "option1",
-											onClick: () => {},
-										},
-										{
-											label: "Option 2",
-											value: "option2",
-											onClick: () => {},
-										},
-										{
-											label: "Option 3",
-											value: "option3",
-											onClick: () => {},
-										},
-									],
-									searchable: true,
-								}}
-							/>
-							<SelectionMenuConfig
-								name="SelectionMenuConfig (Disabled)"
-								menu={{
-									options: [
-										{ label: "Option 1", value: "_1" },
-										{ label: "Option 2", value: "_2" },
-									],
-								}}
-								value="_1"
-								disabled
-							/>
-							<SwitchConfig name="SwitchConfig (Checked)" value={true} onChange={() => {}} />
-							<SwitchConfig name="SwitchConfig (Unchecked)" value={false} onChange={() => {}} />
-							<SwitchConfig name="SwitchConfig (Disabled; Checked)" value={true} onChange={() => {}} disabled />
-							<SwitchConfig name="SwitchConfig (Disabled; Unchecked)" value={false} onChange={() => {}} disabled />
-							<ActionMenuConfig
-								name="ActionMenuConfig"
-								menu={{
-									button: { text: "Action" },
-									options: [
-										{
-											label: "Option 1",
-											value: "option1",
-											icon: faStar,
-											onClick: () => {},
-										},
-										{
-											label: "Option 2",
-											value: "option2",
-											icon: faPencil,
-											onClick: () => {},
-										},
-										{
-											label: "Option 3",
-											value: "option3",
-											icon: faTrash,
-											onClick: () => {},
-										},
-										{
-											label: "Option 4",
-											value: "option4",
-											icon: faInfo,
-											onClick: () => {},
-										},
-									],
-								}}
-							/>
-							<ActionMenuConfig
-								name="ActionMenuConfig (Disabled)"
-								menu={{
-									button: { text: "Action" },
-									options: [
-										{
-											label: "Option 1",
-											value: "option1",
-											onClick: () => {},
-										},
-									],
-								}}
-								disabled
-							/>
-							<InfoConfig name="InfoConfig" data="Key/value pair" copyButton />
-							<InfoConfig name="InfoConfig (No Copy)" data="Key/value pair (No copy)" />
+							<InfoConfig name="Environment" data={nodeEnv} copyButton />
+							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
+							<InfoConfig name="Electron Version" data={electronVersion} copyButton />
+							<InfoConfig name="Chromium Version" data={chromeVersion} copyButton />
 						</ContainerGroup>
+					</Container>
+					<Container name="settings_about_info">
+						<ButtonActionConfig name="" description={"This software is licensed under the MIT License.\n\nThis license, plus acknowledgements and the security policy can be found on the TaskBookly GitHub repository.\n\nMade with ❤️ by CodeDevelops"} button={{ icon: faGithub, text: "View on GitHub" }} />
 					</Container>
 				</>
 			),

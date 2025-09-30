@@ -9,6 +9,8 @@ interface Window {
 			getVersion: () => Promise<string>;
 			getNodeEnv: () => Promise<string>;
 			getPlatform: () => Promise<NodeJS.Platform>;
+			getElectronVersion: () => Promise<string>;
+			getChromeVersion: () => Promise<string>;
 		};
 		focus: {
 			start: () => void;

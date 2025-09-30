@@ -95,7 +95,6 @@ const Focus: React.FC = () => {
 		await window.electron.focus.useBreakCharge();
 	};
 
-	// Create cooldown message
 	const getCooldownMessage = () => {
 		if (chargeUsedThisSession) {
 			return "You've already used a charge this break session.";

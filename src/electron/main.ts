@@ -323,6 +323,14 @@ app.whenReady().then(() => {
 		return process.platform;
 	});
 
+	ipcMain.handle("get-electron-version", () => {
+		return process.versions.electron || "unknown";
+	});
+
+	ipcMain.handle("get-chrome-version", () => {
+		return process.versions.chrome || process.versions.v8 || "unknown";
+	});
+
 	ipcMain.handle("settings-load", () => {
 		return loadSettings();
 	});
