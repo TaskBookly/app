@@ -85,6 +85,7 @@ const Hint: React.FC<{ type: HintType; label: string }> = ({ type, label }) => {
 
 interface SelectionMenuOption {
 	label: string;
+	subLabel?: string;
 	value: string;
 }
 
@@ -237,8 +238,11 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 						role="option"
 						aria-selected={opt.value === value}
 					>
-						<span className="dd-label">{opt.label}</span>
-						{opt.value === value && <FontAwesomeIcon className="dd-check" icon={faCheck} widthAuto />}
+						<span className="dd-labels">
+							<label className="dd-mainLabel">{opt.label}</label>
+							<label className="dd-subLabel">{opt.subLabel}</label>
+						</span>
+						<span className="dd-check">{opt.value === value ? <FontAwesomeIcon icon={faCheck} widthAuto /> : null}</span>
 					</div>
 				))}
 			</DropdownMenu>
@@ -248,6 +252,7 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 
 interface ActionMenuOption {
 	label: string;
+	subLabel?: string;
 	value: string;
 	icon?: IconProp;
 	onClick?: () => void;
@@ -317,7 +322,10 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 						}}
 						role="menuitem"
 					>
-						<span className="dd-label">{opt.label}</span>
+						<span className="dd-labels">
+							<label className="dd-mainLabel">{opt.label}</label>
+							<label className="dd-subLabel">{opt.subLabel}</label>
+						</span>
 						{opt.icon && <FontAwesomeIcon className="dd-icon" icon={opt.icon} />}
 					</div>
 				))}

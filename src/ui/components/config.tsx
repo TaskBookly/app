@@ -87,7 +87,7 @@ const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint,
 		<div data-settingtype="info" className="setting">
 			<div className="settingContent">
 				<span className="settingInfo">
-					<label className="settingLabel">{name}</label>
+					<h3 className="settingLabel">{name}</h3>
 					<p className="settingDesc">{data}</p>
 				</span>
 			</div>
@@ -106,7 +106,7 @@ const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = fal
 		<div data-settingtype="switch" className="setting">
 			<div className="settingContent">
 				<span className="settingInfo">
-					<label className="settingLabel">{name}</label>
+					<h3 className="settingLabel">{name}</h3>
 					<p className="settingDesc">{description}</p>
 				</span>
 				<span className="settingInput">
@@ -128,7 +128,7 @@ const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, di
 		<div data-settingtype="actionButton" className="setting">
 			<div className="settingContent">
 				<span className="settingInfo">
-					<label className="settingLabel">{name}</label>
+					<h3 className="settingLabel">{name}</h3>
 					<p className="settingDesc">{description}</p>
 				</span>
 				<span className="settingInput">
@@ -150,7 +150,7 @@ const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, 
 		<div data-settingtype="actionButton" className="setting">
 			<div className="settingContent">
 				<span className="settingInfo">
-					<label className="settingLabel">{name}</label>
+					<h3 className="settingLabel">{name}</h3>
 					<p className="settingDesc">{description}</p>
 				</span>
 				<span className="settingInput">
@@ -172,7 +172,7 @@ const ActionMenuConfig: React.FC<ActionMenuProps> = ({ name, description, menu, 
 		<div data-settingtype="actionButton" className="setting">
 			<div className="settingContent">
 				<span className="settingInfo">
-					<label className="settingLabel">{name}</label>
+					<h3 className="settingLabel">{name}</h3>
 					<p className="settingDesc">{description}</p>
 				</span>
 				<span className="settingInput">

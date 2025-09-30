@@ -247,14 +247,29 @@ input[type="checkbox"]:checked:active::before {
 	margin: 0;
 	overflow: hidden;
 
-	svg.dd-check {
-		font-size: 0.9em;
+	.dd-check {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.25em;
+		margin-left: 0.5em;
+		color: inherit;
+		opacity: 0.95;
+		flex-shrink: 0;
 	}
 
-	span.dd-label {
+	span.dd-labels {
+		pointer-events: none;
+		display: flex;
+		flex-direction: column;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+
+		.dd-subLabel {
+			opacity: 70%;
+			font-size: 0.75rem;
+		}
 	}
 
 	svg.dd-icon {

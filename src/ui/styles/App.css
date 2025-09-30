@@ -242,7 +242,7 @@
 		top: 0;
 		left: 0;
 		padding: 10px 20px 10px 20px;
-		gap: 15px;
+		gap: 20px;
 		background-color: var(--clr-surface-a20);
 		align-items: center;
 		justify-content: space-between;
@@ -251,6 +251,7 @@
 		svg,
 		h2 {
 			font-size: 1.25em;
+			font-weight: 700;
 			vertical-align: middle;
 			margin: 0;
 		}
@@ -258,6 +259,13 @@
 			font-size: 1.25em;
 			opacity: 70%;
 		}
+	}
+
+	p {
+		font-size: 1em;
+		opacity: 60%;
+		margin: 0;
+		white-space: pre-line;
 	}
 }
 
@@ -353,14 +361,12 @@
 
 	.settingLabel {
 		font-size: 1.2em;
+		font-weight: 800;
+		margin: 0;
 		opacity: 85%;
 	}
 	.settingDesc {
-		font-size: 1em;
-		opacity: 60%;
 		margin: 0;
-		font-weight: 450;
-		white-space: pre-line;
 	}
 }
 
