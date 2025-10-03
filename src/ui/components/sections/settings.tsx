@@ -53,7 +53,6 @@ const Settings: React.FC = () => {
 		{ label: "Light", value: "light" },
 		{ label: "Dark", value: "dark" },
 		{ label: "Autumn Spice", subLabel: "NEW!", value: "autumnSpice" },
-
 		{ label: "Catppuccin", value: "catppuccin" },
 	];
 
