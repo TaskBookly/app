@@ -283,6 +283,10 @@ app.whenReady().then(() => {
 		return nativeTheme.shouldUseDarkColors ? "dark" : "light";
 	});
 
+	ipcMain.on("open-shell-url", (_, url) => {
+		shell.openExternal(url);
+	});
+
 	nativeTheme.on("updated", () => {
 		mainWindow.webContents.send("sys-theme-changed", nativeTheme.shouldUseDarkColors ? "dark" : "light");
 	});

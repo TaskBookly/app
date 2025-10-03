@@ -43,6 +43,7 @@ interface Window {
 		};
 		onJumpToSection: (callback: (section: string) => void) => void;
 		openUserData: () => Promise<void>;
+		openShellURL: (url: string) => void;
 	};
 }
 

@@ -56,4 +56,5 @@ contextBridge.exposeInMainWorld("electron", {
 	},
 	onJumpToSection: (callback) => ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section)),
 	openUserData: () => ipcRenderer.invoke("open-userdata"),
+	openShellURL: (url: string) => ipcRenderer.send("open-shell-url", url),
 } satisfies Window["electron"]);

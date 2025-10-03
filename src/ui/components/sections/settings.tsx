@@ -234,7 +234,7 @@ const Settings: React.FC = () => {
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_about_info">
-						<ButtonActionConfig name="" description={"This software is licensed under the MIT License.\n\nThis license, plus acknowledgements and the security policy can be found on the TaskBookly GitHub repository.\n\nMade with ❤️ by CodeDevelops"} button={{ icon: faGithub, text: "View on GitHub" }} />
+						<ButtonActionConfig name="" description={"This software is licensed under the MIT License.\n\nThis license, plus acknowledgements and the security policy can be found on the TaskBookly GitHub repository.\n\nMade with ❤️ by CodeDevelops"} button={{ icon: faGithub, text: "View on GitHub" }} onClick={() => window.electron.openShellURL("https://github.com/Taskbookly/app")} />
 					</Container>
 				</>
 			),
