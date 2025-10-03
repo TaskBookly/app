@@ -410,12 +410,17 @@ div.groupList {
 	animation: chargeGlow 2s ease-in-out infinite alternate, chargingShimmer 1.5s ease-in-out infinite;
 }
 
+/* Provide a variable that themes can optionally define for glow color; fallback uses primary color with alpha */
+:root {
+	--clr-primary-glow: rgba(71, 189, 250, 0.85);
+}
+
 @keyframes chargeGlow {
 	0% {
-		box-shadow: 0 0 5px rgba(71, 189, 250, 0.3);
+		box-shadow: 0 0 5px rgba(0, 0, 0, 0);
 	}
 	100% {
-		box-shadow: 0 0 20px rgba(71, 189, 250, 0.8), 0 0 40px rgba(71, 189, 250, 0.4);
+		box-shadow: 0 0 20px var(--clr-primary-glow), 0 0 40px rgba(0, 0, 0, 0.15);
 	}
 }
 

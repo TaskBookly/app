@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../core";
 import Tabs, { type Tab } from "../Tabs";
-import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
+import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig, PicturePickerConfig } from "../config";
 import { useSettings } from "../SettingsContext";
 import { faBell, faBolt, faFolderOpen, faGears, faHardDrive, faInfoCircle, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
@@ -50,10 +50,19 @@ const Settings: React.FC = () => {
 
 	const themeOptions: SelectionMenuOption[] = [
 		{ label: "System", value: "system" },
-		{ label: "Light", value: "light" },
-		{ label: "Dark", value: "dark" },
+		{ label: "Bookly Light", value: "light" },
+		{ label: "Bookly Dark", value: "dark" },
 		{ label: "Autumn Spice", subLabel: "NEW!", value: "autumnSpice" },
 		{ label: "Catppuccin", value: "catppuccin" },
+		{ label: "Midnight Ocean", value: "midnightOcean" },
+		{ label: "Sunset Blush", value: "sunsetBlush" },
+		{ label: "Forest Glass", value: "forestGlass" },
+		{ label: "Lavender Mist", value: "lavenderMist" },
+		{ label: "Retro Console", value: "retroConsole" },
+		{ label: "Peachy Sunrise", value: "peachySunrise" },
+		{ label: "Monochrome Ink", value: "monochromeInk" },
+		{ label: "Solar Flare", value: "solarFlare" },
+		{ label: "Mint Haze", value: "mintHaze" },
 	];
 
 	const notifOptions: SelectionMenuOption[] = [
@@ -122,7 +131,30 @@ const Settings: React.FC = () => {
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_general_misc">
-						<SelectionMenuConfig name="Theme" description="The theme that will be displayed across the app. New themes are added occasionally!" menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
+						<PicturePickerConfig
+							name="Theme"
+							description="The theme that will be displayed across the app. New themes are added occasionally!"
+							menu={{
+								options: themeOptions.map((o) => ({
+									...o,
+									previewRenderer: (vars: Record<string, string>) => (
+										<div>
+											<div style={{ position: "absolute", width: "0px", display: "flex", flexDirection: "column", padding: "15px 4px", gap: "3px" }}>
+												<div style={{ width: "12px", height: "12px", background: vars["--clr-surface-a0"], borderRadius: "0.25em" }} />
+												<div style={{ width: "12px", height: "12px", background: vars["--clr-primary-a10"], borderRadius: "0.25em" }} />
+											</div>
+											<div style={{ background: vars["--clr-surface-a20"], paddingLeft: "20px", paddingTop: "10px" }}>
+												<div style={{ maxWidth: "100%", height: "100%", background: vars["--clr-surface-a0"], borderTopLeftRadius: "0.5em", padding: "10px" }}>
+													<div style={{ width: "100%", height: "50px", background: vars["--clr-surface-a20"], borderRadius: "0.5em" }} />
+												</div>
+											</div>
+										</div>
+									),
+								})),
+							}}
+							value={getSetting("theme")}
+							onChange={(v) => setSetting("theme", v)}
+						/>
 						<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar, when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["mac"]} />
 					</Container>
 					<Container name="settings_general_reset">
