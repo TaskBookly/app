@@ -21,6 +21,7 @@ interface TimerData {
 	isOnCooldown: boolean;
 	cooldownBreaksLeft: number;
 	chargeUsedThisSession: boolean;
+	expectedFinish?: number;
 }
 
 class FocusTimer extends EventEmitter {
@@ -115,6 +116,14 @@ class FocusTimer extends EventEmitter {
 			cooldownBreaksLeft: cooldownBreaksLeft,
 			chargeUsedThisSession: this.chargeUsedThisSession,
 		};
+
+		// Compute a precise expected-finish timestamp (ms) to avoid renderer-side
+		// rounding errors when constructing a Date from integer seconds.
+		// Formula: sessionStartTime + sessionDurationMs + totalAddedTimeMs + totalPausedDuration
+		if (this.session !== "none" && this.sessionStartTime > 0) {
+			const sessionDurationMs = FocusTimer.sessions[this.session] * 60 * 1000;
+			data.expectedFinish = this.sessionStartTime + sessionDurationMs + this.totalAddedTime * 1000 + this.totalPausedDuration;
+		}
 		this.emit("timer-update", eventType, data);
 	}
 

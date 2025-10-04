@@ -1,10 +1,11 @@
 import React from "react";
 import IcoButton from "./core";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export interface Tab {
 	label: string;
 	key: string;
-	icon?: string;
+	icon?: IconProp;
 	content: React.ReactNode;
 }
 

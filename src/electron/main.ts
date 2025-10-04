@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell, nativeTheme } from "electron";
 
 import path from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
@@ -15,6 +15,10 @@ const { autoUpdater } = electronUpdPkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+if (process.platform === "win32") {
+	app.setAppUserModelId("com.taskbookly.app");
+}
 
 const packagePath = path.join(__dirname, "..", "package.json");
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
@@ -275,6 +279,18 @@ app.whenReady().then(() => {
 		shell.openPath(userDataPath);
 	});
 
+	ipcMain.handle("sys-theme", () => {
+		return nativeTheme.shouldUseDarkColors ? "dark" : "light";
+	});
+
+	ipcMain.on("open-shell-url", (_, url) => {
+		shell.openExternal(url);
+	});
+
+	nativeTheme.on("updated", () => {
+		mainWindow.webContents.send("sys-theme-changed", nativeTheme.shouldUseDarkColors ? "dark" : "light");
+	});
+
 	autoUpdater.on("update-available", (data) => {
 		if (Notification.isSupported()) {
 			const notif = new Notification({
@@ -309,6 +325,14 @@ app.whenReady().then(() => {
 
 	ipcMain.handle("get-platform", () => {
 		return process.platform;
+	});
+
+	ipcMain.handle("get-electron-version", () => {
+		return process.versions.electron || "unknown";
+	});
+
+	ipcMain.handle("get-chrome-version", () => {
+		return process.versions.chrome || process.versions.v8 || "unknown";
 	});
 
 	ipcMain.handle("settings-load", () => {
@@ -410,9 +434,7 @@ app.on("window-all-closed", () => {
 			secretDataManager.cleanup();
 		}
 	}
-	app.quit();
+	if (process.platform !== "darwin") {
+		app.quit();
+	}
 });
-
-const handleExit = () => process.exit(0);
-process.on("SIGINT", handleExit);
-process.on("SIGTERM", handleExit);

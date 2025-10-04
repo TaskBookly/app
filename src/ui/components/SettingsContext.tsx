@@ -78,7 +78,27 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 	};
 
 	useEffect(() => {
-		document.documentElement.setAttribute("data-theme", getSetting("theme"));
+		const applyTheme = async () => {
+			const theme = getSetting("theme");
+			if (theme === "system") {
+				const systemTheme = (await window.electron.system.getTheme()) ?? "dark";
+				document.documentElement.setAttribute("data-theme", systemTheme);
+			} else {
+				document.documentElement.setAttribute("data-theme", theme);
+			}
+		};
+		applyTheme();
+	}, [getSetting]);
+
+	useEffect(() => {
+		const handleThemeChange = (theme: string) => {
+			if (getSetting("theme") === "system") {
+				document.documentElement.setAttribute("data-theme", theme);
+			}
+		};
+
+		const cleanup = window.electron.system.onThemeChange(handleThemeChange);
+		return cleanup;
 	}, [getSetting]);
 
 	return <SettingsContext.Provider value={{ settings, setSetting, getSetting, setSettingsState, defaultSettings }}>{children}</SettingsContext.Provider>;

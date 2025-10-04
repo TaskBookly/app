@@ -3,6 +3,8 @@ import IcoButton, { Container, ActionMenu, type ActionMenuOption } from "../core
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
+import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faMugSaucer, faPause, faPlay, faPlus, faStop } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Focus: React.FC = () => {
 	const { getSetting } = useSettings();
@@ -37,7 +39,9 @@ const Focus: React.FC = () => {
 			setCooldownBreaksLeft(data.cooldownBreaksLeft || 0);
 			setChargeUsedThisSession(data.chargeUsedThisSession || false);
 
-			if (data.timeLeft && data.status !== "stopped") {
+			if (typeof data.expectedFinish === "number" && data.status !== "stopped") {
+				setSessionExpectedFinishDate(new Date(data.expectedFinish));
+			} else if (data.timeLeft && data.status !== "stopped") {
 				setSessionExpectedFinishDate(new Date(Date.now() + data.timeLeft * 1000));
 			}
 		});
@@ -47,6 +51,19 @@ const Focus: React.FC = () => {
 
 		return cleanup;
 	}, []);
+
+	useEffect(() => {
+		let id: number | undefined;
+		if (timerStatus === "paused") {
+			id = window.setInterval(() => {
+				setSessionExpectedFinishDate(new Date(Date.now() + timeLeftInSession * 1000));
+			}, 1000);
+		}
+
+		return () => {
+			if (id !== undefined) clearInterval(id);
+		};
+	}, [timerStatus, timeLeftInSession]);
 
 	const workSessionAddTimeOptions: ActionMenuOption[] = [
 		{ label: "1 minute", value: "60" },
@@ -78,7 +95,6 @@ const Focus: React.FC = () => {
 		await window.electron.focus.useBreakCharge();
 	};
 
-	// Create cooldown message
 	const getCooldownMessage = () => {
 		if (chargeUsedThisSession) {
 			return "You've already used a charge this break session.";
@@ -94,12 +110,10 @@ const Focus: React.FC = () => {
 			{timerStatus !== "stopped" ? (
 				<Container name="focus_time">
 					<div id="timerCont">
-						<label id="sessionType">
-							<span id="sessionTypeIcon" className="material-symbols-rounded">
-								{currentSession === "work" ? "business_center" : currentSession === "break" ? "coffee" : "switch_access_2"}
-							</span>
+						<div id="sessionType">
+							<FontAwesomeIcon icon={currentSession === "work" ? faBriefcase : currentSession === "break" ? faMugSaucer : faAnglesRight} widthAuto />
 							{currentSession === "work" ? "WORKING" : currentSession === "break" ? "TAKING A BREAK" : "TRANSITIONING"}
-						</label>
+						</div>
 
 						<label id="sessionTimer">{formatAsTime(timeLeftInSession)}</label>
 						<label id="sessionEndTime">{`Ending at ${formatAsClockTime(sessionExpectedFinishDate)}`}</label>
@@ -112,32 +126,30 @@ const Focus: React.FC = () => {
 					<div className="buttonGroup">
 						{timerStatus === "counting" ? (
 							<>
-								<IcoButton text="Pause" icon="pause" disabled={currentSession === "break" || currentSession === "transition"} onClick={{ action: handlePause }} />
-								<IcoButton text="Stop" icon="stop" onClick={{ action: handleStop }} />
+								<IcoButton text="Pause" icon={faPause} disabled={currentSession === "break" || currentSession === "transition"} onClick={{ action: handlePause }} />
+								<IcoButton text="Stop" icon={faStop} onClick={{ action: handleStop }} />
 							</>
 						) : timerStatus === "paused" ? (
 							<>
-								<IcoButton text="Resume" icon="resume" onClick={{ action: handleResume }} />
-								<IcoButton text="Stop" icon="stop" onClick={{ action: handleStop }} />
+								<IcoButton text="Resume" icon={faPlay} onClick={{ action: handleResume }} />
+								<IcoButton text="Stop" icon={faStop} onClick={{ action: handleStop }} />
 							</>
 						) : (
-							<IcoButton text="Start" icon="play_arrow" onClick={{ action: handleStart }} />
+							<IcoButton text="Start" icon={faPlay} onClick={{ action: handleStart }} />
 						)}
 
-						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value) => handleAddTime(parseInt(value))} button={<IcoButton icon="timer_arrow_up" text="Add time" />} /> : null}
+						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value) => handleAddTime(parseInt(value))} button={<IcoButton icon={faPlus} text="Add time" />} /> : null}
 					</div>
 				</div>
 			</Container>
 			{getSetting("breakChargingEnabled") === "true" ? (
 				<Container name="focus_breakCharging">
-					<ButtonActionConfig name="Break charging" description="You'll receive 'Break charges' after enough hours of working. These charges can be used once per break period and will extend them by a few minutes as a reward for working hard!" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Use break charge", icon: "electric_bolt" }} onClick={handleUseBreakCharge}>
+					<ButtonActionConfig name="Break charging" description="You'll receive 'Break charges' after enough hours of working. These charges can be used once per break period and will extend them by a few minutes as a reward for working hard!" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Use break charge", icon: faBolt }} onClick={handleUseBreakCharge}>
 						<div className="groupList">
 							<h3 style={{ margin: 0, marginBlockEnd: "-5px" }}>
 								You have <b>{Math.max(0, breakChargesLeft)}</b> {breakChargesLeft === 1 ? "charge" : "charges"} left.
 							</h3>
-							<label className="sub" style={{ opacity: "70%" }}>
-								{timeLeftTillNextCharge < 60 ? <b>Less than 1 minute</b> : timeLeftTillNextCharge === 60 ? <b>1 minute</b> : Math.ceil(timeLeftTillNextCharge / 60) === 1 ? <b>1 minute</b> : <b>{Math.ceil(timeLeftTillNextCharge / 60)} minutes</b>} of work left till your next break charge is ready!
-							</label>
+							<p>{timeLeftTillNextCharge < 60 ? <b>Less than 1 minute</b> : timeLeftTillNextCharge === 60 ? <b>1 minute</b> : Math.ceil(timeLeftTillNextCharge / 60) === 1 ? <b>1 minute</b> : <b>{Math.ceil(timeLeftTillNextCharge / 60)} minutes</b>} of work left till your next break charge is ready!</p>
 						</div>
 						<div id="chargingProgress">
 							<div
@@ -145,12 +157,12 @@ const Focus: React.FC = () => {
 									width: `${Math.min(Math.max(chargeProgressPercentage, 0), 100)}%`,
 								}}
 								className={isCharging ? "charging-effect" : ""}
-							></div>
+							/>
 						</div>
 						{getCooldownMessage() ? (
-							<label className="sub" style={{ marginTop: "8px", display: "block", opacity: "70%" }}>
-								{getCooldownMessage()}
-							</label>
+							<p>
+								<FontAwesomeIcon icon={faHourglassHalf} /> {getCooldownMessage()}
+							</p>
 						) : null}
 					</ButtonActionConfig>
 				</Container>

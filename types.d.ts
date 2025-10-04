@@ -9,6 +9,8 @@ interface Window {
 			getVersion: () => Promise<string>;
 			getNodeEnv: () => Promise<string>;
 			getPlatform: () => Promise<NodeJS.Platform>;
+			getElectronVersion: () => Promise<string>;
+			getChromeVersion: () => Promise<string>;
 		};
 		focus: {
 			start: () => void;
@@ -22,6 +24,10 @@ interface Window {
 		};
 		sound: {
 			onplaySound: (callback: (soundPath: string) => void) => void;
+		};
+		system: {
+			getTheme: () => Promise<string>;
+			onThemeChange: (callback: (theme: string) => void) => void;
 		};
 		settings: {
 			load: () => Promise<Record<string, string>>;
@@ -37,6 +43,7 @@ interface Window {
 		};
 		onJumpToSection: (callback: (section: string) => void) => void;
 		openUserData: () => Promise<void>;
+		openShellURL: (url: string) => void;
 	};
 }
 
@@ -50,4 +57,5 @@ interface TimerData {
 	isOnCooldown: boolean;
 	cooldownBreaksLeft: number;
 	chargeUsedThisSession: boolean;
+	expectedFinish?: number;
 }

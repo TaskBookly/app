@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../core";
 import Tabs, { type Tab } from "../Tabs";
-import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig } from "../config";
+import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig, PicturePickerConfig } from "../config";
 import { useSettings } from "../SettingsContext";
+import { faBell, faBolt, faFolderOpen, faGears, faHardDrive, faInfoCircle, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
 const Settings: React.FC = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
 	const [appVersion, setAppVersion] = useState<string>("Loading...");
 	const [nodeEnv, setNodeEnv] = useState<string>("Loading...");
 	const [platform, setPlatform] = useState<NodeJS.Platform | null>(null);
+	const [electronVersion, setElectronVersion] = useState<string>("Loading...");
+	const [chromeVersion, setChromeVersion] = useState<string>("Loading...");
 
 	const handleOpenSettingsDirectory = () => {
 		if (window.electron?.openUserData) {
@@ -30,10 +34,32 @@ const Settings: React.FC = () => {
 			});
 	}, []);
 
+	useEffect(() => {
+		(async () => {
+			try {
+				const [elec, chrome] = await Promise.all([window.electron.build.getElectronVersion(), window.electron.build.getChromeVersion()]);
+				setElectronVersion(elec);
+				setChromeVersion(chrome);
+			} catch (err) {
+				console.debug("Extended app info not available:", err);
+				setElectronVersion("Unknown");
+				setChromeVersion("Unknown");
+			}
+		})();
+	}, []);
+
 	const themeOptions: SelectionMenuOption[] = [
-		{ label: "Light", value: "light" },
-		{ label: "Dark", value: "dark" },
+		{ label: "System", value: "system" },
+		{ label: "Bookly Light", value: "light" },
+		{ label: "Bookly Dark", value: "dark" },
+		{ label: "Autumn Spice", subLabel: "NEW!", value: "autumnSpice" },
 		{ label: "Catppuccin", value: "catppuccin" },
+		{ label: "Midnight Ocean", subLabel: "NEW!", value: "midnightOcean" },
+		{ label: "Sunset Blush", subLabel: "NEW!", value: "sunsetBlush" },
+		{ label: "Forest Glass", subLabel: "NEW!", value: "forestGlass" },
+		{ label: "Lavender Mist", subLabel: "NEW!", value: "lavenderMist" },
+		{ label: "Retro Console", subLabel: "NEW!", value: "retroConsole" },
+		{ label: "Monochrome Ink", subLabel: "NEW!", value: "monochromeInk" },
 	];
 
 	const notifOptions: SelectionMenuOption[] = [
@@ -93,75 +119,42 @@ const Settings: React.FC = () => {
 		{
 			label: "General",
 			key: "general",
-			icon: "settings",
+			icon: faGears,
 			content: (
 				<>
-					<Container name="settings_general">
+					<Container name="settings_general_software" header={{ title: "Software", icon: faHardDrive }}>
 						<ContainerGroup>
 							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
-							<SelectionMenuConfig hint={{ type: "info", label: "More themes coming soon! :>" }} name="Theme" description="The theme that should be displayed across TaskBookly." menu={{ options: themeOptions }} value={getSetting("theme")} onChange={(v) => setSetting("theme", v)} />
 						</ContainerGroup>
 					</Container>
-					<Container name="settings_focus" header={{ title: "Focus", icon: "timer" }}>
-						<ContainerGroup>
-							<SwitchConfig name="Transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
-							<SwitchConfig name="Break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
-						</ContainerGroup>
-						<ContainerGroup>
-							{(() => {
-								const workDuration = parseInt(getSetting("workPeriodDuration"));
-								const breakDuration = parseInt(getSetting("breakPeriodDuration"));
-								const ratio = breakDuration / workDuration;
-
-								if (ratio <= 0.17) {
-									return <Hint type="warning" label="Your breaks may be too short for sustained focus. Consider longer breaks." />;
-								}
-								if (ratio >= 0.75) {
-									return <Hint type="warning" label="Your breaks are unusually long compared to work time. Consider adjusting the balance." />;
-								}
-								return null;
-							})()}
-							<SelectionMenuConfig name="Work period duration" menu={{ options: focusSessionWorkDurationOptions }} value={getSetting("workPeriodDuration")} onChange={(v) => setSetting("workPeriodDuration", v)} />
-							<SelectionMenuConfig name="Break period duration" menu={{ options: focusSessionBreakDurationOptions }} value={getSetting("breakPeriodDuration")} onChange={(v) => setSetting("breakPeriodDuration", v)} />
-							{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
-						</ContainerGroup>
-						{getSetting("breakChargingEnabled") === "true" ? (
-							<ContainerGroup>
-								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
-								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
-								<SelectionMenuConfig name="Work time per charge" description="The amount of work time needed to earn a break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting("workTimePerCharge")} onChange={(v) => setSetting("workTimePerCharge", v)} />
-							</ContainerGroup>
-						) : null}
+					<Container name="settings_general_misc">
+						<PicturePickerConfig
+							name="Theme"
+							description="The theme that will be displayed across the app. New themes are added occasionally!"
+							menu={{
+								options: themeOptions.map((o) => ({
+									...o,
+									previewRenderer: (vars: Record<string, string>) => (
+										<div>
+											<div style={{ position: "absolute", width: "0px", display: "flex", flexDirection: "column", padding: "15px 4px", gap: "3px" }}>
+												<div style={{ width: "12px", height: "12px", background: vars["--clr-surface-a0"], borderRadius: "0.25em" }} />
+												<div style={{ width: "12px", height: "12px", background: vars["--clr-primary-a10"], borderRadius: "0.25em" }} />
+											</div>
+											<div style={{ background: vars["--clr-surface-a20"], paddingLeft: "20px", paddingTop: "10px" }}>
+												<div style={{ maxWidth: "100%", height: "100%", background: vars["--clr-surface-a0"], borderTopLeftRadius: "0.5em", padding: "10px" }}>
+													<div style={{ width: "100%", height: "50px", background: vars["--clr-surface-a20"], borderRadius: "0.5em" }} />
+												</div>
+											</div>
+										</div>
+									),
+								})),
+							}}
+							value={getSetting("theme")}
+							onChange={(v) => setSetting("theme", v)}
+						/>
+						<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar, when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["mac"]} />
 					</Container>
-				</>
-			),
-		},
-		{
-			label: "Notifications",
-			key: "notifs",
-			icon: "notifications_unread",
-			content: (
-				<>
-					<Container name="settings_notifs">
-						<ContainerGroup>
-							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
-						</ContainerGroup>
-					</Container>
-				</>
-			),
-		},
-		{
-			label: "Misc",
-			key: "misc",
-			icon: "pending",
-			content: (
-				<>
-					<Container name="settings_misc">
-						<ContainerGroup>
-							<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["mac"]} />
-						</ContainerGroup>
-					</Container>
-					<Container name="settings_reset">
+					<Container name="settings_general_reset">
 						<ContainerGroup>
 							<ActionMenuConfig
 								name="Reset all settings to default"
@@ -191,146 +184,85 @@ const Settings: React.FC = () => {
 			),
 		},
 		{
-			label: "Client",
-			key: "client",
-			icon: "monitor",
+			label: "Focus",
+			key: "focus",
+			icon: faLightbulb,
 			content: (
 				<>
-					<Container name="settings_clientData">
+					<Container name="settings_focus_features">
+						<ContainerGroup>
+							<SwitchConfig name="Transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
+							<SwitchConfig name="Break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
+						</ContainerGroup>
+					</Container>
+					<Container name="settings_focus_durations" header={{ title: "Period Lengths", icon: faTimeline }}>
+						<ContainerGroup>
+							{(() => {
+								const workDuration = parseInt(getSetting("workPeriodDuration"));
+								const breakDuration = parseInt(getSetting("breakPeriodDuration"));
+								const ratio = breakDuration / workDuration;
+
+								if (ratio <= 0.17) {
+									return <Hint type="warning" label="Your breaks may be too short for sustained focus. Consider longer breaks." />;
+								}
+								if (ratio >= 0.75) {
+									return <Hint type="warning" label="Your breaks are unusually long compared to work time. Consider adjusting the balance." />;
+								}
+								return null;
+							})()}
+							<SelectionMenuConfig name="Work period duration" menu={{ options: focusSessionWorkDurationOptions }} value={getSetting("workPeriodDuration")} onChange={(v) => setSetting("workPeriodDuration", v)} />
+							<SelectionMenuConfig name="Break period duration" menu={{ options: focusSessionBreakDurationOptions }} value={getSetting("breakPeriodDuration")} onChange={(v) => setSetting("breakPeriodDuration", v)} />
+							{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
+						</ContainerGroup>
+					</Container>
+					{getSetting("breakChargingEnabled") === "true" ? (
+						<Container name="settings_focus_breakCharging" header={{ title: "Break Charging", icon: faBolt }}>
+							<ContainerGroup>
+								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
+								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
+								<SelectionMenuConfig name="Work time per charge" description="The amount of work time needed to earn a break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting("workTimePerCharge")} onChange={(v) => setSetting("workTimePerCharge", v)} />
+							</ContainerGroup>
+						</Container>
+					) : null}
+				</>
+			),
+		},
+		{
+			label: "Notifications",
+			key: "notifs",
+			icon: faBell,
+			content: (
+				<>
+					<Container name="settings_notifs">
+						<ContainerGroup>
+							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
+						</ContainerGroup>
+					</Container>
+				</>
+			),
+		},
+		{
+			label: "About",
+			key: "appDetails",
+			icon: faInfoCircle,
+			content: (
+				<>
+					<Container name="settings_about_appPackage">
 						<ContainerGroup>
 							<InfoConfig name="Version" data={appVersion} copyButton />
-							<InfoConfig name="Node environment" data={nodeEnv} copyButton />
-							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
-							<ButtonActionConfig name="UserData" button={{ text: "Open Folder", icon: "folder_open" }} onClick={handleOpenSettingsDirectory} />
+							<ButtonActionConfig name="User Data" button={{ text: "Open Folder", icon: faFolderOpen }} onClick={handleOpenSettingsDirectory} />
 						</ContainerGroup>
 					</Container>
-					<Container name="settings_hintTypes">
-						<Hint type="info" label="Info hint type" />
-						<Hint type="warning" label="Warning hint type" />
-						<Hint type="error" label="Error hint type" />
-						<Hint type="success" label="Success hint type" />
-						<Hint type="processing" label="Processing hint type" />
-					</Container>
-					<Container name="settings_configComponents">
+					<Container name="settings_about_appAboutMisc">
 						<ContainerGroup>
-							<SelectionMenuConfig
-								name="SelectionMenuConfig (Empty)"
-								menu={{
-									options: [],
-								}}
-								value="_"
-							/>
-							<SelectionMenuConfig
-								name="SelectionMenuConfig"
-								menu={{
-									options: [
-										{ label: "Option 1", value: "_1" },
-										{ label: "Option 2", value: "_2" },
-										{ label: "Option 3", value: "_3" },
-									],
-								}}
-								value="_1"
-							/>
-							<SelectionMenuConfig
-								name="SelectionMenuConfig (Searchable)"
-								menu={{
-									options: [
-										{ label: "Option 1", value: "_1" },
-										{ label: "Option 2", value: "_2" },
-										{ label: "Option 3", value: "_3" },
-									],
-									searchable: true,
-								}}
-								value="_1"
-							/>
-							<ActionMenuConfig
-								name="ActionMenuConfig (Searchable)"
-								menu={{
-									button: { text: "Action" },
-									options: [
-										{
-											label: "Option 1",
-											value: "option1",
-											onClick: () => {},
-										},
-										{
-											label: "Option 2",
-											value: "option2",
-											onClick: () => {},
-										},
-										{
-											label: "Option 3",
-											value: "option3",
-											onClick: () => {},
-										},
-									],
-									searchable: true,
-								}}
-							/>
-							<SelectionMenuConfig
-								name="SelectionMenuConfig (Disabled)"
-								menu={{
-									options: [
-										{ label: "Option 1", value: "_1" },
-										{ label: "Option 2", value: "_2" },
-									],
-								}}
-								value="_1"
-								disabled
-							/>
-							<SwitchConfig name="SwitchConfig (Checked)" value={true} onChange={() => {}} />
-							<SwitchConfig name="SwitchConfig (Unchecked)" value={false} onChange={() => {}} />
-							<SwitchConfig name="SwitchConfig (Disabled; Checked)" value={true} onChange={() => {}} disabled />
-							<SwitchConfig name="SwitchConfig (Disabled; Unchecked)" value={false} onChange={() => {}} disabled />
-							<ActionMenuConfig
-								name="ActionMenuConfig"
-								menu={{
-									button: { text: "Action" },
-									options: [
-										{
-											label: "Option 1",
-											value: "option1",
-											icon: "star",
-											onClick: () => {},
-										},
-										{
-											label: "Option 2",
-											value: "option2",
-											icon: "edit",
-											onClick: () => {},
-										},
-										{
-											label: "Option 3",
-											value: "option3",
-											icon: "delete",
-											onClick: () => {},
-										},
-										{
-											label: "Option 4",
-											value: "option4",
-											icon: "info",
-											onClick: () => {},
-										},
-									],
-								}}
-							/>
-							<ActionMenuConfig
-								name="ActionMenuConfig (Disabled)"
-								menu={{
-									button: { text: "Action" },
-									options: [
-										{
-											label: "Option 1",
-											value: "option1",
-											onClick: () => {},
-										},
-									],
-								}}
-								disabled
-							/>
-							<InfoConfig name="InfoConfig" data="Key/value pair" copyButton />
-							<InfoConfig name="InfoConfig (No Copy)" data="Key/value pair (No copy)" />
+							<InfoConfig name="Environment" data={nodeEnv} copyButton />
+							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
+							<InfoConfig name="Electron Version" data={electronVersion} copyButton />
+							<InfoConfig name="Chromium Version" data={chromeVersion} copyButton />
 						</ContainerGroup>
+					</Container>
+					<Container name="settings_about_info">
+						<ButtonActionConfig name="" description={"This software is licensed under the MIT License.\n\nThis license, plus acknowledgements and the security policy can be found on the TaskBookly GitHub repository.\n\nMade with ❤️ by CodeDevelops"} button={{ icon: faGithub, text: "View on GitHub" }} onClick={() => window.electron.openShellURL("https://github.com/Taskbookly/app")} />
 					</Container>
 				</>
 			),

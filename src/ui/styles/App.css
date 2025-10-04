@@ -41,26 +41,32 @@
 
 	button {
 		overflow: hidden;
-		.buttonIcon {
-			font-size: 2em;
-		}
-	}
-
-	button:not(#toggleSbBtn) {
-		justify-content: space-between;
 		display: flex;
+		justify-content: space-between;
 		width: 100%;
-	}
-
-	button:not(.selected) span {
-		opacity: 80%;
+		height: min-content;
+		padding-block: 1em;
 	}
 
 	#toggleSbBtn {
-		width: min-content;
+		width: 65px;
+		max-height: 40px;
+	}
+
+	#sbIcon {
+		width: 65px;
+		height: auto;
+		max-width: 100%;
+		color: var(--clr-primary-a20);
+	}
+
+	.buttonIcon {
+		font-size: 1.5em;
 	}
 
 	.buttonText {
+		position: absolute;
+		right: 1em;
 		transition: opacity 0.3s ease;
 		white-space: nowrap;
 	}
@@ -82,6 +88,18 @@
 	pointer-events: auto;
 }
 
+@media (max-width: 749px) {
+	#sidebar {
+		flex-basis: 97px !important;
+	}
+
+	#sidebar .buttonText,
+	#sidebar button .buttonText {
+		opacity: 0 !important;
+		pointer-events: none !important;
+	}
+}
+
 #titlebar {
 	position: relative;
 	flex: 0 0 36px;
@@ -91,7 +109,6 @@
 	display: flex;
 	align-items: center;
 	font-size: 1.1em;
-	font-weight: 600;
 	-webkit-app-region: drag;
 	user-select: none;
 	z-index: 9999;
@@ -177,12 +194,6 @@
 	border-top-left-radius: 20px;
 	outline: 1px solid var(--clr-surface-a20);
 	outline-offset: -1px;
-
-	.sectionLabel {
-		font-size: 3em;
-		font-weight: 1000;
-		margin-bottom: 100px;
-	}
 }
 
 #sectionContainer > .section {
@@ -192,6 +203,12 @@
 	max-height: 100%;
 	box-sizing: border-box;
 	overflow: auto;
+
+	.sectionHeader {
+		font-size: 3em;
+		font-weight: 900;
+		margin-block: 15px 25px;
+	}
 }
 
 #sectionContainer > .section.section-anim-in,
@@ -225,20 +242,30 @@
 		top: 0;
 		left: 0;
 		padding: 10px 20px 10px 20px;
-		gap: 10px;
+		gap: 20px;
 		background-color: var(--clr-surface-a20);
-		padding-bottom: 10px;
+		align-items: center;
+		justify-content: space-between;
+		box-sizing: border-box;
 
-		span,
-		label {
+		svg,
+		h2 {
 			font-size: 1.25em;
+			font-weight: 700;
 			vertical-align: middle;
-			display: flex;
-			align-items: center;
+			margin: 0;
 		}
-		span {
-			font-size: 1.75em;
+		svg {
+			font-size: 1.25em;
+			opacity: 70%;
 		}
+	}
+
+	p {
+		font-size: 1em;
+		opacity: 60%;
+		margin: 0;
+		white-space: pre-line;
 	}
 }
 
@@ -256,6 +283,7 @@
 
 		button {
 			width: 100%;
+			white-space: nowrap;
 		}
 	}
 }
@@ -280,7 +308,7 @@
 	padding: 1em 1em;
 	border-radius: 1em;
 	gap: 0.75em;
-	align-items: start;
+	align-items: center;
 
 	.hintLabel {
 		opacity: 80%;
@@ -288,6 +316,7 @@
 	}
 
 	.hintIcon {
+		font-size: 1.25em;
 		opacity: 70%;
 	}
 }
@@ -306,7 +335,7 @@
 }
 .hint.hintType-processing {
 	.hintIcon {
-		animation: spin 1s linear infinite;
+		animation: spin 2s linear infinite;
 	}
 }
 
@@ -332,13 +361,12 @@
 
 	.settingLabel {
 		font-size: 1.2em;
+		font-weight: 800;
+		margin: 0;
+		opacity: 85%;
 	}
 	.settingDesc {
-		font-size: 1em;
-		opacity: 70%;
 		margin: 0;
-		font-weight: 500;
-		white-space: pre-line;
 	}
 }
 
@@ -382,12 +410,17 @@ div.groupList {
 	animation: chargeGlow 2s ease-in-out infinite alternate, chargingShimmer 1.5s ease-in-out infinite;
 }
 
+/* Provide a variable that themes can optionally define for glow color; fallback uses primary color with alpha */
+:root {
+	--clr-primary-glow: rgba(71, 189, 250, 0.85);
+}
+
 @keyframes chargeGlow {
 	0% {
-		box-shadow: 0 0 5px rgba(71, 189, 250, 0.3);
+		box-shadow: 0 0 5px rgba(0, 0, 0, 0);
 	}
 	100% {
-		box-shadow: 0 0 20px rgba(71, 189, 250, 0.8), 0 0 40px rgba(71, 189, 250, 0.4);
+		box-shadow: 0 0 20px var(--clr-primary-glow), 0 0 40px rgba(0, 0, 0, 0.15);
 	}
 }
 
@@ -451,15 +484,20 @@ div.groupList {
 	flex-direction: column;
 	justify-content: center;
 	text-align: center;
+	vertical-align: middle;
 
-	label#sessionType {
+	div#sessionType {
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
-		vertical-align: middle;
+		align-items: center;
 		gap: 0.5em;
 		font-size: 1em;
 		color: var(--clr-primary-a50);
+
+		svg {
+			font-size: 1.25em;
+		}
 	}
 
 	label#sessionTimer {

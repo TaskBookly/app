@@ -1,7 +1,6 @@
 export const DEFAULT_SETTINGS_CONFIG = {
 	notifsFocus: "all",
-	notifsTasks: "notifsOnly",
-	theme: "dark",
+	theme: "system",
 	autoCheckForUpdates: "true",
 	transitionPeriodsEnabled: "false",
 	breakChargingEnabled: "true",

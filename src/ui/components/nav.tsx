@@ -110,8 +110,8 @@ const Section: React.FC<{ name: string; displayTitle?: string }> = ({ name, disp
 
 	return (
 		<section className="section" data-section={name}>
-			<label className="sectionLabel">{displayTitle || name}</label>
-			{SectionComponent ? <SectionComponent /> : <div>Loading...</div>}
+			<h1 className="sectionHeader">{displayTitle || name}</h1>
+			{SectionComponent ? <SectionComponent /> : <div>There was a problem loading this page, please open a new issue.</div>}
 		</section>
 	);
 };

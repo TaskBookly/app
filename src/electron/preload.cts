@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld("electron", {
 		getVersion: () => ipcRenderer.invoke("get-app-version"),
 		getNodeEnv: () => ipcRenderer.invoke("get-node-env"),
 		getPlatform: () => ipcRenderer.invoke("get-platform"),
+		getElectronVersion: () => ipcRenderer.invoke("get-electron-version"),
+		getChromeVersion: () => ipcRenderer.invoke("get-chrome-version"),
 	},
 	focus: {
 		start: () => ipcRenderer.send("focus-start"),
@@ -28,8 +30,14 @@ contextBridge.exposeInMainWorld("electron", {
 		},
 	},
 	sound: {
-		onplaySound: (callback) => {
-			ipcRenderer.on("play-sound", (_event: any, soundPath: string) => callback(soundPath));
+		onplaySound: (callback) => ipcRenderer.on("play-sound", (_event: any, soundPath: string) => callback(soundPath)),
+	},
+	system: {
+		getTheme: () => ipcRenderer.invoke("sys-theme"),
+		onThemeChange: (callback) => {
+			ipcRenderer.on("sys-theme-changed", (_event: any, theme: string) => callback(theme));
+			// Return cleanup function
+			return () => ipcRenderer.removeAllListeners("sys-theme-changed");
 		},
 	},
 	settings: {
@@ -48,4 +56,5 @@ contextBridge.exposeInMainWorld("electron", {
 	},
 	onJumpToSection: (callback) => ipcRenderer.on("jumpto-section", (_event: any, section: string) => callback(section)),
 	openUserData: () => ipcRenderer.invoke("open-userdata"),
+	openShellURL: (url: string) => ipcRenderer.send("open-shell-url", url),
 } satisfies Window["electron"]);
