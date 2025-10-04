@@ -259,7 +259,6 @@ const PicturePickerConfig: React.FC<PicturePickerProps> = ({ name, description, 
 	if (availableOn && !availableOn.includes(platform)) return null;
 	const rows = menu.rows && menu.rows > 0 ? menu.rows : 1;
 
-	// Track a simple revision counter to force recompute when system theme changes
 	const [, setRevision] = React.useState(0);
 
 	React.useEffect(() => {
@@ -270,7 +269,6 @@ const PicturePickerConfig: React.FC<PicturePickerProps> = ({ name, description, 
 		};
 	}, []);
 
-	// Precompute vars for all options once per revision to avoid repeated layout queries
 	const optionVars: Record<string, Record<string, string>> = {};
 	if (typeof window !== "undefined") {
 		for (const opt of menu.options) {
@@ -297,8 +295,8 @@ const PicturePickerConfig: React.FC<PicturePickerProps> = ({ name, description, 
 										<div className="picture-picker__preview">{opt.previewRenderer ? opt.previewRenderer(vars) : defaultPreview(vars)}</div>
 										<div className="picture-picker__labelWrap">
 											<div className="picture-picker__label">{opt.label}</div>
-											{opt.subLabel ? <div className="picture-picker__sublabel">{opt.subLabel}</div> : null}
 										</div>
+										{opt.subLabel ? <span className="picture-picker__badge">{opt.subLabel}</span> : null}
 									</button>
 								</div>
 							);

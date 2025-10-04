@@ -339,6 +339,7 @@ input[type="checkbox"]:checked:active::before {
 	min-width: 150px;
 	max-width: 150px;
 	box-sizing: border-box;
+	position: relative;
 }
 
 .picture-picker__preview {
@@ -369,4 +370,19 @@ input[type="checkbox"]:checked:active::before {
 .picture-picker__sublabel {
 	font-size: 0.75rem;
 	opacity: 0.75;
+}
+
+.picture-picker__badge {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	outline: 3px solid var(--clr-surface-a10);
+	background-color: var(--clr-primary-a10);
+	color: var(--clr-text-button-selected);
+	padding: 0.15rem 0.45rem;
+	border-radius: 1em;
+	font-size: 0.7rem;
+	font-weight: 800;
+	pointer-events: none;
+	z-index: 5;
 }
