@@ -55,7 +55,7 @@ const Settings: React.FC = () => {
 		{ label: "Autumn Spice", subLabel: "NEW!", value: "autumnSpice" },
 		{ label: "Catppuccin", value: "catppuccin" },
 		{ label: "Midnight Ocean", subLabel: "NEW!", value: "midnightOcean" },
-		{ label: "Sunset Blush", subLabel: "NEW!", value: "sunsetBlush" },
+		{ label: "Strawberry Splash", subLabel: "NEW!", value: "strawberrySplash" },
 		{ label: "Forest Glass", subLabel: "NEW!", value: "forestGlass" },
 		{ label: "Lavender Mist", subLabel: "NEW!", value: "lavenderMist" },
 		{ label: "Retro Console", subLabel: "NEW!", value: "retroConsole" },
@@ -137,12 +137,12 @@ const Settings: React.FC = () => {
 									previewRenderer: (vars: Record<string, string>) => (
 										<div>
 											<div style={{ position: "absolute", width: "0px", display: "flex", flexDirection: "column", padding: "15px 4px", gap: "3px" }}>
-												<div style={{ width: "12px", height: "12px", background: vars["--clr-surface-a0"], borderRadius: "0.25em" }} />
+												<div style={{ width: "12px", height: "12px", background: vars["--clr-surface-a20"], borderRadius: "0.25em" }} />
 												<div style={{ width: "12px", height: "12px", background: vars["--clr-primary-a10"], borderRadius: "0.25em" }} />
 											</div>
-											<div style={{ background: vars["--clr-surface-a20"], paddingLeft: "20px", paddingTop: "10px" }}>
+											<div style={{ background: vars["--clr-surface-a10"], paddingLeft: "20px", paddingTop: "10px" }}>
 												<div style={{ maxWidth: "100%", height: "100%", background: vars["--clr-surface-a0"], borderTopLeftRadius: "0.5em", padding: "10px" }}>
-													<div style={{ width: "100%", height: "50px", background: vars["--clr-surface-a20"], borderRadius: "0.5em" }} />
+													<div style={{ width: "100%", height: "50px", background: vars["--clr-surface-a10"], borderRadius: "0.5em" }} />
 												</div>
 											</div>
 										</div>

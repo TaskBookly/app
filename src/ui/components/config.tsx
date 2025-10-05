@@ -63,7 +63,7 @@ interface SelectionMenuProps extends ConfigDefaults {
 }
 
 interface PicturePickerOption extends SelectionMenuOption {
-	previewRenderer?: (vars: Record<string, string>) => React.ReactNode;
+	previewRenderer: (vars: Record<string, string>) => React.ReactNode;
 }
 
 interface PicturePickerProps extends ConfigDefaults {
@@ -226,7 +226,7 @@ function readThemeVars(theme: string): Record<string, string> {
 	}
 
 	const cs = getComputedStyle(root);
-	const keys = ["--clr-surface-a0", "--clr-surface-a20", "--clr-primary-a10", "--clr-primary-a50", "--clr-text", "--clr-button-selected-surface-highlights", "--clr-text-button-selected"];
+	const keys = ["--clr-surface-a0", "--clr-surface-a10", "--clr-surface-a20", "--clr-primary-a10", "--clr-primary-a20"];
 	const out: Record<string, string> = {};
 	for (const k of keys) {
 		out[k] = cs.getPropertyValue(k) || "";
@@ -242,17 +242,6 @@ function readThemeVars(theme: string): Record<string, string> {
 	__themeVarCache.set(cacheKey, out);
 	return out;
 }
-
-const defaultPreview = (vars: Record<string, string>) => {
-	return (
-		<div>
-			<div>
-				<div style={{ width: "40%", height: 32, background: vars["--clr-surface-a20"], borderRadius: 4 }} />
-				<div style={{ width: "28%", height: 28, background: vars["--clr-primary-a50"], borderRadius: 4 }} />
-			</div>
-		</div>
-	);
-};
 
 const PicturePickerConfig: React.FC<PicturePickerProps> = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["windows", "mac"], children }) => {
 	const platform = getPlatform();
@@ -292,7 +281,7 @@ const PicturePickerConfig: React.FC<PicturePickerProps> = ({ name, description, 
 							return (
 								<div key={opt.value} className="picture-picker__item">
 									<button type="button" disabled={disabled} className={`${opt.value === value ? "selected" : ""} picture-picker__button`} onClick={() => onChange(opt.value)}>
-										<div className="picture-picker__preview">{opt.previewRenderer ? opt.previewRenderer(vars) : defaultPreview(vars)}</div>
+										<div className="picture-picker__preview">{opt.previewRenderer(vars)}</div>
 										<div className="picture-picker__labelWrap">
 											<div className="picture-picker__label">{opt.label}</div>
 										</div>

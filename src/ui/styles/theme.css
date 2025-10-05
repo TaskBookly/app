@@ -2,6 +2,10 @@
 	/** Base colors */
 	--clr-text: #ffffff;
 
+	/** Component variables */
+	/* Default (dark) switch thumb should be lighter than track */
+	--clr-switch-thumb: var(--clr-surface-a60);
+
 	/** Theme primary colors */
 	--clr-primary-a0: #47bdfa;
 	--clr-primary-a10: #66c4fb;
@@ -43,6 +47,10 @@
 :root[data-theme="light"] {
 	/** Base colors */
 	--clr-text: #000000;
+
+	/** Component variables */
+	/* In light themes, the switch thumb should be light (near white) */
+	--clr-switch-thumb: var(--clr-surface-a0);
 
 	/** Theme primary colors */
 	--clr-primary-a0: #46befa;
@@ -181,15 +189,15 @@
 	--clr-primary-glow: var(--clr-primary-a30);
 }
 
-:root[data-theme="sunsetBlush"] {
+:root[data-theme="strawberrySplash"] {
 	--clr-text: #2b1a18;
 
 	--clr-primary-a0: #ff6b6b;
-	--clr-primary-a10: #ff7f7f;
-	--clr-primary-a20: #ff958f;
-	--clr-primary-a30: #ffab9f;
-	--clr-primary-a40: #ffcfbf;
-	--clr-primary-a50: #ffe9e4;
+	--clr-primary-a10: #e85e5e;
+	--clr-primary-a20: #d15050;
+	--clr-primary-a30: #b94545;
+	--clr-primary-a40: #a03b3b;
+	--clr-primary-a50: #8a3131;
 
 	--clr-surface-a0: #fff3f2;
 	--clr-surface-a10: #ffe6e4;
@@ -203,11 +211,14 @@
 	--clr-surface-a90: #ff1b15;
 	--clr-surface-a100: #e60000;
 
-	--clr-button-surface-highlights: var(--clr-surface-a30);
-	--clr-button-selected-surface-highlights: var(--clr-primary-a30);
+	--clr-button-surface-highlights: var(--clr-surface-a0);
+	--clr-button-selected-surface-highlights: var(--clr-surface-a30);
 	--clr-text-button-selected: #fff3f2;
 
 	--clr-primary-glow: var(--clr-primary-a30);
+
+	/* Light theme switch thumb color */
+	--clr-switch-thumb: var(--clr-surface-a0);
 }
 
 :root[data-theme="forestGlass"] {
@@ -243,11 +254,11 @@
 	--clr-text: #1f1236;
 
 	--clr-primary-a0: #7b5cff;
-	--clr-primary-a10: #8f72ff;
-	--clr-primary-a20: #a289ff;
-	--clr-primary-a30: #b8a0ff;
-	--clr-primary-a40: #d0c2ff;
-	--clr-primary-a50: #efe8ff;
+	--clr-primary-a10: #6d50f0;
+	--clr-primary-a20: #5f45e2;
+	--clr-primary-a30: #513bd4;
+	--clr-primary-a40: #4332c6;
+	--clr-primary-a50: #3528b8;
 
 	--clr-surface-a0: #faf7ff;
 	--clr-surface-a10: #f2ecff;
@@ -266,6 +277,9 @@
 	--clr-text-button-selected: #f7f3ff;
 
 	--clr-primary-glow: var(--clr-primary-a30);
+
+	/* Light theme switch thumb color */
+	--clr-switch-thumb: var(--clr-surface-a0);
 }
 
 :root[data-theme="retroConsole"] {
@@ -276,7 +290,7 @@
 	--clr-primary-a20: #8eff8e;
 	--clr-primary-a30: #a3ffa3;
 	--clr-primary-a40: #c6ffc6;
-	--clr-primary-a50: #eeffee;
+	--clr-primary-a50: #c6ffc6;
 
 	--clr-surface-a0: #071107;
 	--clr-surface-a10: #0b1a0b;
@@ -297,118 +311,31 @@
 	--clr-primary-glow: var(--clr-primary-a30);
 }
 
-:root[data-theme="peachySunrise"] {
-	--clr-text: #3a1f12;
-
-	--clr-primary-a0: #ffb66b;
-	--clr-primary-a10: #ffbf80;
-	--clr-primary-a20: #ffc996;
-	--clr-primary-a30: #ffd4ad;
-	--clr-primary-a40: #ffe7cc;
-	--clr-primary-a50: #fff4ea;
-
-	--clr-surface-a0: #fffaf6;
-	--clr-surface-a10: #fff1e6;
-	--clr-surface-a20: #ffe6d6;
-	--clr-surface-a30: #ffd7bf;
-	--clr-surface-a40: #ffc6a0;
-	--clr-surface-a50: #ffb580;
-	--clr-surface-a60: #ff9a56;
-	--clr-surface-a70: #ff7f2f;
-	--clr-surface-a80: #ff5f00;
-	--clr-surface-a90: #e64a00;
-	--clr-surface-a100: #b33900;
-
-	--clr-button-surface-highlights: var(--clr-surface-a30);
-	--clr-button-selected-surface-highlights: var(--clr-primary-a40);
-	--clr-text-button-selected: #fffaf6;
-
-	--clr-primary-glow: var(--clr-primary-a30);
-}
-
-:root[data-theme="solarFlare"] {
-	--clr-text: #1b0f07;
-
-	--clr-primary-a0: #ff8a00;
-	--clr-primary-a10: #ff9826;
-	--clr-primary-a20: #ffa64d;
-	--clr-primary-a30: #ffb775;
-	--clr-primary-a40: #ffd59f;
-	--clr-primary-a50: #fff0d6;
-
-	--clr-surface-a0: #fff7f2;
-	--clr-surface-a10: #fff0e6;
-	--clr-surface-a20: #ffe0cc;
-	--clr-surface-a30: #ffd0b3;
-	--clr-surface-a40: #ffc099;
-	--clr-surface-a50: #ffad79;
-	--clr-surface-a60: #ff8f46;
-	--clr-surface-a70: #e56f1f;
-	--clr-surface-a80: #c54e00;
-	--clr-surface-a90: #9b3500;
-	--clr-surface-a100: #6b2100;
-
-	--clr-button-surface-highlights: var(--clr-surface-a30);
-	--clr-button-selected-surface-highlights: var(--clr-primary-a30);
-	--clr-text-button-selected: #fff7f2;
-
-	--clr-primary-glow: var(--clr-primary-a30);
-}
-
 :root[data-theme="monochromeInk"] {
-	--clr-text: #f5f5f5;
+	--clr-text: #e6e6e6;
 
-	--clr-primary-a0: #bdbdbd;
-	--clr-primary-a10: #9e9e9e;
-	--clr-primary-a20: #7e7e7e;
-	--clr-primary-a30: #5e5e5e;
-	--clr-primary-a40: #3e3e3e;
-	--clr-primary-a50: #1f1f1f;
+	--clr-primary-a0: #d0d0d0;
+	--clr-primary-a10: #bbbbbb;
+	--clr-primary-a20: #a6a6a6;
+	--clr-primary-a30: #919191;
+	--clr-primary-a40: #7c7c7c;
+	--clr-primary-a50: #666666;
 
-	--clr-surface-a0: #0b0b0b;
-	--clr-surface-a10: #141414;
-	--clr-surface-a20: #1e1e1e;
-	--clr-surface-a30: #282828;
-	--clr-surface-a40: #323232;
-	--clr-surface-a50: #3c3c3c;
-	--clr-surface-a60: #474747;
-	--clr-surface-a70: #5a5a5a;
-	--clr-surface-a80: #7b7b7b;
-	--clr-surface-a90: #9c9c9c;
-	--clr-surface-a100: #bdbdbd;
-
-	--clr-button-surface-highlights: var(--clr-surface-a30);
-	--clr-button-selected-surface-highlights: var(--clr-primary-a40);
-	--clr-text-button-selected: #0b0b0b;
-
-	--clr-primary-glow: var(--clr-primary-a30);
-}
-
-:root[data-theme="mintHaze"] {
-	--clr-text: #05302b;
-
-	--clr-primary-a0: #4fe1b3;
-	--clr-primary-a10: #58e6bb;
-	--clr-primary-a20: #66ebc4;
-	--clr-primary-a30: #7ff3d1;
-	--clr-primary-a40: #a6f8e6;
-	--clr-primary-a50: #dffef6;
-
-	--clr-surface-a0: #f6fffb;
-	--clr-surface-a10: #ecfff6;
-	--clr-surface-a20: #e0f9ef;
-	--clr-surface-a30: #cff3e3;
-	--clr-surface-a40: #bfead7;
-	--clr-surface-a50: #9be7c5;
-	--clr-surface-a60: #6ed8ad;
-	--clr-surface-a70: #47b391;
-	--clr-surface-a80: #178066;
-	--clr-surface-a90: #0f5f49;
-	--clr-surface-a100: #073b2d;
+	--clr-surface-a0: #121212;
+	--clr-surface-a10: #1a1a1a;
+	--clr-surface-a20: #232323;
+	--clr-surface-a30: #2d2d2d;
+	--clr-surface-a40: #373737;
+	--clr-surface-a50: #424242;
+	--clr-surface-a60: #4d4d4d;
+	--clr-surface-a70: #5c5c5c;
+	--clr-surface-a80: #7a7a7a;
+	--clr-surface-a90: #9a9a9a;
+	--clr-surface-a100: #c7c7c7;
 
 	--clr-button-surface-highlights: var(--clr-surface-a30);
 	--clr-button-selected-surface-highlights: var(--clr-primary-a30);
-	--clr-text-button-selected: #f6fffb;
+	--clr-text-button-selected: #0b0b0b;
 
 	--clr-primary-glow: var(--clr-primary-a30);
 }

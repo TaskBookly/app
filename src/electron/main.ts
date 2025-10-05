@@ -434,7 +434,5 @@ app.on("window-all-closed", () => {
 			secretDataManager.cleanup();
 		}
 	}
-	if (process.platform !== "darwin") {
-		app.quit();
-	}
+	app.quit();
 });

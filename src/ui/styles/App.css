@@ -29,7 +29,6 @@
 	display: inline-flex;
 	flex-direction: column;
 	flex: 0 0 250px;
-	background-color: var(--clr-surface-a10);
 	padding: 20px 1em;
 	gap: 1em;
 	overflow: auto;
@@ -105,7 +104,6 @@
 	flex: 0 0 36px;
 	height: 36px;
 	width: 100vw;
-	background-color: var(--clr-surface-a10);
 	display: flex;
 	align-items: center;
 	font-size: 1.1em;
@@ -193,7 +191,6 @@
 	background-color: var(--clr-surface-a0);
 	border-top-left-radius: 20px;
 	outline: 1px solid var(--clr-surface-a20);
-	outline-offset: -1px;
 }
 
 #sectionContainer > .section {
@@ -410,11 +407,6 @@ div.groupList {
 	animation: chargeGlow 2s ease-in-out infinite alternate, chargingShimmer 1.5s ease-in-out infinite;
 }
 
-/* Provide a variable that themes can optionally define for glow color; fallback uses primary color with alpha */
-:root {
-	--clr-primary-glow: rgba(71, 189, 250, 0.85);
-}
-
 @keyframes chargeGlow {
 	0% {
 		box-shadow: 0 0 5px rgba(0, 0, 0, 0);
@@ -494,6 +486,7 @@ div.groupList {
 		gap: 0.5em;
 		font-size: 1em;
 		color: var(--clr-primary-a50);
+		font-weight: 700;
 
 		svg {
 			font-size: 1.25em;
