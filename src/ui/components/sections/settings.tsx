@@ -3,7 +3,7 @@ import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../co
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig, PicturePickerConfig } from "../config";
 import { useSettings } from "../SettingsContext";
-import { faBell, faBolt, faFolderOpen, faGears, faHardDrive, faInfoCircle, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
+import { faBell, faBolt, faBug, faFolderOpen, faGears, faHardDrive, faInfoCircle, faLayerGroup, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
 const Settings: React.FC = () => {
@@ -84,6 +84,8 @@ const Settings: React.FC = () => {
 		{ label: "30 minutes", value: "30" },
 		{ label: "35 minutes", value: "35" },
 		{ label: "40 minutes", value: "40" },
+		{ label: "45 minutes", value: "45" },
+		{ label: "1 hour", value: "60" },
 	];
 
 	const focusSessionBreakDurationOptions: SelectionMenuOption[] = [
@@ -152,7 +154,6 @@ const Settings: React.FC = () => {
 							value={getSetting("theme")}
 							onChange={(v) => setSetting("theme", v)}
 						/>
-						<SwitchConfig name="Touch Bar" description="Enabling this feature will display quick actions and info on your Mac's Touch Bar, when available." value={getSetting("touchBar") === "true"} onChange={() => setSetting("touchBar", getSetting("touchBar") === "true" ? "false" : "true")} availableOn={["mac"]} />
 					</Container>
 					<Container name="settings_general_reset">
 						<ContainerGroup>
@@ -267,6 +268,26 @@ const Settings: React.FC = () => {
 				</>
 			),
 		},
+		...(nodeEnv === "development"
+			? [
+					{
+						label: "Debug",
+						key: "debug",
+						icon: faBug,
+						content: (
+							<>
+								<Container name="settings_debug_hintComponents" header={{ title: "Hint Components", icon: faLayerGroup }}>
+									<Hint type="info" label="Info type" />
+									<Hint type="warning" label="Warning type" />
+									<Hint type="error" label="Error type" />
+									<Hint type="success" label="Success type" />
+									<Hint type="processing" label="Processing type" />
+								</Container>
+							</>
+						),
+					},
+			  ]
+			: []),
 	];
 
 	return <Tabs tabs={tabs} />;

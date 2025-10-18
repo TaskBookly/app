@@ -142,6 +142,8 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 					{ type: "normal", label: "4 Minutes", click: () => focusTimer.addTime(240) },
 					{ type: "normal", label: "5 Minutes", click: () => focusTimer.addTime(300) },
 					{ type: "normal", label: "10 Minutes", click: () => focusTimer.addTime(600) },
+					{ type: "normal", label: "15 Minutes", click: () => focusTimer.addTime(900) },
+					{ type: "normal", label: "20 Minutes", click: () => focusTimer.addTime(1200) },
 				],
 			}
 		);

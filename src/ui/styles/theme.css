@@ -78,6 +78,16 @@
 	--clr-text-button-selected: #dbf2ff;
 
 	--clr-primary-glow: var(--clr-primary-a30);
+
+	/** Theme hint colors */
+	--clr-hint-info-bg: #98e0ff;
+	--clr-hint-info-text: #0a1a2f;
+	--clr-hint-warning-bg: #ffe066;
+	--clr-hint-warning-text: #4d3a00;
+	--clr-hint-error-bg: #ffbbc5;
+	--clr-hint-error-text: #b71c1c;
+	--clr-hint-success-bg: #c8e6c9;
+	--clr-hint-success-text: #1b5e20;
 }
 
 :root[data-theme="catppuccin"] {
@@ -150,14 +160,15 @@
 
 	--clr-primary-glow: var(--clr-primary-a30);
 
-	--clr-hint-info-bg: #cfeff0;
-	--clr-hint-info-text: #241814;
-	--clr-hint-warning-bg: #ffc891;
-	--clr-hint-warning-text: #2e1408;
-	--clr-hint-error-bg: #e35b56;
-	--clr-hint-error-text: #fff6f6;
-	--clr-hint-success-bg: #86b76e;
-	--clr-hint-success-text: #241814;
+	/** Theme hint colors */
+	--clr-hint-info-bg: #ffe5c2;
+	--clr-hint-info-text: #2a1f1a;
+	--clr-hint-warning-bg: #ffb681;
+	--clr-hint-warning-text: #2a1f1a;
+	--clr-hint-error-bg: #b97e6b;
+	--clr-hint-error-text: #151211;
+	--clr-hint-success-bg: #dac6b8;
+	--clr-hint-success-text: #151211;
 }
 
 :root[data-theme="midnightOcean"] {
@@ -192,12 +203,12 @@
 :root[data-theme="strawberrySplash"] {
 	--clr-text: #2b1a18;
 
-	--clr-primary-a0: #ff6b6b;
-	--clr-primary-a10: #e85e5e;
-	--clr-primary-a20: #d15050;
-	--clr-primary-a30: #b94545;
-	--clr-primary-a40: #a03b3b;
-	--clr-primary-a50: #8a3131;
+	--clr-primary-a0: #ff9a9a;
+	--clr-primary-a10: #ff8686;
+	--clr-primary-a20: #ff7272;
+	--clr-primary-a30: #ff5e5e;
+	--clr-primary-a40: #ff4a4a;
+	--clr-primary-a50: #ff3636;
 
 	--clr-surface-a0: #fff3f2;
 	--clr-surface-a10: #ffe6e4;
@@ -253,12 +264,12 @@
 :root[data-theme="lavenderMist"] {
 	--clr-text: #1f1236;
 
-	--clr-primary-a0: #7b5cff;
-	--clr-primary-a10: #6d50f0;
-	--clr-primary-a20: #5f45e2;
-	--clr-primary-a30: #513bd4;
-	--clr-primary-a40: #4332c6;
-	--clr-primary-a50: #3528b8;
+	--clr-primary-a0: #c3a9f0;
+	--clr-primary-a10: #ac8af0;
+	--clr-primary-a20: #9b70f0;
+	--clr-primary-a30: #8c58f0;
+	--clr-primary-a40: #7c41f0;
+	--clr-primary-a50: #6c2bf0;
 
 	--clr-surface-a0: #faf7ff;
 	--clr-surface-a10: #f2ecff;
@@ -272,8 +283,8 @@
 	--clr-surface-a90: #3421e6;
 	--clr-surface-a100: #120a6b;
 
-	--clr-button-surface-highlights: var(--clr-surface-a30);
-	--clr-button-selected-surface-highlights: var(--clr-primary-a30);
+	--clr-button-surface-highlights: var(--clr-surface-a0);
+	--clr-button-selected-surface-highlights: var(--clr-surface-a50);
 	--clr-text-button-selected: #f7f3ff;
 
 	--clr-primary-glow: var(--clr-primary-a30);
