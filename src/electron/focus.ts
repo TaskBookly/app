@@ -27,6 +27,9 @@ interface TimerData {
 class FocusTimer extends EventEmitter {
 	private readonly mainWindow: BrowserWindow;
 	private readonly secretDataManager: SecretDataManager;
+	private readonly handleWindowClosed: () => void;
+	private readonly tickIntervalMs = 100;
+	private disposed: boolean;
 
 	private static settings: Record<string, string> = {};
 
@@ -49,6 +52,7 @@ class FocusTimer extends EventEmitter {
 		super(); // Initialize EventEmitter
 		this.mainWindow = window;
 		this.secretDataManager = SecretDataManager.getInstance();
+		this.handleWindowClosed = () => this.dispose();
 
 		FocusTimer.settings = settings;
 		FocusTimer.updateSessionDurations();
@@ -64,12 +68,14 @@ class FocusTimer extends EventEmitter {
 		this._timeLeftInSession = 0;
 		this._chargeUsedThisSession = false;
 		this.intervalId = null;
+		this.disposed = false;
 
 		this.previousSession = "work";
 		this.sessionStartTime = 0;
 		this.pausedTime = 0;
 		this.totalPausedDuration = 0;
 		this.totalAddedTime = 0;
+		this.mainWindow.once("closed", this.handleWindowClosed);
 	}
 
 	public static updateSettings(settings: Record<string, string>): void {
@@ -85,11 +91,22 @@ class FocusTimer extends EventEmitter {
 
 	// Force update of timer data (used for initialization)
 	public forceDataUpdate(): void {
+		if (this.disposed) {
+			return;
+		}
 		this.secretDataManager.forceUpdate();
 		this.emitTimerUpdate("action");
 	}
 
 	private emitTimerUpdate(eventType: "tick" | "action" | "sessionChange"): void {
+		if (this.disposed) {
+			return;
+		}
+
+		if (!this.hasLiveRenderer()) {
+			this.dispose();
+			return;
+		}
 		const secretData = this.secretDataManager.getChargeData();
 		const workTimePerCharge = parseFloat(FocusTimer.settings.workTimePerCharge || "60") * 60; // Convert to seconds
 		const breakChargeCooldown = parseInt(FocusTimer.settings.breakChargeCooldown || "1");
@@ -134,8 +151,56 @@ class FocusTimer extends EventEmitter {
 			transition: parseFloat(FocusTimer.settings.transitionPeriodDuration),
 		};
 	}
+	public dispose(): void {
+		if (this.disposed) {
+			return;
+		}
+
+		this.disposed = true;
+		this.mainWindow.removeListener("closed", this.handleWindowClosed);
+
+		if (this.intervalId) {
+			clearInterval(this.intervalId);
+			this.intervalId = null;
+		}
+
+		this._currentSession = "none";
+		this._sessionStatus = "stopped";
+		this._timeLeftInSession = 0;
+		this._chargeUsedThisSession = false;
+		this.sessionStartTime = 0;
+		this.totalPausedDuration = 0;
+		this.totalAddedTime = 0;
+		this.lastWorkTimeUpdate = 0;
+
+		this.removeAllListeners();
+		this.secretDataManager.cleanup();
+	}
+
+	private hasLiveRenderer(): boolean {
+		return !this.mainWindow.isDestroyed() && !this.mainWindow.webContents.isDestroyed();
+	}
+
+	private safeSendToRenderer(channel: string, ...args: unknown[]): void {
+		if (this.disposed || !this.hasLiveRenderer()) {
+			return;
+		}
+
+		try {
+			this.mainWindow.webContents.send(channel, ...args);
+		} catch (error) {
+			if (error instanceof Error && error.message.includes("Object has been destroyed")) {
+				this.dispose();
+			} else {
+				console.error("FocusTimer failed to send message:", error);
+			}
+		}
+	}
 
 	public start(): void {
+		if (this.disposed) {
+			return;
+		}
 		if (this.status === "stopped") {
 			FocusTimer.updateSessionDurations();
 
@@ -149,13 +214,16 @@ class FocusTimer extends EventEmitter {
 
 			this.intervalId = setInterval(() => {
 				this.tick();
-			}, 100);
+			}, this.tickIntervalMs);
 
 			this.emitTimerUpdate("action");
 		}
 	}
 
 	public resume(): void {
+		if (this.disposed) {
+			return;
+		}
 		if (this.session === "work" && this.status === "paused") {
 			this.status = "counting";
 			// Add the paused duration to total paused time
@@ -167,6 +235,9 @@ class FocusTimer extends EventEmitter {
 	}
 
 	public pause(): void {
+		if (this.disposed) {
+			return;
+		}
 		if (this.session === "work" && this.status === "counting") {
 			// Track work time up to pause point
 			if (FocusTimer.settings.breakChargingEnabled === "true") {
@@ -186,6 +257,9 @@ class FocusTimer extends EventEmitter {
 	}
 
 	public stop(): void {
+		if (this.disposed) {
+			return;
+		}
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
@@ -201,6 +275,9 @@ class FocusTimer extends EventEmitter {
 	}
 
 	public addTime(seconds: number): void {
+		if (this.disposed) {
+			return;
+		}
 		if (this.session === "work" && this.status !== "stopped") {
 			if (seconds > 1) {
 				this.totalAddedTime += seconds;
@@ -219,6 +296,9 @@ class FocusTimer extends EventEmitter {
 	}
 
 	public useBreakCharge(): boolean {
+		if (this.disposed) {
+			return false;
+		}
 		const cooldownPeriod = parseInt(FocusTimer.settings.breakChargeCooldown || "0");
 		const extensionAmount = parseInt(FocusTimer.settings.breakChargeExtensionAmount || "5") * 60; // Convert to seconds
 
@@ -233,6 +313,9 @@ class FocusTimer extends EventEmitter {
 	}
 
 	private tick(): void {
+		if (this.disposed) {
+			return;
+		}
 		if (this.session !== "none" && this.status === "counting") {
 			const now = Date.now();
 			const elapsedTime = Math.floor((now - this.sessionStartTime - this.totalPausedDuration) / 1000);
@@ -271,6 +354,9 @@ class FocusTimer extends EventEmitter {
 	}
 
 	private onSessionComplete(): void {
+		if (this.disposed) {
+			return;
+		}
 		if (Notification.isSupported() && (FocusTimer.settings.notifsFocus === "notifsOnly" || FocusTimer.settings.notifsFocus === "all")) {
 			const notif = new Notification({
 				title: `Your ${this.session} session has ended!`,
@@ -278,20 +364,29 @@ class FocusTimer extends EventEmitter {
 				silent: true,
 			});
 			notif.on("click", () => {
-				this.mainWindow.focus();
-				this.mainWindow.webContents.send("jumpto-section", "focus");
+				if (this.hasLiveRenderer()) {
+					try {
+						this.mainWindow.focus();
+					} catch (error) {
+						console.debug("FocusTimer: unable to focus main window after notification", error);
+					}
+					this.safeSendToRenderer("jumpto-section", "focus");
+				}
 			});
 
 			notif.show();
 		}
 		if (FocusTimer.settings.notifsFocus === "soundOnly" || FocusTimer.settings.notifsFocus === "all") {
-			this.mainWindow.webContents.send("play-sound", "notifs/sessionComplete.ogg");
+			this.safeSendToRenderer("play-sound", "notifs/sessionComplete.ogg");
 		}
 
 		this.nextSession();
 	}
 
 	private nextSession(): void {
+		if (this.disposed) {
+			return;
+		}
 		if (this.session !== "none") {
 			this.chargeUsedThisSession = false;
 

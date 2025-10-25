@@ -157,7 +157,7 @@ input[type="checkbox"]::before {
 	top: 0.15em;
 	width: 1.7em;
 	height: 1.7em;
-	background-color: var(--clr-surface-a60);
+	background-color: var(--clr-switch-thumb, var(--clr-surface-a60));
 	border-radius: 50%;
 	transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
 }

@@ -142,6 +142,8 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 					{ type: "normal", label: "4 Minutes", click: () => focusTimer.addTime(240) },
 					{ type: "normal", label: "5 Minutes", click: () => focusTimer.addTime(300) },
 					{ type: "normal", label: "10 Minutes", click: () => focusTimer.addTime(600) },
+					{ type: "normal", label: "15 Minutes", click: () => focusTimer.addTime(900) },
+					{ type: "normal", label: "20 Minutes", click: () => focusTimer.addTime(1200) },
 				],
 			}
 		);
@@ -154,6 +156,9 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 }
 
 function updateMenu() {
+	if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
+		return;
+	}
 	if (process.platform === "darwin") {
 		const menuTemplate: MenuItemConstructorOptions[] = [
 			{
@@ -240,6 +245,10 @@ app.whenReady().then(() => {
 	focusTimer.forceDataUpdate();
 
 	focusTimer.on("timer-update", (eventType, data) => {
+		const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
+		if (!hasRenderer) {
+			return;
+		}
 		if (eventType !== "tick") {
 			updateMenu();
 		}
@@ -429,12 +438,7 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
 	if (focusTimer) {
-		const secretDataManager = (focusTimer as any).secretDataManager;
-		if (secretDataManager?.cleanup) {
-			secretDataManager.cleanup();
-		}
+		focusTimer.dispose();
 	}
-	if (process.platform !== "darwin") {
-		app.quit();
-	}
+	app.quit();
 });

@@ -72,6 +72,8 @@ const Focus: React.FC = () => {
 		{ label: "4 minutes", value: "240" },
 		{ label: "5 minutes", value: "300" },
 		{ label: "10 minutes", value: "600" },
+		{ label: "15 minutes", value: "900" },
+		{ label: "20 minutes", value: "1200" },
 	];
 
 	// Simplified action handlers - backend will automatically send updates

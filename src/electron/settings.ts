@@ -12,21 +12,19 @@ export const DEFAULT_SETTINGS_CONFIG = {
 	workTimePerCharge: "60",
 };
 
-export const PLATFORM_SPECIFIC_SETTINGS = {
+export const PLATFORM_SPECIFIC_DEFAULTS = {
 	win32: {},
-	darwin: {
-		touchBar: "true",
-	},
+	darwin: {},
 };
 
 export const getDefaultSettings = (platform: string): Record<string, string> => {
 	const defaults = { ...DEFAULT_SETTINGS_CONFIG };
 
-	if (platform === "win32" && PLATFORM_SPECIFIC_SETTINGS.win32) {
-		Object.assign(defaults, PLATFORM_SPECIFIC_SETTINGS.win32);
+	if (platform === "win32" && PLATFORM_SPECIFIC_DEFAULTS.win32) {
+		Object.assign(defaults, PLATFORM_SPECIFIC_DEFAULTS.win32);
 	}
-	if (platform === "darwin" && PLATFORM_SPECIFIC_SETTINGS.darwin) {
-		Object.assign(defaults, PLATFORM_SPECIFIC_SETTINGS.darwin);
+	if (platform === "darwin" && PLATFORM_SPECIFIC_DEFAULTS.darwin) {
+		Object.assign(defaults, PLATFORM_SPECIFIC_DEFAULTS.darwin);
 	}
 
 	return defaults;
