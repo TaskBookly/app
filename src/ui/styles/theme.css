@@ -230,6 +230,16 @@
 
 	/* Light theme switch thumb color */
 	--clr-switch-thumb: var(--clr-surface-a0);
+
+	/** Theme hint colors */
+	--clr-hint-info-bg: #98e0ff;
+	--clr-hint-info-text: #0a1a2f;
+	--clr-hint-warning-bg: #ffe066;
+	--clr-hint-warning-text: #4d3a00;
+	--clr-hint-error-bg: #ffbbc5;
+	--clr-hint-error-text: #b71c1c;
+	--clr-hint-success-bg: #c8e6c9;
+	--clr-hint-success-text: #1b5e20;
 }
 
 :root[data-theme="forestGlass"] {
@@ -291,6 +301,16 @@
 
 	/* Light theme switch thumb color */
 	--clr-switch-thumb: var(--clr-surface-a0);
+
+	/** Theme hint colors */
+	--clr-hint-info-bg: #98e0ff;
+	--clr-hint-info-text: #0a1a2f;
+	--clr-hint-warning-bg: #ffe066;
+	--clr-hint-warning-text: #4d3a00;
+	--clr-hint-error-bg: #ffbbc5;
+	--clr-hint-error-text: #b71c1c;
+	--clr-hint-success-bg: #c8e6c9;
+	--clr-hint-success-text: #1b5e20;
 }
 
 :root[data-theme="retroConsole"] {
