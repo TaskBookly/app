@@ -2,7 +2,6 @@ import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Not
 
 import path from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { fileURLToPath } from "url";
 
 import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
@@ -11,18 +10,15 @@ import { getDefaultSettings } from "./settings.js";
 import FocusTimer from "./focus.js";
 
 import electronUpdPkg from "electron-updater";
-const { autoUpdater } = electronUpdPkg;
+import { startupDisRPC } from "./dRPC.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { autoUpdater } = electronUpdPkg;
 
 if (process.platform === "win32") {
 	app.setAppUserModelId("com.taskbookly.app");
 }
 
-const packagePath = path.join(__dirname, "..", "package.json");
-const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
-const appVersion = packageJson.version;
+export const appVersion: string = app.getVersion();
 
 const settingsPath = path.join(app.getPath("userData"), "settings.json");
 
@@ -216,9 +212,9 @@ app.whenReady().then(() => {
 	autoUpdater.autoDownload = false;
 	const settings = loadSettings();
 
-	if (settings.autoCheckForUpdates === "true") {
-		autoUpdater.checkForUpdates();
-	}
+	autoUpdater.checkForUpdates();
+
+	startupDisRPC();
 
 	mainWindow = new BrowserWindow({
 		title: "TaskBookly",

@@ -1,7 +1,7 @@
 export const DEFAULT_SETTINGS_CONFIG = {
 	notifsFocus: "all",
 	theme: "system",
-	autoCheckForUpdates: "true",
+	discordRichPresence: "true",
 	transitionPeriodsEnabled: "false",
 	breakChargingEnabled: "true",
 	workPeriodDuration: "25",

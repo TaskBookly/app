@@ -3,7 +3,7 @@ import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../co
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig, PicturePickerConfig } from "../config";
 import { useSettings } from "../SettingsContext";
-import { faBell, faBolt, faBug, faFolderOpen, faGears, faHardDrive, faInfoCircle, faLayerGroup, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
+import { faBell, faBolt, faBug, faFolderOpen, faGears, faInfoCircle, faLayerGroup, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
 const Settings: React.FC = () => {
@@ -124,36 +124,34 @@ const Settings: React.FC = () => {
 			icon: faGears,
 			content: (
 				<>
-					<Container name="settings_general_software" header={{ title: "Software", icon: faHardDrive }}>
-						<ContainerGroup>
-							<SwitchConfig name="Check for updates automatically" description="TaskBookly will check for new releases occasionally and notify you if any are found. You must be connected to the internet for this feature to work." value={getSetting("autoCheckForUpdates") === "true"} onChange={() => setSetting("autoCheckForUpdates", getSetting("autoCheckForUpdates") === "true" ? "false" : "true")} />
-						</ContainerGroup>
-					</Container>
 					<Container name="settings_general_misc">
-						<PicturePickerConfig
-							name="Theme"
-							description="The theme that will be displayed across the app. New themes are added occasionally!"
-							menu={{
-								options: themeOptions.map((o) => ({
-									...o,
-									previewRenderer: (vars: Record<string, string>) => (
-										<div>
-											<div style={{ position: "absolute", width: "0px", display: "flex", flexDirection: "column", padding: "15px 4px", gap: "3px" }}>
-												<div style={{ width: "12px", height: "12px", background: vars["--clr-surface-a20"], borderRadius: "0.25em" }} />
-												<div style={{ width: "12px", height: "12px", background: vars["--clr-primary-a10"], borderRadius: "0.25em" }} />
-											</div>
-											<div style={{ background: vars["--clr-surface-a10"], paddingLeft: "20px", paddingTop: "10px" }}>
-												<div style={{ maxWidth: "100%", height: "100%", background: vars["--clr-surface-a0"], borderTopLeftRadius: "0.5em", padding: "10px" }}>
-													<div style={{ width: "100%", height: "50px", background: vars["--clr-surface-a10"], borderRadius: "0.5em" }} />
+						<ContainerGroup>
+							<PicturePickerConfig
+								name="Theme"
+								description="The theme that will be displayed across the app. New themes are added occasionally!"
+								menu={{
+									options: themeOptions.map((o) => ({
+										...o,
+										previewRenderer: (vars: Record<string, string>) => (
+											<div>
+												<div style={{ position: "absolute", width: "0px", display: "flex", flexDirection: "column", padding: "15px 4px", gap: "3px" }}>
+													<div style={{ width: "12px", height: "12px", background: vars["--clr-surface-a20"], borderRadius: "0.25em" }} />
+													<div style={{ width: "12px", height: "12px", background: vars["--clr-primary-a10"], borderRadius: "0.25em" }} />
+												</div>
+												<div style={{ background: vars["--clr-surface-a10"], paddingLeft: "20px", paddingTop: "10px" }}>
+													<div style={{ maxWidth: "100%", height: "100%", background: vars["--clr-surface-a0"], borderTopLeftRadius: "0.5em", padding: "10px" }}>
+														<div style={{ width: "100%", height: "50px", background: vars["--clr-surface-a10"], borderRadius: "0.5em" }} />
+													</div>
 												</div>
 											</div>
-										</div>
-									),
-								})),
-							}}
-							value={getSetting("theme")}
-							onChange={(v) => setSetting("theme", v)}
-						/>
+										),
+									})),
+								}}
+								value={getSetting("theme")}
+								onChange={(v) => setSetting("theme", v)}
+							/>
+						</ContainerGroup>
+						<SwitchConfig name="Discord Rich Presence" description={"If enabled, focus activity will be shared to your Discord client and displayed under your profile.\nShare my activity must be enabled in Discord Settings > Activity Privacy for this to work."} value={getSetting("discordRichPresence") === "true"} onChange={() => setSetting("discordRichPresence", getSetting("discordRichPresence") === "true" ? "false" : "true")} />
 					</Container>
 					<Container name="settings_general_reset">
 						<ContainerGroup>

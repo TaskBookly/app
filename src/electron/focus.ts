@@ -1,6 +1,7 @@
 import { BrowserWindow, Notification } from "electron";
 import { EventEmitter } from "events";
 import SecretDataManager from "./bChargingManager.js";
+import { clearDisRPC, focusActivity, startupDisRPC, updateDisRPC } from "./dRPC.js";
 
 type SessionType = "none" | "work" | "break" | "transition";
 type SessionStatus = "counting" | "paused" | "stopped";
@@ -34,6 +35,7 @@ class FocusTimer extends EventEmitter {
 	private static settings: Record<string, string> = {};
 
 	private static sessions: FocusSessions;
+	private static activeTimers: Set<FocusTimer> = new Set();
 
 	private _currentSession: SessionType;
 	private _sessionStatus: SessionStatus;
@@ -76,9 +78,12 @@ class FocusTimer extends EventEmitter {
 		this.totalPausedDuration = 0;
 		this.totalAddedTime = 0;
 		this.mainWindow.once("closed", this.handleWindowClosed);
+
+		FocusTimer.activeTimers.add(this);
 	}
 
 	public static updateSettings(settings: Record<string, string>): void {
+		const previousPresence = FocusTimer.settings.discordRichPresence;
 		FocusTimer.settings = settings;
 
 		// Recalculate charge progress if break charging is enabled
@@ -86,6 +91,27 @@ class FocusTimer extends EventEmitter {
 			const workTimePerCharge = parseInt(FocusTimer.settings.workTimePerCharge || "60");
 			const secretDataManager = SecretDataManager.getInstance();
 			secretDataManager.initializeChargeProgress(workTimePerCharge);
+		}
+
+		if (FocusTimer.settings.discordRichPresence !== "true") {
+			clearDisRPC();
+			return;
+		}
+
+		startupDisRPC();
+
+		if (previousPresence !== "true") {
+			let updated = false;
+			for (const timer of FocusTimer.activeTimers) {
+				if (timer.session !== "none" && timer.status !== "stopped") {
+					timer.forceDataUpdate();
+					updated = true;
+					break;
+				}
+			}
+			if (!updated) {
+				clearDisRPC();
+			}
 		}
 	}
 
@@ -96,6 +122,35 @@ class FocusTimer extends EventEmitter {
 		}
 		this.secretDataManager.forceUpdate();
 		this.emitTimerUpdate("action");
+	}
+
+	private emitDisRPCUpdate(data: TimerData) {
+		if (FocusTimer.settings.discordRichPresence !== "true") {
+			return;
+		}
+
+		if (data.session === "none" || data.status === "stopped") {
+			clearDisRPC();
+			return;
+		}
+
+		const periodType: focusActivity["periodType"] = data.session === "transition" ? "transition" : data.session;
+		let periodStartUnix: number | undefined;
+		let periodEndUnix: number | undefined;
+
+		if (data.status === "counting" && typeof data.expectedFinish === "number") {
+			periodEndUnix = Math.floor(data.expectedFinish / 1000);
+			const periodStartEpochMs = this.sessionStartTime + this.totalPausedDuration;
+			periodStartUnix = Math.floor(periodStartEpochMs / 1000);
+		}
+
+		const payload: focusActivity = {
+			periodType,
+			periodStartUnix,
+			periodEndUnix,
+		};
+
+		updateDisRPC(payload);
 	}
 
 	private emitTimerUpdate(eventType: "tick" | "action" | "sessionChange"): void {
@@ -141,6 +196,9 @@ class FocusTimer extends EventEmitter {
 			const sessionDurationMs = FocusTimer.sessions[this.session] * 60 * 1000;
 			data.expectedFinish = this.sessionStartTime + sessionDurationMs + this.totalAddedTime * 1000 + this.totalPausedDuration;
 		}
+		if (eventType === "action" || eventType === "sessionChange") {
+			this.emitDisRPCUpdate(data);
+		}
 		this.emit("timer-update", eventType, data);
 	}
 
@@ -175,6 +233,11 @@ class FocusTimer extends EventEmitter {
 
 		this.removeAllListeners();
 		this.secretDataManager.cleanup();
+		FocusTimer.activeTimers.delete(this);
+
+		if (FocusTimer.settings.discordRichPresence === "true") {
+			clearDisRPC();
+		}
 	}
 
 	private hasLiveRenderer(): boolean {
