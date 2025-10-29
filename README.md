@@ -13,21 +13,8 @@ A simple task management and focus tool.
 4. Run the installer
 5. Follow the installation instructions
 
-# 📦 Acknowledgements
-TaskBookly would not be where it is without the help of these awesome packages and people:
-
-## Technologies & Tools
-
--   **Electron** - Desktop application framework
--   **React** - User interface library
--   **TypeScript** - Type-safe JavaScript
--   **Vite** - Build tool and development server
--   **electron-builder** - Application packaging and distribution
--   **ESLint** - Code linting and formatting
--   **cross-env** - Cross-platform environment variables
--   **npm-run-all** - Parallel script execution
--   **concurrently** - Concurrent command execution
--   **[Catppuccin](https://github.com/catppuccin/catppuccin)** - Catppuccin theme
+# 📦 Acknowledgments
+Package Acknowledgments can be found on the [official website](https://taskbookly.framer.website/acknowledgments).
 
 ## Contributors
 -   **[@3hantom](https://github.com/3hantom)** - Notification SFXs
