@@ -1,8 +1,8 @@
 import { BrowserWindow, Notification } from "electron";
 import { EventEmitter } from "events";
 import SecretDataManager from "./bChargingManager.js";
-import { clearDisRPC, startupDisRPC, updateDisRPC } from "./dRPC.js";
-import type { focusActivity } from "./dRPC.js";
+import { clearDisRPC, startupDisRPC, updateDisRPC } from "./discordRPC.js";
+import type { focusActivity } from "./discordRPC.js";
 
 type SessionType = "none" | "work" | "break" | "transition";
 type SessionStatus = "counting" | "paused" | "stopped";

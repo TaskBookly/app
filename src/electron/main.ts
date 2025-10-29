@@ -10,7 +10,7 @@ import { getDefaultSettings } from "./settings.js";
 import FocusTimer from "./focus.js";
 
 import electronUpdPkg from "electron-updater";
-import { startupDisRPC } from "./dRPC.js";
+import { startupDisRPC } from "./discordRPC.js";
 
 const { autoUpdater } = electronUpdPkg;
 
@@ -305,7 +305,7 @@ app.whenReady().then(() => {
 				silent: true,
 			});
 
-			notif.on("click", () => shell.openExternal("https://github.com/TaskBookly/app/releases/latest"));
+			notif.on("click", () => shell.openExternal("https://taskbookly.framer.website/download"));
 			notif.show();
 			mainWindow.webContents.send("play-sound", "notifs/info.ogg");
 		}

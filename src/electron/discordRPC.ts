@@ -51,6 +51,7 @@ function applyActivity(activity: focusActivity | null): void {
 			largeImageText: `v${appVersion}`,
 			smallImageKey: `session_${activity.periodType}`,
 			smallImageText: `${client.user.username} is currently ${activity.periodType === "work" ? "working" : activity.periodType === "break" ? "taking a break" : activity.periodType === "transition" ? "transitioning to their next session" : "N/A"}`,
+			state: activity.periodEndUnix ? "In session" : "Paused",
 			details: activity.periodType === "work" ? "Working" : activity.periodType === "break" ? "Taking a Break" : activity.periodType === "transition" ? "Transitioning" : "Idk what bro is doing",
 			startTimestamp,
 			endTimestamp,
