@@ -28,7 +28,11 @@ textarea,
 .dropdown-option,
 .picture-picker__preview > div,
 #chargingProgress div {
-	transition: background-color 280ms cubic-bezier(0.2, 0, 0, 1), color 280ms cubic-bezier(0.2, 0, 0, 1), box-shadow 320ms cubic-bezier(0.2, 0, 0, 1), outline-color 240ms cubic-bezier(0.2, 0, 0, 1);
+	transition:
+		background-color 280ms cubic-bezier(0.2, 0, 0, 1),
+		color 280ms cubic-bezier(0.2, 0, 0, 1),
+		box-shadow 320ms cubic-bezier(0.2, 0, 0, 1),
+		outline-color 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 img {
@@ -64,7 +68,14 @@ button {
 	align-items: center;
 	justify-content: center;
 	gap: 0.5em;
-	transition: outline-color 0.25s, outline-offset 0.25s, outline-width 0.25s, scale 0.2s, background 0.2s, opacity 0.1s, color 0.25s;
+	transition:
+		outline-color 0.25s,
+		outline-offset 0.25s,
+		outline-width 0.25s,
+		scale 0.2s,
+		background 0.2s,
+		opacity 0.1s,
+		color 0.25s;
 	z-index: 0;
 	outline: none;
 
@@ -90,7 +101,9 @@ button::before {
 	border-radius: 1em;
 	padding: 1px;
 	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-button-surface-highlights));
-	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: 1;
@@ -110,7 +123,7 @@ button:focus-visible:not(:disabled, .selected) {
 
 button:active:not(:disabled, .selected) {
 	background-color: var(--clr-surface-a20);
-	scale: 0.95;
+	scale: 0.9;
 }
 button.selected {
 	color: var(--clr-text-button-selected);
@@ -159,7 +172,9 @@ input[type="checkbox"]::before {
 	height: 1.7em;
 	background-color: var(--clr-switch-thumb, var(--clr-surface-a60));
 	border-radius: 50%;
-	transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
+	transition:
+		transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+		background-color 0.2s;
 }
 input[type="checkbox"]::after {
 	content: "";
@@ -168,7 +183,9 @@ input[type="checkbox"]::after {
 	border-radius: 1em;
 	padding: 1px;
 	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-button-surface-highlights));
-	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: 1;
@@ -214,7 +231,9 @@ input[type="checkbox"]:checked:active::before {
 	z-index: 1000;
 	background-color: var(--clr-surface-a10);
 	border-radius: 1em;
-	box-shadow: 0 8px 32px var(--clr-surface-a30), 0 3px 80px var(--clr-surface-a30);
+	box-shadow:
+		0 8px 32px var(--clr-surface-a30),
+		0 3px 80px var(--clr-surface-a30);
 	max-height: 12em;
 	min-width: 160px;
 	width: max-content;
@@ -255,7 +274,9 @@ input[type="checkbox"]:checked:active::before {
 	gap: 1em;
 	justify-content: space-between;
 	position: relative;
-	transition: background-color 0.15s, color 0.15s;
+	transition:
+		background-color 0.15s,
+		color 0.15s;
 	margin: 0;
 	overflow: hidden;
 
@@ -303,7 +324,9 @@ input[type="checkbox"]:checked:active::before {
 	inset: 0;
 	border-radius: 0.6em;
 	padding: 1px;
-	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: 1;
