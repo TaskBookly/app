@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../core";
 import Tabs, { type Tab } from "../Tabs";
-import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, ActionMenuConfig, PicturePickerConfig } from "../config";
+import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, PicturePickerConfig } from "../config";
 import { useSettings } from "../SettingsContext";
 import { faBell, faBolt, faBug, faFolderOpen, faGears, faInfoCircle, faLayerGroup, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
+import { usePopup } from "../PopupProvider";
 
 const Settings: React.FC = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
@@ -13,12 +14,39 @@ const Settings: React.FC = () => {
 	const [platform, setPlatform] = useState<NodeJS.Platform | null>(null);
 	const [electronVersion, setElectronVersion] = useState<string>("Loading...");
 	const [chromeVersion, setChromeVersion] = useState<string>("Loading...");
+	const { confirm } = usePopup();
 
-	const handleOpenSettingsDirectory = () => {
+	const handleResetSettings = useCallback(async () => {
+		const confirmed = await confirm({
+			title: "Reset all settings to default?",
+			message: (
+				<>
+					<p>Restoring defaults will overwrite your current TaskBookly configuration. This will not override any custom focus presets.</p>
+					<p>Are you sure you want to do this?</p>
+				</>
+			),
+			confirmLabel: "Reset settings",
+			cancelLabel: "Keep current",
+			intent: "danger",
+		});
+		if (!confirmed) return;
+		try {
+			setSettingsState(defaultSettings);
+			if (typeof window !== "undefined" && window.electron) {
+				for (const setting of defaultSettings) {
+					window.electron.settings.set(setting.key, setting.value);
+				}
+			}
+		} catch (error) {
+			console.error("Failed to reset settings:", error);
+		}
+	}, [confirm, setSettingsState, defaultSettings]);
+
+	const handleOpenSettingsDirectory = useCallback(() => {
 		if (window.electron?.openUserData) {
 			window.electron.openUserData();
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		Promise.all([window.electron.build.getVersion(), window.electron.build.getNodeEnv(), window.electron.build.getPlatform()])
@@ -69,6 +97,9 @@ const Settings: React.FC = () => {
 		{ label: "Notifications & Sound", value: "all" },
 	];
 
+	const selectableNotifOptions = notifOptions.filter((option): option is Extract<SelectionMenuOption, { value: string }> => option.type !== "separator");
+	const focusTimerOptions = selectableNotifOptions.filter((option) => option.value !== "none");
+
 	const focusSessionTransitionDurationOptions: SelectionMenuOption[] = [
 		{ label: "30 seconds", value: "0.5" },
 		{ label: "1 minute", value: "1" },
@@ -76,23 +107,6 @@ const Settings: React.FC = () => {
 		{ label: "3 minutes", value: "3" },
 		{ label: "4 minutes", value: "4" },
 		{ label: "5 minutes", value: "5" },
-	];
-
-	const focusSessionWorkDurationOptions: SelectionMenuOption[] = [
-		{ label: "20 minutes", value: "20" },
-		{ label: "25 minutes", value: "25" },
-		{ label: "30 minutes", value: "30" },
-		{ label: "35 minutes", value: "35" },
-		{ label: "40 minutes", value: "40" },
-		{ label: "45 minutes", value: "45" },
-		{ label: "1 hour", value: "60" },
-	];
-
-	const focusSessionBreakDurationOptions: SelectionMenuOption[] = [
-		{ label: "5 minutes", value: "5" },
-		{ label: "10 minutes", value: "10" },
-		{ label: "15 minutes", value: "15" },
-		{ label: "20 minutes", value: "20" },
 	];
 
 	const breakChargeExtensionAmountOptions: SelectionMenuOption[] = [
@@ -155,28 +169,7 @@ const Settings: React.FC = () => {
 					</Container>
 					<Container name="settings_general_reset">
 						<ContainerGroup>
-							<ActionMenuConfig
-								name="Reset all settings to default"
-								menu={{
-									button: { text: "Reset" },
-									options: [
-										{
-											label: "Confirm?",
-											value: "confirm",
-											onClick: () => {
-												try {
-													setSettingsState(defaultSettings);
-													if (typeof window !== "undefined" && window.electron) {
-														for (const setting of defaultSettings) {
-															window.electron.settings.set(setting.key, setting.value);
-														}
-													}
-												} catch {}
-											},
-										},
-									],
-								}}
-							/>
+							<ButtonActionConfig name="Reset all settings to default" description="Restore TaskBookly to its default preferences." button={{ text: "Reset settings" }} onClick={handleResetSettings} />
 						</ContainerGroup>
 					</Container>
 				</>
@@ -196,21 +189,7 @@ const Settings: React.FC = () => {
 					</Container>
 					<Container name="settings_focus_durations" header={{ title: "Period Lengths", icon: faTimeline }}>
 						<ContainerGroup>
-							{(() => {
-								const workDuration = parseInt(getSetting("workPeriodDuration"));
-								const breakDuration = parseInt(getSetting("breakPeriodDuration"));
-								const ratio = breakDuration / workDuration;
-
-								if (ratio <= 0.17) {
-									return <Hint type="warning" label="Your breaks may be too short for sustained focus. Consider longer breaks." />;
-								}
-								if (ratio >= 0.75) {
-									return <Hint type="warning" label="Your breaks are unusually long compared to work time. Consider adjusting the balance." />;
-								}
-								return null;
-							})()}
-							<SelectionMenuConfig name="Work period duration" menu={{ options: focusSessionWorkDurationOptions }} value={getSetting("workPeriodDuration")} onChange={(v) => setSetting("workPeriodDuration", v)} />
-							<SelectionMenuConfig name="Break period duration" menu={{ options: focusSessionBreakDurationOptions }} value={getSetting("breakPeriodDuration")} onChange={(v) => setSetting("breakPeriodDuration", v)} />
+							<Hint type="info" label="Work and break durations are now managed through Focus presets." />
 							{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
 						</ContainerGroup>
 					</Container>
@@ -234,7 +213,7 @@ const Settings: React.FC = () => {
 				<>
 					<Container name="settings_notifs">
 						<ContainerGroup>
-							<SelectionMenuConfig name="Focus timers" menu={{ options: notifOptions.filter((option) => option.value !== "none") }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
+							<SelectionMenuConfig name="Focus timers" menu={{ options: focusTimerOptions }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
 						</ContainerGroup>
 					</Container>
 				</>

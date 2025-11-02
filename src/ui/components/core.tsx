@@ -83,11 +83,19 @@ const Hint: React.FC<{ type: HintType; label: string }> = ({ type, label }) => {
 	);
 };
 
-interface SelectionMenuOption {
+type MenuSeparatorOption = {
+	type: "separator";
+	label?: string;
+};
+
+interface SelectionMenuValueOption {
 	label: string;
 	subLabel?: string;
 	value: string;
+	type?: "option";
 }
+
+type SelectionMenuOption = SelectionMenuValueOption | MenuSeparatorOption;
 
 interface SelectionMenuProps {
 	options: SelectionMenuOption[];
@@ -97,6 +105,7 @@ interface SelectionMenuProps {
 	searchable?: boolean;
 	placeholder?: string;
 	className?: string;
+	style?: React.CSSProperties;
 }
 
 // Shared dropdown menu props type
@@ -195,7 +204,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, s
 	);
 };
 
-const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange, disabled = false, searchable = false, placeholder = "Select..." }) => {
+const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange, disabled = false, searchable = false, placeholder = "Select...", className = "", style }) => {
 	const [search, setSearch] = React.useState("");
 	const ref = React.useRef<HTMLDivElement>(null);
 	const buttonRef = React.useRef<HTMLDivElement>(null);
@@ -203,15 +212,30 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 	const [menuAbove, setMenuAbove] = React.useState(false);
 	const menuRef = React.useRef<HTMLDivElement>(null);
 
-	const filteredOptions = searchable && search ? options.filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())) : options;
-	const selectedLabel = options.find((opt) => opt.value === value)?.label || placeholder;
+	const selectedLabel = React.useMemo(() => {
+		const match = options.find((opt): opt is SelectionMenuValueOption => opt.type !== "separator" && opt.value === value);
+		return match?.label ?? placeholder;
+	}, [options, value, placeholder]);
+
+	const filteredOptions = React.useMemo(() => {
+		if (!searchable || !search.trim()) {
+			return options;
+		}
+		const lower = search.trim().toLowerCase();
+		return options.filter((opt) => {
+			if (opt.type === "separator") {
+				return false;
+			}
+			return opt.label.toLowerCase().includes(lower) || opt.subLabel?.toLowerCase().includes(lower);
+		});
+	}, [options, search, searchable]);
 
 	React.useEffect(() => {
 		if (!open && search) setSearch("");
 	}, [open, search]);
 
 	return (
-		<div ref={ref} style={{ display: "inline-block", position: "relative" }}>
+		<div ref={ref} className={className} style={{ display: "inline-block", position: "relative", ...style }}>
 			<div
 				ref={buttonRef}
 				onClick={() => {
@@ -226,37 +250,49 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove}>
 				{searchable && <input type="text" className="dropdown-search" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} disabled={disabled} autoFocus />}
 				{filteredOptions.length === 0 && <div className="dropdown-empty">No options</div>}
-				{filteredOptions.map((opt) => (
-					<div
-						key={opt.value}
-						className={`dropdown-option${opt.value === value ? " selected" : ""}`}
-						onClick={() => {
-							onChange(opt.value);
-							setOpen(false);
-							setSearch("");
-						}}
-						role="option"
-						aria-selected={opt.value === value}
-					>
-						<span className="dd-labels">
-							<label className="dd-mainLabel">{opt.label}</label>
-							<label className="dd-subLabel">{opt.subLabel}</label>
-						</span>
-						<span className="dd-check">{opt.value === value ? <FontAwesomeIcon icon={faCheck} widthAuto /> : null}</span>
-					</div>
-				))}
+				{filteredOptions.map((opt, index) => {
+					if (opt.type === "separator") {
+						return (
+							<div key={`separator-${index}`} className="dropdown-separator" role="separator">
+								{opt.label ? <span>{opt.label}</span> : null}
+							</div>
+						);
+					}
+					return (
+						<div
+							key={opt.value}
+							className={`dropdown-option${opt.value === value ? " selected" : ""}`}
+							onClick={() => {
+								onChange(opt.value);
+								setOpen(false);
+								setSearch("");
+							}}
+							role="option"
+							aria-selected={opt.value === value}
+						>
+							<span className="dd-labels">
+								<label className="dd-mainLabel">{opt.label}</label>
+								<label className="dd-subLabel">{opt.subLabel}</label>
+							</span>
+							<span className="dd-check">{opt.value === value ? <FontAwesomeIcon icon={faCheck} widthAuto /> : null}</span>
+						</div>
+					);
+				})}
 			</DropdownMenu>
 		</div>
 	);
 };
 
-interface ActionMenuOption {
+interface ActionMenuValueOption {
 	label: string;
 	subLabel?: string;
 	value: string;
 	icon?: IconProp;
 	onClick?: () => void;
+	type?: "option";
 }
+
+type ActionMenuOption = ActionMenuValueOption | MenuSeparatorOption;
 
 interface ActionMenuProps {
 	button: React.ReactNode;
@@ -283,7 +319,12 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 	function getFilteredOptions(opts: ActionMenuOption[], search: string): ActionMenuOption[] {
 		if (!search) return opts;
 		const lower = search.toLowerCase();
-		return opts.filter((opt) => opt.label.toLowerCase().includes(lower));
+		return opts.filter((opt) => {
+			if (opt.type === "separator") {
+				return false;
+			}
+			return opt.label.toLowerCase().includes(lower) || opt.subLabel?.toLowerCase().includes(lower);
+		});
 	}
 	const filteredOptions = getFilteredOptions(options, search);
 
@@ -308,27 +349,36 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove} className={className}>
 				{searchable && <input type="text" className="dropdown-search" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} autoFocus />}
 				{filteredOptions.length === 0 && <div className="dropdown-empty">No options</div>}
-				{filteredOptions.map((opt) => (
-					<div
-						key={opt.value}
-						className={`dropdown-option`}
-						onClick={() => {
-							setOpen(false);
-							if (onOptionSelect) {
-								onOptionSelect(opt.value);
-							} else if (opt.onClick) {
-								opt.onClick();
-							}
-						}}
-						role="menuitem"
-					>
-						<span className="dd-labels">
-							<label className="dd-mainLabel">{opt.label}</label>
-							<label className="dd-subLabel">{opt.subLabel}</label>
-						</span>
-						{opt.icon && <FontAwesomeIcon className="dd-icon" icon={opt.icon} />}
-					</div>
-				))}
+				{filteredOptions.map((opt, index) => {
+					if (opt.type === "separator") {
+						return (
+							<div key={`separator-${index}`} className="dropdown-separator" role="separator">
+								{opt.label ? <span>{opt.label}</span> : null}
+							</div>
+						);
+					}
+					return (
+						<div
+							key={opt.value}
+							className={`dropdown-option`}
+							onClick={() => {
+								setOpen(false);
+								if (onOptionSelect) {
+									onOptionSelect(opt.value);
+								} else if (opt.onClick) {
+									opt.onClick();
+								}
+							}}
+							role="menuitem"
+						>
+							<span className="dd-labels">
+								<label className="dd-mainLabel">{opt.label}</label>
+								<label className="dd-subLabel">{opt.subLabel}</label>
+							</span>
+							{opt.icon && <FontAwesomeIcon className="dd-icon" icon={opt.icon} />}
+						</div>
+					);
+				})}
 			</DropdownMenu>
 		</div>
 	);

@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
-import IcoButton, { Container, ActionMenu, type ActionMenuOption } from "../core";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import IcoButton, { Container, ActionMenu, type ActionMenuOption, SelectionMenu, type SelectionMenuOption } from "../core";
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faMugSaucer, faPause, faPlay, faPlus, faStop } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faFloppyDisk, faHourglassHalf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faStop, faStopwatch, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { usePopup } from "../PopupProvider";
+import type { FocusPreset } from "../../../common/focusPresets";
 
 const Focus: React.FC = () => {
 	const { getSetting } = useSettings();
@@ -19,6 +21,191 @@ const Focus: React.FC = () => {
 	const [cooldownBreaksLeft, setCooldownBreaksLeft] = useState<number>(0);
 	const [isCharging, setIsCharging] = useState<boolean>(false);
 	const [chargeUsedThisSession, setChargeUsedThisSession] = useState<boolean>(false);
+
+	const { open, confirm } = usePopup();
+
+	const [presets, setPresets] = useState<FocusPreset[]>([]);
+	const [selectedPresetId, setSelectedPresetId] = useState<string>("");
+
+	const refreshPresets = useCallback(async () => {
+		try {
+			const payload = await window.electron.focusPresets.list();
+			if (!payload) return;
+			setPresets(payload.presets);
+			const fallbackId = payload.selectedPresetId || payload.presets[0]?.id || "";
+			setSelectedPresetId(fallbackId);
+		} catch (error) {
+			console.error("Failed to load focus presets:", error);
+		}
+	}, []);
+
+	useEffect(() => {
+		refreshPresets();
+	}, [refreshPresets]);
+
+	const presetOptions = useMemo<SelectionMenuOption[]>(() => {
+		if (!presets.length) {
+			return [];
+		}
+		const builtIn = presets.filter((preset) => preset.builtIn);
+		const custom = presets.filter((preset) => !preset.builtIn);
+		const options: SelectionMenuOption[] = [];
+		if (builtIn.length > 0) {
+			options.push({ type: "separator", label: "Built-in Presets" });
+			for (const preset of builtIn) {
+				options.push({
+					label: preset.name,
+					subLabel: preset.description ?? `Work ${preset.workDurationMinutes} min • Break ${preset.breakDurationMinutes} min`,
+					value: preset.id,
+				});
+			}
+		}
+		if (custom.length > 0) {
+			options.push({ type: "separator", label: "Custom Presets" });
+			for (const preset of custom) {
+				options.push({
+					label: preset.name,
+					subLabel: preset.description ?? `Work ${preset.workDurationMinutes} min • Break ${preset.breakDurationMinutes} min`,
+					value: preset.id,
+				});
+			}
+		}
+		return options;
+	}, [presets]);
+
+	const selectedPreset = useMemo(() => presets.find((preset) => preset.id === selectedPresetId), [presets, selectedPresetId]);
+
+	const handlePresetChange = useCallback(
+		(presetId: string) => {
+			if (timerStatus !== "stopped") {
+				return;
+			}
+			setSelectedPresetId(presetId);
+			(async () => {
+				try {
+					await window.electron.focusPresets.setActive(presetId);
+				} catch (error) {
+					console.error("Failed to set active focus preset:", error);
+				} finally {
+					await refreshPresets();
+				}
+			})();
+		},
+		[timerStatus, refreshPresets]
+	);
+
+	const handleNewPreset = useCallback(async () => {
+		if (timerStatus !== "stopped") {
+			return;
+		}
+
+		const result = await open({
+			title: "New Focus Preset",
+			message: <p>Focus presets let you quickly swap between different work and break durations to suit what you are working on.</p>,
+			inputs: [
+				{ id: "name", label: "Preset name", type: "text", required: true, placeholder: "My preset" },
+				{ id: "workDuration", label: "Work duration (minutes)", description: "How long work sessions will last.", type: "number", min: 1, max: 180, step: 1, required: true, defaultValue: 25 },
+				{ id: "breakDuration", label: "Break duration (minutes)", description: "How long break sessions will last.", type: "number", min: 1, max: 60, step: 1, required: true, defaultValue: 5 },
+			],
+			actions: [
+				{ label: "Cancel", id: "cancel" },
+				{ label: "Create", id: "create", intent: "primary" },
+			],
+		});
+
+		if (result.actionId !== "create") {
+			return;
+		}
+
+		const name = typeof result.values.name === "string" ? result.values.name.trim() : "";
+		const workDuration = typeof result.values.workDuration === "number" ? result.values.workDuration : NaN;
+		const breakDuration = typeof result.values.breakDuration === "number" ? result.values.breakDuration : NaN;
+		const workValid = Number.isFinite(workDuration) && workDuration >= 1 && workDuration <= 180;
+		const breakValid = Number.isFinite(breakDuration) && breakDuration >= 1 && breakDuration <= 60;
+
+		if (!name || !workValid || !breakValid) {
+			return;
+		}
+
+		try {
+			const created = await window.electron.focusPresets.create({
+				name,
+				workDurationMinutes: workDuration,
+				breakDurationMinutes: breakDuration,
+			});
+			await window.electron.focusPresets.setActive(created.id);
+			await refreshPresets();
+		} catch (error) {
+			console.error("Failed to create focus preset:", error);
+		}
+	}, [open, refreshPresets, timerStatus]);
+
+	const handleEditPreset = useCallback(async () => {
+		if (timerStatus !== "stopped") {
+			return;
+		}
+
+		const preset = selectedPreset;
+		if (!preset || preset.builtIn) {
+			return;
+		}
+
+		const result = await open({
+			title: `Edit ${preset.name}`,
+			inputs: [
+				{ id: "name", label: "Preset name", type: "text", required: true, defaultValue: preset.name },
+				{ id: "workDuration", label: "Work duration (minutes)", type: "number", min: 1, max: 180, step: 1, required: true, defaultValue: preset.workDurationMinutes },
+				{ id: "breakDuration", label: "Break duration (minutes)", type: "number", min: 1, max: 60, step: 1, required: true, defaultValue: preset.breakDurationMinutes },
+			],
+			actions: [
+				{ label: "Delete", id: "delete", intent: "danger", icon: faTrash },
+				{ label: "Cancel", id: "cancel" },
+				{ label: "Save", id: "save", intent: "primary", icon: faFloppyDisk },
+			],
+		});
+
+		if (result.actionId === "delete") {
+			const result = await confirm({ title: `Delete ${preset.name}?`, message: "This cannot be undone!", confirmLabel: "Yes, I don't want this anymore!!!" });
+			if (result) {
+				try {
+					const success = await window.electron.focusPresets.delete(preset.id);
+					if (success) {
+						await refreshPresets();
+					}
+				} catch (error) {
+					console.error("Failed to delete focus preset:", error);
+				}
+			}
+			return;
+		}
+
+		if (result.actionId !== "save") {
+			return;
+		}
+
+		const name = typeof result.values.name === "string" ? result.values.name.trim() : "";
+		const workDuration = typeof result.values.workDuration === "number" ? result.values.workDuration : NaN;
+		const breakDuration = typeof result.values.breakDuration === "number" ? result.values.breakDuration : NaN;
+		const workValid = Number.isFinite(workDuration) && workDuration >= 1 && workDuration <= 180;
+		const breakValid = Number.isFinite(breakDuration) && breakDuration >= 1 && breakDuration <= 60;
+
+		if (!name || !workValid || !breakValid) {
+			return;
+		}
+
+		try {
+			const updated = await window.electron.focusPresets.update(preset.id, {
+				name,
+				workDurationMinutes: workDuration,
+				breakDurationMinutes: breakDuration,
+			});
+			if (updated) {
+				await refreshPresets();
+			}
+		} catch (error) {
+			console.error("Failed to update focus preset:", error);
+		}
+	}, [open, refreshPresets, selectedPreset, timerStatus]);
 
 	// Listen for timer updates from backend
 	useEffect(() => {
@@ -125,6 +312,15 @@ const Focus: React.FC = () => {
 
 			<Container name="focus_controls">
 				<div className="groupList">
+					<div id="focusPresets" className="buttonGroup">
+						<SelectionMenu options={presetOptions} value={selectedPresetId} onChange={handlePresetChange} searchable placeholder="Choose preset" disabled={timerStatus !== "stopped"} />
+						{timerStatus === "stopped" ? (
+							<>
+								<IcoButton icon={faPlus} tooltip="Create Preset" onClick={{ action: handleNewPreset }} />
+								<IcoButton icon={faPencil} tooltip={selectedPreset && selectedPreset.builtIn ? "Built-in presets cannot be edited" : "Edit Preset"} disabled={!selectedPreset || selectedPreset.builtIn} onClick={{ action: handleEditPreset }} />
+							</>
+						) : null}
+					</div>
 					<div className="buttonGroup">
 						{timerStatus === "counting" ? (
 							<>
@@ -140,7 +336,7 @@ const Focus: React.FC = () => {
 							<IcoButton text="Start" icon={faPlay} onClick={{ action: handleStart }} />
 						)}
 
-						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value) => handleAddTime(parseInt(value))} button={<IcoButton icon={faPlus} text="Add time" />} /> : null}
+						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value: string) => handleAddTime(parseInt(value, 10))} button={<IcoButton icon={faStopwatch} text="Add time" />} /> : null}
 					</div>
 				</div>
 			</Container>

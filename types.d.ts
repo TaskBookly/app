@@ -22,6 +22,13 @@ interface Window {
 			requestDataUpdate: () => void;
 			onTimerUpdate: (callback: (data: TimerData) => void) => void;
 		};
+		focusPresets: {
+			list: () => Promise<{ presets: FocusPreset[]; selectedPresetId: string }>;
+			create: (preset: FocusPresetInput) => Promise<FocusPreset>;
+			update: (presetId: string, preset: FocusPresetInput) => Promise<FocusPreset | null>;
+			delete: (presetId: string) => Promise<boolean>;
+			setActive: (presetId: string) => Promise<{ selectedPresetId: string }>;
+		};
 		sound: {
 			onplaySound: (callback: (soundPath: string) => void) => void;
 		};
@@ -40,11 +47,29 @@ interface Window {
 			close: () => void;
 			isMaximized: () => Promise<boolean>;
 			onStateChanged: (callback: (state: { maximized: boolean }) => void) => void;
+			onCloseRequested: (callback: () => void) => () => void;
+			submitCloseDecision: (shouldClose: boolean) => Promise<boolean>;
 		};
 		onJumpToSection: (callback: (section: string) => void) => void;
 		openUserData: () => Promise<void>;
 		openShellURL: (url: string) => void;
 	};
+}
+
+interface FocusPreset {
+	id: string;
+	name: string;
+	workDurationMinutes: number;
+	breakDurationMinutes: number;
+	description?: string;
+	builtIn: boolean;
+}
+
+interface FocusPresetInput {
+	name: string;
+	workDurationMinutes: number;
+	breakDurationMinutes: number;
+	description?: string;
 }
 
 interface TimerData {

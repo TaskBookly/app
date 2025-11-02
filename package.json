@@ -8,7 +8,7 @@
 	"copyright": "(C) 2025 TaskBookly LLC",
 	"author": "TaskBookly LLC",
 	"description": "A task management and focus tool.",
-	"main": "dist-electron/main.js",
+	"main": "dist-electron/electron/main.js",
 	"scripts": {
 		"transpile:electron": "tsc -p src/electron/tsconfig.json",
 		"dev": "npm-run-all --parallel dev:react dev:electron",
@@ -31,7 +31,7 @@
 			"dist-react"
 		],
 		"extraResources": [
-			"dist-electron/preload.cjs"
+			"dist-electron/electron/preload.cjs"
 		],
 		"mac": {
 			"icon": "build-resources/icons/mac/icon.png",

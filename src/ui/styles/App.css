@@ -1,5 +1,6 @@
 @import url("./theme.css");
 @import url("./Tooltip.css");
+@import url("./Popup.css");
 
 ::-webkit-scrollbar {
 	width: 10px;
@@ -376,6 +377,10 @@ div.buttonGroup {
 div.groupList {
 	display: flex;
 	flex-direction: column;
+	gap: 1em;
+}
+
+#focusPresets {
 	gap: 0.5em;
 }
 

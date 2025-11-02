@@ -3,5 +3,10 @@ import { isDev } from "./utils.js";
 import path from "path";
 
 export function getPreloadPath(): string {
-	return path.join(app.getAppPath(), isDev() ? "." : "..", "/dist-electron/preload.cjs");
+	const segments: string[] = [app.getAppPath()];
+	if (!isDev()) {
+		segments.push("..");
+	}
+	segments.push("dist-electron", "electron", "preload.cjs");
+	return path.join(...segments);
 }

@@ -8,6 +8,7 @@ import { getPreloadPath } from "./pathResolver.js";
 import { getDefaultSettings } from "./settings.js";
 
 import FocusTimer from "./focus.js";
+import FocusPresetStore from "./focusPresetStore.js";
 
 import electronUpdPkg from "electron-updater";
 import { startupDisRPC } from "./discordRPC.js";
@@ -65,6 +66,9 @@ let sidebarCollapsed: boolean = false;
 
 let mainWindow: BrowserWindow;
 let focusTimer: FocusTimer;
+let focusPresetStore: FocusPresetStore;
+let allowWindowClose = false;
+let pendingClosePrompt = false;
 
 // Function to build the focus menu based on current state
 function buildFocusMenu(): MenuItemConstructorOptions {
@@ -210,6 +214,7 @@ function updateMenu() {
 
 app.whenReady().then(() => {
 	autoUpdater.autoDownload = false;
+	focusPresetStore = new FocusPresetStore();
 	const settings = loadSettings();
 
 	autoUpdater.checkForUpdates();
@@ -236,9 +241,30 @@ app.whenReady().then(() => {
 		fullscreenable: false,
 	});
 
-	focusTimer = new FocusTimer(mainWindow, settings);
+	const initialPreset = focusPresetStore.getSelectedPreset();
+	focusTimer = new FocusTimer(mainWindow, settings, initialPreset);
 
 	focusTimer.forceDataUpdate();
+
+	mainWindow.on("close", (event) => {
+		if (allowWindowClose) {
+			allowWindowClose = false;
+			return;
+		}
+
+		const shouldConfirmClose = Boolean(focusTimer) && focusTimer.status !== "stopped";
+		const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
+		if (!shouldConfirmClose || !hasRenderer) {
+			return;
+		}
+
+		event.preventDefault();
+		if (pendingClosePrompt) {
+			return;
+		}
+		pendingClosePrompt = true;
+		mainWindow.webContents.send("window-close-requested");
+	});
 
 	focusTimer.on("timer-update", (eventType, data) => {
 		const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
@@ -371,6 +397,45 @@ app.whenReady().then(() => {
 		return true;
 	});
 
+	const getPresetPayload = () => ({
+		presets: focusPresetStore.getPresets(),
+		selectedPresetId: focusPresetStore.getSelectedPresetId(),
+	});
+
+	ipcMain.handle("focus-presets-list", () => {
+		return getPresetPayload();
+	});
+
+	ipcMain.handle("focus-presets-create", (_event, preset: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
+		return focusPresetStore.createPreset(preset);
+	});
+
+	ipcMain.handle("focus-presets-update", (_event, presetId: string, payload: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
+		const updated = focusPresetStore.updatePreset(presetId, payload);
+		if (updated && focusPresetStore.getSelectedPresetId() === presetId) {
+			FocusTimer.setActivePreset(updated);
+			focusTimer.forceDataUpdate();
+		}
+		return updated;
+	});
+
+	ipcMain.handle("focus-presets-delete", (_event, presetId: string) => {
+		const result = focusPresetStore.deletePreset(presetId);
+		if (result) {
+			const activePreset = focusPresetStore.getSelectedPreset();
+			FocusTimer.setActivePreset(activePreset);
+			focusTimer.forceDataUpdate();
+		}
+		return result;
+	});
+
+	ipcMain.handle("focus-presets-set-active", (_event, presetId: string) => {
+		const preset = focusPresetStore.setSelectedPreset(presetId);
+		FocusTimer.setActivePreset(preset);
+		focusTimer.forceDataUpdate();
+		return { selectedPresetId: preset.id };
+	});
+
 	// Window control handlers
 	ipcMain.on("window-minimize", () => {
 		mainWindow.minimize();
@@ -390,6 +455,18 @@ app.whenReady().then(() => {
 
 	ipcMain.handle("window-is-maximized", () => {
 		return mainWindow.isMaximized();
+	});
+
+	ipcMain.handle("window-close-decision", (_event, shouldClose: boolean) => {
+		pendingClosePrompt = false;
+		if (!mainWindow || mainWindow.isDestroyed()) {
+			return false;
+		}
+		if (shouldClose) {
+			allowWindowClose = true;
+			mainWindow.close();
+		}
+		return shouldClose;
 	});
 
 	// Listen for window state changes

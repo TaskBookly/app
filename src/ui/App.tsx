@@ -1,15 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./styles/App.css";
 import Section, { jumpToSection, clearAllHideTimeouts } from "./components/nav.tsx";
 import IcoButton from "./components/core.tsx";
 import { useTooltip, TooltipPortal } from "./components/Tooltip";
 import { SettingsProvider } from "./components/SettingsContext";
+import { usePopup } from "./components/PopupProvider";
 import { faBars, faClose, faLightbulb, faWindowMaximize, faWindowMinimize, faWindowRestore, faWrench } from "@fortawesome/free-solid-svg-icons";
 
 function App() {
 	const tooltip = useTooltip();
+	const popup = usePopup();
+	const popupRef = useRef(popup);
 	const [isMaximized, setIsMaximized] = useState(false);
 	const [platform, setPlatform] = useState<string>("");
+
+	useEffect(() => {
+		popupRef.current = popup;
+	}, [popup]);
 
 	useEffect(() => {
 		jumpToSection("focus");
@@ -52,9 +59,27 @@ function App() {
 			setIsMaximized(state.maximized);
 		});
 
+		const removeCloseRequestListener = window.electron.window.onCloseRequested(async () => {
+			try {
+				const confirmed = await popupRef.current.confirm({
+					title: "End focus session?",
+					message: "A focus session is currently active. Closing TaskBookly will stop the session and discard progress.",
+					confirmLabel: "Quit TaskBookly",
+					cancelLabel: "Keep Focusing",
+					dismissible: false,
+					intent: "danger",
+				});
+				await window.electron.window.submitCloseDecision(confirmed);
+			} catch (error) {
+				console.error("Failed to handle close confirmation:", error);
+				await window.electron.window.submitCloseDecision(false);
+			}
+		});
+
 		// Cleanup function to clear timeouts when section component unmounts
 		return () => {
 			clearAllHideTimeouts();
+			removeCloseRequestListener?.();
 		};
 	}, []);
 
