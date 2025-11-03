@@ -385,5 +385,5 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 };
 
 export { ContainerGroup, Container, SelectionMenu, ActionMenu, Hint };
-export type { SelectionMenuOption, ActionMenuOption, HintType };
+export type { SelectionMenuOption, SelectionMenuValueOption, ActionMenuOption, HintType };
 export default IcoButton;

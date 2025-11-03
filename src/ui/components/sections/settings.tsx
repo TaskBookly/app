@@ -90,6 +90,9 @@ const Settings: React.FC = () => {
 		{ label: "Monochrome Ink", subLabel: "NEW!", value: "monochromeInk" },
 	];
 
+	const selectableThemeOptions = themeOptions.filter((option): option is Extract<SelectionMenuOption, { value: string }> => option.type !== "separator");
+
+
 	const notifOptions: SelectionMenuOption[] = [
 		{ label: "None", value: "none" },
 		{ label: "Sound Only", value: "soundOnly" },
@@ -144,7 +147,7 @@ const Settings: React.FC = () => {
 								name="Theme"
 								description="The theme that will be displayed across the app. New themes are added occasionally!"
 								menu={{
-									options: themeOptions.map((o) => ({
+									options: selectableThemeOptions.map((o) => ({
 										...o,
 										previewRenderer: (vars: Record<string, string>) => (
 											<div>
