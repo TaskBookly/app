@@ -343,7 +343,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 				{React.isValidElement(button)
 					? React.cloneElement(button as React.ReactElement<{ className?: string; disabled?: boolean }>, {
 							className: [(button as React.ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
-					  })
+						})
 					: button}
 			</div>
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove} className={className}>
@@ -385,5 +385,5 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 };
 
 export { ContainerGroup, Container, SelectionMenu, ActionMenu, Hint };
-export type { SelectionMenuOption, ActionMenuOption, HintType };
+export type { SelectionMenuOption, SelectionMenuValueOption, ActionMenuOption, HintType };
 export default IcoButton;

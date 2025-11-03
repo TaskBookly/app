@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Container, ContainerGroup, type SelectionMenuOption, Hint } from "../core";
+import { Container, ContainerGroup, type SelectionMenuOption, type SelectionMenuValueOption, Hint } from "../core";
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, PicturePickerConfig } from "../config";
 import { useSettings } from "../SettingsContext";
@@ -76,7 +76,7 @@ const Settings: React.FC = () => {
 		})();
 	}, []);
 
-	const themeOptions: SelectionMenuOption[] = [
+	const themeOptions: SelectionMenuValueOption[] = [
 		{ label: "System", value: "system" },
 		{ label: "Bookly Light", value: "light" },
 		{ label: "Bookly Dark", value: "dark" },
@@ -263,7 +263,7 @@ const Settings: React.FC = () => {
 							</>
 						),
 					},
-			  ]
+				]
 			: []),
 	];
 

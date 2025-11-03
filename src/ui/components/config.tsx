@@ -1,5 +1,5 @@
 import React from "react";
-import IcoButton, { type SelectionMenuOption, type ActionMenuOption, type HintType, Hint, SelectionMenu, ActionMenu } from "./core";
+import IcoButton, { type SelectionMenuOption, type SelectionMenuValueOption, type ActionMenuOption, type HintType, Hint, SelectionMenu, ActionMenu } from "./core";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
@@ -62,9 +62,9 @@ interface SelectionMenuProps extends ConfigDefaults {
 	};
 }
 
-interface PicturePickerOption extends SelectionMenuOption {
+type PicturePickerOption = SelectionMenuValueOption & {
 	previewRenderer: (vars: Record<string, string>) => React.ReactNode;
-}
+};
 
 interface PicturePickerProps extends ConfigDefaults {
 	value: string;
