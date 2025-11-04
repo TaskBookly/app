@@ -202,7 +202,7 @@ function updateMenu() {
 
 		menuTemplate.push({
 			role: "help",
-			submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Report an Issue...", click: () => shell.openExternal("https://github.com/TaskBookly/app/issues/new") }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }],
+			submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Report an Issue...", click: () => shell.openExternal("https://github.com/TaskBookly/app/issues/new") }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://taskbookly.framer.website/acknowledgments") }],
 		});
 
 		const menu = Menu.buildFromTemplate(menuTemplate);

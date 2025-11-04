@@ -80,14 +80,14 @@ const Settings: React.FC = () => {
 		{ label: "System", value: "system" },
 		{ label: "Bookly Light", value: "light" },
 		{ label: "Bookly Dark", value: "dark" },
-		{ label: "Autumn Spice", subLabel: "NEW!", value: "autumnSpice" },
+		{ label: "Autumn Spice", value: "autumnSpice" },
 		{ label: "Catppuccin", value: "catppuccin" },
-		{ label: "Midnight Ocean", subLabel: "NEW!", value: "midnightOcean" },
-		{ label: "Strawberry Splash", subLabel: "NEW!", value: "strawberrySplash" },
-		{ label: "Forest Glass", subLabel: "NEW!", value: "forestGlass" },
-		{ label: "Lavender Mist", subLabel: "NEW!", value: "lavenderMist" },
-		{ label: "Retro Console", subLabel: "NEW!", value: "retroConsole" },
-		{ label: "Monochrome Ink", subLabel: "NEW!", value: "monochromeInk" },
+		{ label: "Midnight Ocean", value: "midnightOcean" },
+		{ label: "Strawberry Splash", value: "strawberrySplash" },
+		{ label: "Forest Glass", value: "forestGlass" },
+		{ label: "Lavender Mist", value: "lavenderMist" },
+		{ label: "Retro Console", value: "retroConsole" },
+		{ label: "Monochrome Ink", value: "monochromeInk" },
 	];
 
 	const notifOptions: SelectionMenuOption[] = [
@@ -263,7 +263,7 @@ const Settings: React.FC = () => {
 							</>
 						),
 					},
-				]
+			  ]
 			: []),
 	];
 
