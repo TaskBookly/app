@@ -55,6 +55,7 @@ function applyActivity(activity: focusActivity | null): void {
 			details: activity.periodType === "work" ? "Working" : activity.periodType === "break" ? "Taking a Break" : activity.periodType === "transition" ? "Transitioning" : "Idk what bro is doing",
 			startTimestamp,
 			endTimestamp,
+			buttons: [{ label: "Get TaskBookly", url: "https://taskbookly.framer.website" }],
 		})
 		.catch((error) => {
 			console.error("Failed to set Discord RPC activity:", error);
