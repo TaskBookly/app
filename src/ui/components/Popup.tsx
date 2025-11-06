@@ -90,6 +90,7 @@ const Popup: React.FC<PopupProps> = ({ open, title, message, inputs = [], action
 	const exitTimer = useRef<number | undefined>(undefined);
 	const idleTimer = useRef<number | undefined>(undefined);
 	const prevOpen = useRef(open);
+	const overlayPointerDownRef = useRef(false);
 	const resolvedInitialValues = useMemo(() => initialValues ?? {}, [initialValues]);
 	const computeInitialRawValues = useCallback(() => {
 		const map: Record<string, string | boolean> = {};
@@ -325,7 +326,25 @@ const Popup: React.FC<PopupProps> = ({ open, title, message, inputs = [], action
 		return map;
 	}, [inputs, rawValues]);
 
+	const handleOverlayPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+		overlayPointerDownRef.current = event.target === event.currentTarget;
+	};
+
+	const handleOverlayPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+		if (event.target !== event.currentTarget) {
+			overlayPointerDownRef.current = false;
+		}
+	};
+
+	const handleOverlayPointerCancel = () => {
+		overlayPointerDownRef.current = false;
+	};
+
 	const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
+		if (!overlayPointerDownRef.current) {
+			return;
+		}
+		overlayPointerDownRef.current = false;
 		if (event.target === event.currentTarget && dismissible && onDismiss) {
 			onDismiss();
 		}
@@ -384,7 +403,7 @@ const Popup: React.FC<PopupProps> = ({ open, title, message, inputs = [], action
 	if (!shouldRender || !portalElement) return null;
 
 	return createPortal(
-		<div className="popupOverlay" data-state={renderState} onClick={handleOverlayClick} style={{ zIndex }}>
+		<div className="popupOverlay" data-state={renderState} onPointerDown={handleOverlayPointerDown} onPointerUp={handleOverlayPointerUp} onPointerCancel={handleOverlayPointerCancel} onClick={handleOverlayClick} style={{ zIndex }}>
 			<div className="popupCard" data-state={renderState} ref={cardRef} role="dialog" aria-modal="true" aria-labelledby={titleId}>
 				<header className="popupHeader">
 					<div className="popupHeaderText">
@@ -475,7 +494,7 @@ const Popup: React.FC<PopupProps> = ({ open, title, message, inputs = [], action
 									);
 								})}
 							</footer>,
-					  ]
+						]
 					: []}
 			</div>
 		</div>,
