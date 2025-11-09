@@ -3,7 +3,7 @@ import { Container, ContainerGroup, type SelectionMenuOption, type SelectionMenu
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, PicturePickerConfig } from "../config";
 import { useSettings } from "../SettingsContext";
-import { faBell, faBolt, faBug, faFolderOpen, faGears, faInfoCircle, faLayerGroup, faLightbulb, faTimeline } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBell, faBolt, faBug, faFolderOpen, faGears, faInfoCircle, faLayerGroup, faLightbulb, faLink, faTimeline } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { usePopup } from "../PopupProvider";
 
@@ -138,7 +138,7 @@ const Settings: React.FC = () => {
 			icon: faGears,
 			content: (
 				<>
-					<Container name="settings_general_misc">
+					<Container name="settings_general_theme">
 						<ContainerGroup>
 							<PicturePickerConfig
 								name="Theme"
@@ -165,6 +165,8 @@ const Settings: React.FC = () => {
 								onChange={(v) => setSetting("theme", v)}
 							/>
 						</ContainerGroup>
+					</Container>
+					<Container name="settings_general_misc" header={{ title: "Connections", icon: faLink }}>
 						<SwitchConfig name="Discord Rich Presence" description={"If enabled, focus activity will be shared to your Discord client and displayed under your profile.\nShare my activity must be enabled in Discord Settings > Activity Privacy for this to work."} value={getSetting("discordRichPresence") === "true"} onChange={() => setSetting("discordRichPresence", getSetting("discordRichPresence") === "true" ? "false" : "true")} />
 					</Container>
 					<Container name="settings_general_reset">
@@ -181,27 +183,35 @@ const Settings: React.FC = () => {
 			icon: faLightbulb,
 			content: (
 				<>
-					<Container name="settings_focus_features">
-						<ContainerGroup>
-							<SwitchConfig name="Transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
-							<SwitchConfig name="Break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
-						</ContainerGroup>
-					</Container>
 					<Container name="settings_focus_durations" header={{ title: "Period Lengths", icon: faTimeline }}>
 						<ContainerGroup>
 							<Hint type="info" label="Work and break durations are now managed through Focus presets." />
-							{getSetting("transitionPeriodsEnabled") === "true" ? <SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} /> : null}
 						</ContainerGroup>
 					</Container>
-					{getSetting("breakChargingEnabled") === "true" ? (
-						<Container name="settings_focus_breakCharging" header={{ title: "Break Charging", icon: faBolt }}>
+
+					<Container name="settings_focus_transition" header={{ title: "Transition Periods", icon: faAnglesRight }}>
+						<ContainerGroup>
+							<SwitchConfig name="Enable transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />
+						</ContainerGroup>
+						{getSetting("transitionPeriodsEnabled") === "true" ? (
+							<ContainerGroup>
+								<SelectionMenuConfig name="Transition period duration" menu={{ options: focusSessionTransitionDurationOptions }} value={getSetting("transitionPeriodDuration")} onChange={(v) => setSetting("transitionPeriodDuration", v)} />
+							</ContainerGroup>
+						) : null}
+					</Container>
+
+					<Container name="settings_focus_breakCharging" header={{ title: "Break Charging", icon: faBolt }}>
+						<ContainerGroup>
+							<SwitchConfig name="Enable break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and will extend them by a few minutes." value={getSetting("breakChargingEnabled") === "true"} onChange={() => setSetting("breakChargingEnabled", getSetting("breakChargingEnabled") === "true" ? "false" : "true")} />
+						</ContainerGroup>
+						{getSetting("breakChargingEnabled") === "true" ? (
 							<ContainerGroup>
 								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting("breakChargeExtensionAmount")} onChange={(v) => setSetting("breakChargeExtensionAmount", v)} />
 								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting("breakChargeCooldown")} onChange={(v) => setSetting("breakChargeCooldown", v)} />
 								<SelectionMenuConfig name="Work time per charge" description="The amount of work time needed to earn a break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting("workTimePerCharge")} onChange={(v) => setSetting("workTimePerCharge", v)} />
 							</ContainerGroup>
-						</Container>
-					) : null}
+						) : null}
+					</Container>
 				</>
 			),
 		},
@@ -240,7 +250,7 @@ const Settings: React.FC = () => {
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_about_info">
-						<ButtonActionConfig name="" description={"This software is licensed under the MIT License.\n\nThis license, plus acknowledgements and the security policy can be found on the TaskBookly GitHub repository.\n\nMade with ❤️ by CodeDevelops"} button={{ icon: faGithub, text: "View on GitHub" }} onClick={() => window.electron.openShellURL("https://github.com/Taskbookly/app")} />
+						<ButtonActionConfig name="" description={"This software is licensed under the MIT License.\n\nThis license, plus acknowledgments and the security policy can be found on the TaskBookly GitHub repository.\n\nMade with ❤️ by CodeDevelops"} button={{ icon: faGithub, text: "View on GitHub" }} onClick={() => window.electron.openShellURL("https://github.com/Taskbookly/app")} />
 					</Container>
 				</>
 			),

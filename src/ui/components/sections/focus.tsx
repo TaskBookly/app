@@ -3,7 +3,7 @@ import IcoButton, { Container, ActionMenu, type ActionMenuOption, SelectionMenu,
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faFloppyDisk, faHourglassHalf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faStop, faStopwatch, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faStop, faStopwatch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { usePopup } from "../PopupProvider";
 import type { FocusPreset } from "../../../common/focusPresets";
@@ -158,14 +158,14 @@ const Focus: React.FC = () => {
 				{ id: "breakDuration", label: "Break duration (minutes)", type: "number", min: 1, max: 60, step: 1, required: true, defaultValue: preset.breakDurationMinutes },
 			],
 			actions: [
-				{ label: "Delete", id: "delete", intent: "danger", icon: faTrash },
+				{ label: "Delete", id: "delete", intent: "danger" },
 				{ label: "Cancel", id: "cancel" },
-				{ label: "Save", id: "save", intent: "primary", icon: faFloppyDisk },
+				{ label: "Save", id: "save", intent: "primary" },
 			],
 		});
 
 		if (result.actionId === "delete") {
-			const result = await confirm({ title: `Delete ${preset.name}?`, message: "This cannot be undone!", confirmLabel: "Yes, I don't want this anymore!!!" });
+			const result = await confirm({ title: `Delete ${preset.name}?`, message: "This cannot be undone!", confirmLabel: "Delete it!" });
 			if (result) {
 				try {
 					const success = await window.electron.focusPresets.delete(preset.id);

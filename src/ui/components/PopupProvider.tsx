@@ -42,7 +42,18 @@ interface PopupInstance {
 	options: PopupOpenOptions;
 }
 
-const PopupContext = createContext<PopupController | null>(null);
+const globalPopupContextKey = "__taskbookly_popup_context__" as const;
+type PopupContextGlobal = typeof globalThis & {
+	[globalPopupContextKey]?: React.Context<PopupController | null>;
+};
+
+const PopupContext = (() => {
+	const scope = globalThis as PopupContextGlobal;
+	if (!scope[globalPopupContextKey]) {
+		scope[globalPopupContextKey] = createContext<PopupController | null>(null);
+	}
+	return scope[globalPopupContextKey]!;
+})();
 
 const generateId = () => {
 	if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
