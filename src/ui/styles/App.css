@@ -141,7 +141,9 @@
 		padding: 10px;
 
 		.buttonIcon {
-			transition: scale 0.2s, opacity 0.2s;
+			transition:
+				scale 0.2s,
+				opacity 0.2s;
 			opacity: 60%;
 		}
 	}
@@ -371,17 +373,59 @@
 div.buttonGroup {
 	display: flex;
 	justify-content: center;
-	gap: 1em;
+	gap: 0.5em;
+	--button-group-outer-radius: 16px;
+	--button-group-inner-radius: 5px;
+
+	> * {
+		--bg-radius-start: var(--button-group-inner-radius);
+		--bg-radius-end: var(--button-group-inner-radius);
+		border-top-left-radius: var(--bg-radius-start);
+		border-bottom-left-radius: var(--bg-radius-start);
+		border-top-right-radius: var(--bg-radius-end);
+		border-bottom-right-radius: var(--bg-radius-end);
+	}
+
+	> button {
+		border-top-left-radius: var(--bg-radius-start);
+		border-bottom-left-radius: var(--bg-radius-start);
+		border-top-right-radius: var(--bg-radius-end);
+		border-bottom-right-radius: var(--bg-radius-end);
+	}
+
+	> button::before {
+		border-radius: inherit;
+	}
+
+	> * button {
+		border-top-left-radius: var(--bg-radius-start);
+		border-bottom-left-radius: var(--bg-radius-start);
+		border-top-right-radius: var(--bg-radius-end);
+		border-bottom-right-radius: var(--bg-radius-end);
+	}
+
+	> * button::before {
+		border-radius: inherit;
+	}
+
+	> *:first-child {
+		--bg-radius-start: var(--button-group-outer-radius);
+	}
+
+	> *:last-child {
+		--bg-radius-end: var(--button-group-outer-radius);
+	}
+
+	> *:only-child {
+		--bg-radius-start: var(--button-group-outer-radius);
+		--bg-radius-end: var(--button-group-outer-radius);
+	}
 }
 
 div.groupList {
 	display: flex;
 	flex-direction: column;
 	gap: 1em;
-}
-
-#focusPresets {
-	gap: 0.5em;
 }
 
 #chargingProgress {
@@ -409,7 +453,9 @@ div.groupList {
 	position: relative;
 	overflow: hidden;
 	background: linear-gradient(90deg, var(--clr-primary-a0) 0%, var(--clr-primary-a30) 50%, var(--clr-primary-a0) 100%);
-	animation: chargeGlow 2s ease-in-out infinite alternate, chargingShimmer 1.5s ease-in-out infinite;
+	animation:
+		chargeGlow 2s ease-in-out infinite alternate,
+		chargingShimmer 1.5s ease-in-out infinite;
 }
 
 @keyframes chargeGlow {
@@ -417,7 +463,9 @@ div.groupList {
 		box-shadow: 0 0 5px rgba(0, 0, 0, 0);
 	}
 	100% {
-		box-shadow: 0 0 20px var(--clr-primary-glow), 0 0 40px rgba(0, 0, 0, 0.15);
+		box-shadow:
+			0 0 20px var(--clr-primary-glow),
+			0 0 40px rgba(0, 0, 0, 0.15);
 	}
 }
 
@@ -501,6 +549,10 @@ div.groupList {
 	label#sessionTimer {
 		font-size: 3.5em;
 		font-weight: 900;
+	}
+
+	label#sessionTimer.paused {
+		opacity: 70%;
 	}
 
 	label#sessionEndTime {

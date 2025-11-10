@@ -9,7 +9,9 @@
 	pointer-events: none;
 	opacity: 0;
 	transform: translateY(6px) scale(0.98);
-	transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+	transition:
+		opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+		transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 	max-width: 220px;
 	min-width: 0;
 	min-height: 0;

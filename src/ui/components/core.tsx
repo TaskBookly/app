@@ -254,7 +254,8 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 					if (opt.type === "separator") {
 						return (
 							<div key={`separator-${index}`} className="dropdown-separator" role="separator">
-								{opt.label ? <span>{opt.label}</span> : null}
+								<div className="dropdown-separator-line"></div>
+								<div className="dropdown-separator-label">{opt.label ? <span>{opt.label}</span> : null}</div>
 							</div>
 						);
 					}

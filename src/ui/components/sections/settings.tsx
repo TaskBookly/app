@@ -273,7 +273,7 @@ const Settings: React.FC = () => {
 							</>
 						),
 					},
-			  ]
+				]
 			: []),
 	];
 

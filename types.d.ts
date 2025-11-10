@@ -56,12 +56,15 @@ interface Window {
 	};
 }
 
+type FocusPresetSection = "Productivity Staples" | "Study & Learning" | "Work & Creative" | "Science-Based";
+
 interface FocusPreset {
 	id: string;
 	name: string;
 	workDurationMinutes: number;
 	breakDurationMinutes: number;
 	description?: string;
+	section?: FocusPresetSection;
 	builtIn: boolean;
 }
 

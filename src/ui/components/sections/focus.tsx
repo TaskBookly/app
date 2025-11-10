@@ -47,12 +47,29 @@ const Focus: React.FC = () => {
 		if (!presets.length) {
 			return [];
 		}
-		const builtIn = presets.filter((preset) => preset.builtIn);
-		const custom = presets.filter((preset) => !preset.builtIn);
+
 		const options: SelectionMenuOption[] = [];
-		if (builtIn.length > 0) {
-			options.push({ type: "separator", label: "Built-in Presets" });
-			for (const preset of builtIn) {
+		const builtInSections = new Map<string, FocusPreset[]>();
+		const sectionOrder: string[] = [];
+		const fallbackSectionLabel = "Built-in Presets";
+
+		for (const preset of presets) {
+			if (!preset.builtIn) continue;
+			const sectionLabel = preset.section ?? fallbackSectionLabel;
+			if (!builtInSections.has(sectionLabel)) {
+				builtInSections.set(sectionLabel, []);
+				sectionOrder.push(sectionLabel);
+			}
+			builtInSections.get(sectionLabel)!.push(preset);
+		}
+
+		for (const sectionLabel of sectionOrder) {
+			const sectionPresets = builtInSections.get(sectionLabel);
+			if (!sectionPresets || sectionPresets.length === 0) {
+				continue;
+			}
+			options.push({ type: "separator", label: sectionLabel });
+			for (const preset of sectionPresets) {
 				options.push({
 					label: preset.name,
 					subLabel: preset.description ?? `Work ${preset.workDurationMinutes} min • Break ${preset.breakDurationMinutes} min`,
@@ -60,9 +77,11 @@ const Focus: React.FC = () => {
 				});
 			}
 		}
-		if (custom.length > 0) {
+
+		const customPresets = presets.filter((preset) => !preset.builtIn);
+		if (customPresets.length > 0) {
 			options.push({ type: "separator", label: "Custom Presets" });
-			for (const preset of custom) {
+			for (const preset of customPresets) {
 				options.push({
 					label: preset.name,
 					subLabel: preset.description ?? `Work ${preset.workDurationMinutes} min • Break ${preset.breakDurationMinutes} min`,
@@ -70,6 +89,7 @@ const Focus: React.FC = () => {
 				});
 			}
 		}
+
 		return options;
 	}, [presets]);
 
@@ -304,7 +324,9 @@ const Focus: React.FC = () => {
 							{currentSession === "work" ? "WORKING" : currentSession === "break" ? "TAKING A BREAK" : "TRANSITIONING"}
 						</div>
 
-						<label id="sessionTimer">{formatAsTime(timeLeftInSession)}</label>
+						<label className={timerStatus === "paused" ? "paused" : undefined} id="sessionTimer">
+							{formatAsTime(timeLeftInSession)}
+						</label>
 						<label id="sessionEndTime">{`Ending at ${formatAsClockTime(sessionExpectedFinishDate)}`}</label>
 					</div>
 				</Container>
@@ -336,7 +358,7 @@ const Focus: React.FC = () => {
 							<IcoButton text="Start" icon={faPlay} onClick={{ action: handleStart }} />
 						)}
 
-						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value: string) => handleAddTime(parseInt(value, 10))} button={<IcoButton icon={faStopwatch} text="Add time" />} /> : null}
+						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value: string) => handleAddTime(parseInt(value, 10))} button={<IcoButton icon={faStopwatch} text="Add Time" />} /> : null}
 					</div>
 				</div>
 			</Container>
