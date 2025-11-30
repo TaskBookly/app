@@ -18,7 +18,6 @@ interface IcoButtonProps {
 	tooltip?: string;
 }
 
-
 interface ContainerProps {
 	name: string;
 	header?: {
@@ -387,7 +386,7 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 			>
 				{isValidElement(button)
 					? cloneElement(button as ReactElement<{ className?: string; disabled?: boolean }>, {
-						className: [(button as ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
+							className: [(button as ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
 					  })
 					: button}
 			</div>

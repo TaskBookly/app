@@ -86,14 +86,7 @@ class SecretDataManager {
 			return false;
 		}
 		const candidate = data as Partial<SecretData>;
-		return (
-			typeof candidate.currentCharges === "number" &&
-			typeof candidate.timeLeftTillNextCharge === "number" &&
-			typeof candidate.breakChargesSinceLastUse === "number" &&
-			typeof candidate.lastWorkTimeTracked === "number" &&
-			typeof candidate.totalWorkTimeAccumulated === "number" &&
-			(candidate.version === undefined || typeof candidate.version === "number")
-		);
+		return typeof candidate.currentCharges === "number" && typeof candidate.timeLeftTillNextCharge === "number" && typeof candidate.breakChargesSinceLastUse === "number" && typeof candidate.lastWorkTimeTracked === "number" && typeof candidate.totalWorkTimeAccumulated === "number" && (candidate.version === undefined || typeof candidate.version === "number");
 	}
 
 	private migrateDataIfNeeded(data: SecretData): SecretData {

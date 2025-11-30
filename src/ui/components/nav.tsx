@@ -60,7 +60,6 @@ function jumpToSection(section: string): { found: boolean; element?: HTMLButtonE
 	return { found: false };
 }
 
-
 interface SectionProps {
 	name: string;
 	displayTitle?: string;

@@ -495,7 +495,7 @@ const Popup = ({ open, title, message, inputs = [], actions, onAction, onDismiss
 									);
 								})}
 							</footer>,
-						]
+					  ]
 					: []}
 			</div>
 		</div>,
