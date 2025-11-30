@@ -322,6 +322,8 @@ app.whenReady().then(() => {
 			return;
 		}
 		pendingClosePrompt = true;
+
+		mainWindow.show();
 		mainWindow.webContents.send("window-close-requested");
 	});
 
