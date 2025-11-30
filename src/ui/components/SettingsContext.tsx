@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { getDefaultSettings } from "../../electron/settings";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { getDefaultSettings } from "../../common/settingsDefaults";
 
 type Setting = { key: string; value: string };
 type SettingsContextType = {
 	settings: Setting[];
 	setSetting: (key: string, value: string) => Promise<void>;
 	getSetting: (key: string) => string;
-	setSettingsState: React.Dispatch<React.SetStateAction<Setting[]>>;
+	setSettingsState: Dispatch<SetStateAction<Setting[]>>;
 	defaultSettings: Setting[];
 };
 
@@ -21,7 +22,11 @@ const getDefaultSettingsArray = async (): Promise<Setting[]> => {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface SettingsProviderProps {
+	children: ReactNode;
+}
+
+export const SettingsProvider = ({ children }: SettingsProviderProps) => {
 	const [defaultSettings, setDefaultSettings] = useState<Setting[]>([]);
 	const [settings, setSettingsState] = useState<Setting[]>([]);
 

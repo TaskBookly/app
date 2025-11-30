@@ -1,4 +1,5 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import IcoButton, { type SelectionMenuOption, type SelectionMenuValueOption, type ActionMenuOption, type HintType, Hint, SelectionMenu, ActionMenu } from "./core";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
@@ -22,7 +23,7 @@ interface InfoProps {
 		type: HintType;
 		label: string;
 	};
-	children?: React.ReactNode;
+	children?: ReactNode;
 }
 
 interface ConfigDefaults {
@@ -34,7 +35,7 @@ interface ConfigDefaults {
 		type: HintType;
 		label: string;
 	};
-	children?: React.ReactNode;
+	children?: ReactNode;
 }
 
 interface SwitchProps extends ConfigDefaults {
@@ -63,7 +64,7 @@ interface SelectionMenuProps extends ConfigDefaults {
 }
 
 type PicturePickerOption = SelectionMenuValueOption & {
-	previewRenderer: (vars: Record<string, string>) => React.ReactNode;
+	previewRenderer: (vars: Record<string, string>) => ReactNode;
 };
 
 interface PicturePickerProps extends ConfigDefaults {
@@ -89,7 +90,7 @@ interface ActionMenuProps extends ConfigDefaults {
 	};
 }
 
-const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint, availableOn = ["windows", "mac"], children }) => {
+const InfoConfig = ({ name, data, copyButton = false, hint, availableOn = ["windows", "mac"], children }: InfoProps) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes(platform)) return null;
 
@@ -112,7 +113,7 @@ const InfoConfig: React.FC<InfoProps> = ({ name, data, copyButton = false, hint,
 	);
 };
 
-const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["windows", "mac"], children }) => {
+const SwitchConfig = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["windows", "mac"], children }: SwitchProps) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes(platform)) return null;
 
@@ -134,7 +135,7 @@ const SwitchConfig: React.FC<SwitchProps> = ({ name, description, disabled = fal
 	);
 };
 
-const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, disabled = false, button, hint, onClick = () => {}, availableOn = ["windows", "mac"], children }) => {
+const ButtonActionConfig = ({ name, description, disabled = false, button, hint, onClick = () => {}, availableOn = ["windows", "mac"], children }: ButtonActionProps) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes(platform)) return null;
 
@@ -156,7 +157,7 @@ const ButtonActionConfig: React.FC<ButtonActionProps> = ({ name, description, di
 	);
 };
 
-const SelectionMenuConfig: React.FC<SelectionMenuProps> = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["windows", "mac"], children }) => {
+const SelectionMenuConfig = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["windows", "mac"], children }: SelectionMenuProps) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes(platform)) return null;
 
@@ -194,14 +195,18 @@ if (typeof window !== "undefined" && typeof window.matchMedia !== "undefined") {
 			__themeVarCache.delete("system");
 			try {
 				window.dispatchEvent(new CustomEvent("theme-system-changed"));
-			} catch {}
+			} catch (_error) {
+				void _error;
+				// Suppress cross-origin access errors that can occur in some browsers.
+			}
 		};
 		if (typeof mq.addEventListener === "function") {
 			mq.addEventListener("change", handler);
 		} else if (typeof mq.addListener === "function") {
-			mq.addListener(handler as any);
+			mq.addListener(handler as Parameters<typeof mq.addListener>[0]);
 		}
-	} catch (e) {
+	} catch (_error) {
+		void _error;
 		// ignore - non-fatal
 	}
 }
@@ -243,20 +248,23 @@ function readThemeVars(theme: string): Record<string, string> {
 	return out;
 }
 
-const PicturePickerConfig: React.FC<PicturePickerProps> = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["windows", "mac"], children }) => {
+const PicturePickerConfig = ({ name, description, menu, value, onChange = () => {}, disabled = false, hint, availableOn = ["windows", "mac"], children }: PicturePickerProps) => {
 	const platform = getPlatform();
-	if (availableOn && !availableOn.includes(platform)) return null;
+	const isAvailable = !availableOn || availableOn.includes(platform);
 	const rows = menu.rows && menu.rows > 0 ? menu.rows : 1;
 
-	const [, setRevision] = React.useState(0);
+	const [, setRevision] = useState(0);
 
-	React.useEffect(() => {
+	useEffect(() => {
+		if (!isAvailable) return;
 		const handler = () => setRevision((r) => r + 1);
 		window.addEventListener?.("theme-system-changed", handler as EventListener);
 		return () => {
 			window.removeEventListener?.("theme-system-changed", handler as EventListener);
 		};
-	}, []);
+	}, [isAvailable]);
+
+	if (!isAvailable) return null;
 
 	const optionVars: Record<string, Record<string, string>> = {};
 	if (typeof window !== "undefined") {
@@ -299,7 +307,7 @@ const PicturePickerConfig: React.FC<PicturePickerProps> = ({ name, description, 
 	);
 };
 
-const ActionMenuConfig: React.FC<ActionMenuProps> = ({ name, description, menu, disabled = false, hint, availableOn = ["windows", "mac"], children }) => {
+const ActionMenuConfig = ({ name, description, menu, disabled = false, hint, availableOn = ["windows", "mac"], children }: ActionMenuProps) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes(platform)) return null;
 

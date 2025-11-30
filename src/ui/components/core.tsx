@@ -1,4 +1,5 @@
-import React from "react";
+import { cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, Dispatch, ReactElement, ReactNode, RefObject, SetStateAction } from "react";
 import { jumpToSection } from "./nav";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -17,15 +18,32 @@ interface IcoButtonProps {
 	tooltip?: string;
 }
 
-const ContainerGroup: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+
+interface ContainerProps {
+	name: string;
+	header?: {
+		title: string;
+		icon: IconProp;
+		buttons?: IcoButtonProps[];
+	};
+	id?: string;
+	className?: string;
+	children?: ReactNode;
+}
+
+interface ContainerGroupProps {
+	children?: ReactNode;
+}
+
+const ContainerGroup = ({ children }: ContainerGroupProps) => {
 	return children ? <div className="containerGroup">{children}</div> : null;
 };
 
-const Container: React.FC<{ name: string; header?: { title: string; icon: IconProp }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => {
-	const [isVisible, setIsVisible] = React.useState(true);
-	const contentRef = React.useRef<HTMLDivElement>(null);
+const Container = ({ name, header, children, id, className = "" }: ContainerProps) => {
+	const [isVisible, setIsVisible] = useState(true);
+	const contentRef = useRef<HTMLDivElement>(null);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (contentRef.current) {
 			const hasVisibleContent =
 				contentRef.current.children.length > 0 &&
@@ -43,9 +61,18 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: IconPr
 		<div data-container={name} id={id} className={`container ${className}`}>
 			{header ? (
 				<div className="containerHeader">
-					<h2>{header.title}</h2>
+					<div className="containerHeaderTitle">
+						<FontAwesomeIcon icon={header.icon} widthAuto />
+						<h2>{header.title}</h2>
+					</div>
 
-					<FontAwesomeIcon icon={header.icon} widthAuto />
+					{header.buttons ? (
+						<div className="containerHeaderButtons buttonGroup">
+							{header.buttons.map((buttonProps, index) => (
+								<IcoButton key={buttonProps.id ?? `header-btn-${index}`} {...buttonProps} />
+							))}
+						</div>
+					) : null}
 				</div>
 			) : null}
 
@@ -56,7 +83,7 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: IconPr
 	);
 };
 
-const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, iconWidthAuto = false, disabled = false, onClick, id, className, tooltip }) => {
+const IcoButton = ({ text, icon, iconWidthAuto = false, disabled = false, onClick, id, className, tooltip }: IcoButtonProps) => {
 	const handleClick = () => {
 		if (onClick?.action) {
 			onClick.action();
@@ -74,13 +101,23 @@ const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, iconWidthAuto = false
 	);
 };
 
-const Hint: React.FC<{ type: HintType; label: string }> = ({ type, label }) => {
+interface HintProps {
+	type: HintType;
+	label: string;
+}
+
+const Hint = ({ type, label }: HintProps) => {
 	return (
 		<div className={`hint hintType-${type}`}>
 			<FontAwesomeIcon className="hintIcon" icon={type === "info" ? faCircleInfo : type === "warning" ? faWarning : type === "error" ? faCircleXmark : type === "success" ? faCircleCheck : type === "processing" ? faCompass : faCircleQuestion} />
 			<span className="hintLabel">{label}</span>
 		</div>
 	);
+};
+
+type MenuOptionData = {
+	icon: IconProp;
+	data: string | number | boolean;
 };
 
 type MenuSeparatorOption = {
@@ -92,6 +129,7 @@ interface SelectionMenuValueOption {
 	label: string;
 	subLabel?: string;
 	value: string;
+	data?: MenuOptionData[];
 	type?: "option";
 }
 
@@ -105,23 +143,23 @@ interface SelectionMenuProps {
 	searchable?: boolean;
 	placeholder?: string;
 	className?: string;
-	style?: React.CSSProperties;
+	style?: CSSProperties;
 }
 
 // Shared dropdown menu props type
 interface DropdownMenuProps {
 	open: boolean;
-	buttonRef: React.RefObject<HTMLDivElement | null>;
-	menuRef: React.RefObject<HTMLDivElement | null>;
-	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-	setMenuAbove: React.Dispatch<React.SetStateAction<boolean>>;
+	buttonRef: RefObject<HTMLDivElement | null>;
+	menuRef: RefObject<HTMLDivElement | null>;
+	setOpen: Dispatch<SetStateAction<boolean>>;
+	setMenuAbove: Dispatch<SetStateAction<boolean>>;
 	menuAbove: boolean;
-	children: React.ReactNode;
+	children: ReactNode;
 	className?: string;
 }
 
-const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, setOpen, setMenuAbove, menuAbove, children, className = "" }) => {
-	React.useEffect(() => {
+const DropdownMenu = ({ open, buttonRef, menuRef, setOpen, setMenuAbove, menuAbove, children, className = "" }: DropdownMenuProps) => {
+	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
 			if (buttonRef.current && menuRef.current && !buttonRef.current.contains(event.target as Node) && !menuRef.current.contains(event.target as Node)) {
 				setOpen(false);
@@ -152,7 +190,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, s
 		};
 	}, [open, buttonRef, menuRef, setOpen]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (open && buttonRef.current && menuRef.current) {
 			const rect = buttonRef.current.getBoundingClientRect();
 			const menu = menuRef.current;
@@ -204,20 +242,19 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, s
 	);
 };
 
-const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange, disabled = false, searchable = false, placeholder = "Select...", className = "", style }) => {
-	const [search, setSearch] = React.useState("");
-	const ref = React.useRef<HTMLDivElement>(null);
-	const buttonRef = React.useRef<HTMLDivElement>(null);
-	const [open, setOpen] = React.useState(false);
-	const [menuAbove, setMenuAbove] = React.useState(false);
-	const menuRef = React.useRef<HTMLDivElement>(null);
+const SelectionMenu = ({ options, value, onChange, disabled = false, searchable = false, placeholder = "Select...", className = "", style }: SelectionMenuProps) => {
+	const [search, setSearch] = useState("");
+	const buttonRef = useRef<HTMLDivElement>(null);
+	const [open, setOpen] = useState(false);
+	const [menuAbove, setMenuAbove] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
 
-	const selectedLabel = React.useMemo(() => {
+	const selectedLabel = useMemo(() => {
 		const match = options.find((opt): opt is SelectionMenuValueOption => opt.type !== "separator" && opt.value === value);
 		return match?.label ?? placeholder;
 	}, [options, value, placeholder]);
 
-	const filteredOptions = React.useMemo(() => {
+	const filteredOptions = useMemo(() => {
 		if (!searchable || !search.trim()) {
 			return options;
 		}
@@ -230,12 +267,12 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 		});
 	}, [options, search, searchable]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (!open && search) setSearch("");
 	}, [open, search]);
 
 	return (
-		<div ref={ref} className={className} style={{ display: "inline-block", position: "relative", ...style }}>
+		<div className={className} style={{ display: "inline-block", position: "relative", ...(style ?? {}) }}>
 			<div
 				ref={buttonRef}
 				onClick={() => {
@@ -274,6 +311,17 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 							<span className="dd-labels">
 								<label className="dd-mainLabel">{opt.label}</label>
 								<label className="dd-subLabel">{opt.subLabel}</label>
+
+								{opt.data ? (
+									<div className="dd-data">
+										{opt.data.map((d, i) => (
+											<div key={i} className="dd-data-item">
+												<FontAwesomeIcon icon={d.icon} />
+												<span>{String(d.data)}</span>
+											</div>
+										))}
+									</div>
+								) : null}
 							</span>
 							<span className="dd-check">{opt.value === value ? <FontAwesomeIcon icon={faCheck} widthAuto /> : null}</span>
 						</div>
@@ -296,30 +344,26 @@ interface ActionMenuValueOption {
 type ActionMenuOption = ActionMenuValueOption | MenuSeparatorOption;
 
 interface ActionMenuProps {
-	button: React.ReactNode;
+	button: ReactNode;
 	options: ActionMenuOption[];
 	className?: string;
 	searchable?: boolean;
 	onOptionSelect?: (value: string) => void;
 }
 
-const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = "", searchable = false, onOptionSelect }) => {
-	const ref = React.useRef<HTMLDivElement>(null);
-	const buttonRef = React.useRef<HTMLDivElement>(null);
-	const [open, setOpen] = React.useState(false);
-	const [menuAbove, setMenuAbove] = React.useState(false);
-	const menuRef = React.useRef<HTMLDivElement>(null);
-	const [search, setSearch] = React.useState("");
+const ActionMenu = ({ button, options, className = "", searchable = false, onOptionSelect }: ActionMenuProps) => {
+	const buttonRef = useRef<HTMLDivElement>(null);
+	const [open, setOpen] = useState(false);
+	const [menuAbove, setMenuAbove] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
+	const [search, setSearch] = useState("");
 
 	// Infer disabled from button prop if possible
-	let isDisabled = false;
-	if (React.isValidElement(button) && (button.props as { disabled?: boolean })?.disabled) {
-		isDisabled = true;
-	}
+	const isDisabled = isValidElement(button) && Boolean((button.props as { disabled?: boolean })?.disabled);
 
-	function getFilteredOptions(opts: ActionMenuOption[], search: string): ActionMenuOption[] {
-		if (!search) return opts;
-		const lower = search.toLowerCase();
+	function getFilteredOptions(opts: ActionMenuOption[], searchValue: string): ActionMenuOption[] {
+		if (!searchValue) return opts;
+		const lower = searchValue.toLowerCase();
 		return opts.filter((opt) => {
 			if (opt.type === "separator") {
 				return false;
@@ -327,24 +371,24 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = ""
 			return opt.label.toLowerCase().includes(lower) || opt.subLabel?.toLowerCase().includes(lower);
 		});
 	}
-	const filteredOptions = getFilteredOptions(options, search);
+	const filteredOptions = useMemo(() => getFilteredOptions(options, search), [options, search]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (!open && search) setSearch("");
 	}, [open, search]);
 
 	return (
-		<div ref={ref} style={{ display: "inline-block", position: "relative" }}>
+		<div style={{ display: "inline-block", position: "relative" }}>
 			<div
 				ref={buttonRef}
 				onClick={() => {
 					if (!isDisabled) setOpen((o) => !o);
 				}}
 			>
-				{React.isValidElement(button)
-					? React.cloneElement(button as React.ReactElement<{ className?: string; disabled?: boolean }>, {
-							className: [(button as React.ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
-						})
+				{isValidElement(button)
+					? cloneElement(button as ReactElement<{ className?: string; disabled?: boolean }>, {
+						className: [(button as ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
+					  })
 					: button}
 			</div>
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove} className={className}>

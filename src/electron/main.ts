@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 
 import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
-import { getDefaultSettings } from "./settings.js";
+import { getDefaultSettings } from "../common/settingsDefaults.js";
 
 import FocusTimer from "./focus.js";
 import FocusPresetStore from "./focusPresetStore.js";
@@ -17,6 +17,63 @@ const { autoUpdater } = electronUpdPkg;
 
 if (process.platform === "win32") {
 	app.setAppUserModelId("com.taskbookly.app");
+}
+
+const suppressedErrorCodes = new Set(["EIO", "EPIPE"]);
+let hasShownMainProcessError = false;
+
+function handleMainProcessError(source: "uncaughtException" | "unhandledRejection", error: unknown) {
+	const err = error instanceof Error ? error : new Error(String(error));
+	const nodeError = err as NodeJS.ErrnoException;
+	if (nodeError.code && suppressedErrorCodes.has(nodeError.code)) {
+		console.warn(`[main] Suppressed ${nodeError.code} from ${source}: ${err.message}`);
+		return;
+	}
+	if (hasShownMainProcessError) {
+		console.error(`[main] Additional ${source}:`, err);
+		return;
+	}
+	hasShownMainProcessError = true;
+
+	const showDialog = () => {
+		dialog
+			.showMessageBox({
+				type: "error",
+				title: "Unexpected Error",
+				message: "TaskBookly encountered an unexpected error in the main process.",
+				detail: err.stack ?? err.message,
+				buttons: ["OK"],
+			})
+			.catch((dialogError) => {
+				console.error("Failed to present error dialog", dialogError);
+			});
+	};
+
+	if (app.isReady()) {
+		showDialog();
+	} else {
+		app.once("ready", showDialog);
+	}
+
+	console.error(`[main] ${source}:`, err);
+}
+
+process.on("uncaughtException", (error) => {
+	handleMainProcessError("uncaughtException", error);
+});
+
+process.on("unhandledRejection", (reason) => {
+	handleMainProcessError("unhandledRejection", reason);
+});
+
+if (isDev()) {
+	const simulatedCode = process.env.SIMULATE_MAIN_ERROR?.toUpperCase();
+	if (simulatedCode) {
+		process.nextTick(() => {
+			const simulatedError = Object.assign(new Error(`Simulated main-process error (${simulatedCode})`), { code: simulatedCode });
+			process.emit("uncaughtException", simulatedError);
+		});
+	}
 }
 
 export const appVersion: string = app.getVersion();
@@ -217,7 +274,9 @@ app.whenReady().then(() => {
 	focusPresetStore = new FocusPresetStore();
 	const settings = loadSettings();
 
-	autoUpdater.checkForUpdates();
+	if (!isDev()) {
+		autoUpdater.checkForUpdates();
+	}
 
 	startupDisRPC();
 
@@ -479,25 +538,11 @@ app.whenReady().then(() => {
 	});
 
 	mainWindow.webContents.on("render-process-gone", async (_, error) => {
-		const { response } = await dialog.showMessageBox({
-			type: "error",
-			message: "This is.. awkward",
-			detail: `
-			TaskBookly encountered a fatal error and crashed :(
-			Reason: ${error.reason} (Exit Code: ${error.exitCode})
+		promptProcessFailure(error);
+	});
 
-			If you continue to encounter this error, please open a new Issue on our GitHub Repository
-			`,
-			title: "Fatal Error",
-			buttons: ["Restart", "Close & Open Issue...", "Close"],
-			cancelId: 2,
-		});
-		if (response === 0) {
-			app.relaunch();
-		} else if (response === 1) {
-			shell.openExternal("https://github.com/TaskBookly/app/issues/new");
-		}
-		app.quit();
+	app.on("child-process-gone", async (_, error) => {
+		promptProcessFailure(error);
 	});
 
 	if (isDev()) {
@@ -515,3 +560,25 @@ app.on("window-all-closed", () => {
 	}
 	app.quit();
 });
+
+async function promptProcessFailure(error: Electron.Details | Electron.RenderProcessGoneDetails) {
+	const { response } = await dialog.showMessageBox({
+		type: "error",
+		message: "This is.. awkward",
+		detail: `
+			TaskBookly encountered a fatal error and crashed :(
+			Reason: ${error.reason} (Exit Code: ${error.exitCode})
+
+			If you continue to encounter this error, please open a new Issue on our GitHub Repository
+			`,
+		title: "Fatal Error",
+		buttons: ["Restart", "Close & Open Issue...", "Close"],
+		cancelId: 2,
+	});
+	if (response === 0) {
+		app.relaunch();
+	} else if (response === 1) {
+		shell.openExternal("https://github.com/TaskBookly/app/issues/new");
+	}
+	app.quit();
+}

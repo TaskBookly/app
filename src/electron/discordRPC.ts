@@ -1,4 +1,3 @@
-import { ActivityType } from "discord-api-types/v10";
 import { Client } from "@xhayper/discord-rpc";
 import { appVersion } from "./main.js";
 
@@ -46,7 +45,7 @@ function applyActivity(activity: focusActivity | null): void {
 
 	client.user
 		.setActivity({
-			type: ActivityType.Watching,
+			type: 3,
 			largeImageKey: "taskbookly",
 			largeImageText: `v${appVersion}`,
 			smallImageKey: `session_${activity.periodType}`,

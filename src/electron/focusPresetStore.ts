@@ -37,7 +37,7 @@ class FocusPresetStore {
 		if (!existsSync(userData)) {
 			mkdirSync(userData, { recursive: true });
 		}
-		this.filePath = path.join(userData, "focus-presets.json");
+		this.filePath = path.join(userData, "focusPresets.json");
 		this.load();
 	}
 
@@ -141,7 +141,11 @@ class FocusPresetStore {
 	private save(): void {
 		const payload: FocusPresetFile = {
 			selectedPresetId: this.selectedPresetId,
-			customPresets: this.customPresets.map(({ builtIn, ...preset }) => preset),
+			customPresets: this.customPresets.map((preset) => {
+				const { builtIn, ...storedPreset } = preset;
+				void builtIn;
+				return storedPreset;
+			}),
 		};
 		try {
 			writeFileSync(this.filePath, JSON.stringify(payload, null, 2));

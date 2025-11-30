@@ -1,9 +1,10 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import type { Context, ReactNode } from "react";
 import Popup, { type PopupAction, type PopupInput, type PopupValues } from "./Popup";
 
 export interface PopupOpenOptions {
 	title: string;
-	message?: React.ReactNode;
+	message?: ReactNode;
 	inputs?: PopupInput[];
 	actions: PopupAction[];
 	dismissible?: boolean;
@@ -21,7 +22,7 @@ export const POPUP_RESULT_DISMISSED = "__dismissed";
 
 export interface PopupConfirmOptions {
 	title: string;
-	message?: React.ReactNode;
+	message?: ReactNode;
 	confirmLabel?: string;
 	cancelLabel?: string;
 	confirmIcon?: PopupAction["icon"];
@@ -44,7 +45,7 @@ interface PopupInstance {
 
 const globalPopupContextKey = "__taskbookly_popup_context__" as const;
 type PopupContextGlobal = typeof globalThis & {
-	[globalPopupContextKey]?: React.Context<PopupController | null>;
+	[globalPopupContextKey]?: Context<PopupController | null>;
 };
 
 const PopupContext = (() => {
@@ -60,7 +61,11 @@ const generateId = () => {
 	return Math.random().toString(36).slice(2);
 };
 
-const PopupProvider: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+interface PopupProviderProps {
+	children?: ReactNode;
+}
+
+const PopupProvider = ({ children }: PopupProviderProps) => {
 	const [instances, setInstances] = useState<PopupInstance[]>([]);
 	const resolversRef = useRef(new Map<string, (result: PopupResult) => void>());
 	const closeResultsRef = useRef(new Map<string, PopupResult>());

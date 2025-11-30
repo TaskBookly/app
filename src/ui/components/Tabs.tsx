@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, type ReactNode } from "react";
 import IcoButton from "./core";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -6,7 +6,7 @@ export interface Tab {
 	label: string;
 	key: string;
 	icon?: IconProp;
-	content: React.ReactNode;
+	content: ReactNode;
 }
 
 interface TabsProps {
@@ -15,8 +15,8 @@ interface TabsProps {
 	className?: string;
 }
 
-const Tabs: React.FC<TabsProps> = ({ tabs, initialKey, className = "" }) => {
-	const [activeKey, setActiveKey] = React.useState(initialKey || (tabs.length > 0 ? tabs[0].key : ""));
+const Tabs = ({ tabs, initialKey, className = "" }: TabsProps) => {
+	const [activeKey, setActiveKey] = useState(initialKey || (tabs.length > 0 ? tabs[0].key : ""));
 
 	return (
 		<div className={`tabCont ${className}`}>

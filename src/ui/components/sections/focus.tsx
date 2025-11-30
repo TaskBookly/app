@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import IcoButton, { Container, ActionMenu, type ActionMenuOption, SelectionMenu, type SelectionMenuOption } from "../core";
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faStop, faStopwatch } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faInfoCircle, faMugSaucer, faPause, faPencil, faPlay, faPlus, faStop, faStopwatch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { usePopup } from "../PopupProvider";
 import type { FocusPreset } from "../../../common/focusPresets";
 
-const Focus: React.FC = () => {
+const Focus = () => {
 	const { getSetting } = useSettings();
 	const [currentSession, setCurrentSession] = useState<"work" | "break" | "transition">("work");
 	const [timerStatus, setTimerStatus] = useState<"counting" | "paused" | "stopped">("stopped");
@@ -53,6 +53,27 @@ const Focus: React.FC = () => {
 		const sectionOrder: string[] = [];
 		const fallbackSectionLabel = "Built-in Presets";
 
+		const customPresets = presets.filter((preset) => !preset.builtIn);
+		if (customPresets.length > 0) {
+			options.push({ type: "separator", label: "Custom Presets" });
+			for (const preset of customPresets) {
+				options.push({
+					label: preset.name,
+					value: preset.id,
+					data: [
+						{
+							icon: faBriefcase,
+							data: `${preset.workDurationMinutes}m`,
+						},
+						{
+							icon: faMugSaucer,
+							data: `${preset.breakDurationMinutes}m`,
+						},
+					],
+				});
+			}
+		}
+
 		for (const preset of presets) {
 			if (!preset.builtIn) continue;
 			const sectionLabel = preset.section ?? fallbackSectionLabel;
@@ -74,18 +95,16 @@ const Focus: React.FC = () => {
 					label: preset.name,
 					subLabel: preset.description ?? `Work ${preset.workDurationMinutes} min • Break ${preset.breakDurationMinutes} min`,
 					value: preset.id,
-				});
-			}
-		}
-
-		const customPresets = presets.filter((preset) => !preset.builtIn);
-		if (customPresets.length > 0) {
-			options.push({ type: "separator", label: "Custom Presets" });
-			for (const preset of customPresets) {
-				options.push({
-					label: preset.name,
-					subLabel: preset.description ?? `Work ${preset.workDurationMinutes} min • Break ${preset.breakDurationMinutes} min`,
-					value: preset.id,
+					data: [
+						{
+							icon: faBriefcase,
+							data: `${preset.workDurationMinutes}m`,
+						},
+						{
+							icon: faMugSaucer,
+							data: `${preset.breakDurationMinutes}m`,
+						},
+					],
 				});
 			}
 		}
@@ -225,7 +244,7 @@ const Focus: React.FC = () => {
 		} catch (error) {
 			console.error("Failed to update focus preset:", error);
 		}
-	}, [open, refreshPresets, selectedPreset, timerStatus]);
+	}, [open, refreshPresets, selectedPreset, timerStatus, confirm]);
 
 	// Listen for timer updates from backend
 	useEffect(() => {
@@ -363,11 +382,16 @@ const Focus: React.FC = () => {
 				</div>
 			</Container>
 			{getSetting("breakChargingEnabled") === "true" ? (
-				<Container name="focus_breakCharging">
-					<ButtonActionConfig name="Break charging" description="You'll receive 'Break charges' after enough hours of working. These charges can be used once per break period and will extend them by a few minutes as a reward for working hard!" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Use break charge", icon: faBolt }} onClick={handleUseBreakCharge}>
+				<Container name="focus_breakCharging" header={{ title: "Break Charging", icon: faBolt, buttons: [{ icon: faInfoCircle, onClick: { action: () => open({ title: "Break Charging", message: "As you work, you'll progress towards earning break charges. These grant you the ability to extend breaks by a few minutes as a reward for working hard!", actions: [] }) } }] }}>
+					<ButtonActionConfig name="Charge Break" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Use break charge", icon: faBolt }} onClick={handleUseBreakCharge}>
 						<div className="groupList">
-							<h3 style={{ margin: 0, marginBlockEnd: "-5px" }}>
-								You have <b>{Math.max(0, breakChargesLeft)}</b> {breakChargesLeft === 1 ? "charge" : "charges"} left.
+							<h3 style={{ margin: 0, marginBlockEnd: "-15px" }}>
+								You have
+								<b className="breakChargesCounter">
+									<FontAwesomeIcon icon={faBolt} />
+									{breakChargesLeft}
+								</b>{" "}
+								left.
 							</h3>
 							<p>{timeLeftTillNextCharge < 60 ? <b>Less than 1 minute</b> : timeLeftTillNextCharge === 60 ? <b>1 minute</b> : Math.ceil(timeLeftTillNextCharge / 60) === 1 ? <b>1 minute</b> : <b>{Math.ceil(timeLeftTillNextCharge / 60)} minutes</b>} of work left till your next break charge is ready!</p>
 						</div>

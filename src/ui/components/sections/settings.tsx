@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Container, ContainerGroup, type SelectionMenuOption, type SelectionMenuValueOption, Hint } from "../core";
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, PicturePickerConfig } from "../config";
@@ -7,7 +7,7 @@ import { faAnglesRight, faBell, faBolt, faBug, faFolderOpen, faGears, faInfoCirc
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { usePopup } from "../PopupProvider";
 
-const Settings: React.FC = () => {
+const Settings = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
 	const [appVersion, setAppVersion] = useState<string>("Loading...");
 	const [nodeEnv, setNodeEnv] = useState<string>("Loading...");
@@ -273,7 +273,7 @@ const Settings: React.FC = () => {
 							</>
 						),
 					},
-				]
+			  ]
 			: []),
 	];
 

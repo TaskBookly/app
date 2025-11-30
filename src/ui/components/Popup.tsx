@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -22,7 +23,7 @@ type PopupInput = {
 	options?: PopupInputOption[];
 	rows?: number;
 	required?: boolean;
-	description?: React.ReactNode;
+	description?: ReactNode;
 	min?: number;
 	max?: number;
 	step?: number;
@@ -42,7 +43,7 @@ type PopupAction = {
 interface PopupProps {
 	open: boolean;
 	title: string;
-	message?: React.ReactNode;
+	message?: ReactNode;
 	inputs?: PopupInput[];
 	actions: PopupAction[];
 	onAction: (actionId: string, values: PopupValues) => void;
@@ -74,7 +75,7 @@ const unlockBodyScroll = () => {
 	}
 };
 
-const Popup: React.FC<PopupProps> = ({ open, title, message, inputs = [], actions, onAction, onDismiss, initialValues, dismissible = true, onExitComplete }) => {
+const Popup = ({ open, title, message, inputs = [], actions, onAction, onDismiss, initialValues, dismissible = true, onExitComplete }: PopupProps) => {
 	const [portalElement] = useState(() => {
 		if (typeof document === "undefined") return null;
 		const el = document.createElement("div");
@@ -326,11 +327,11 @@ const Popup: React.FC<PopupProps> = ({ open, title, message, inputs = [], action
 		return map;
 	}, [inputs, rawValues]);
 
-	const handleOverlayPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+	const handleOverlayPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
 		overlayPointerDownRef.current = event.target === event.currentTarget;
 	};
 
-	const handleOverlayPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+	const handleOverlayPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
 		if (event.target !== event.currentTarget) {
 			overlayPointerDownRef.current = false;
 		}
@@ -340,7 +341,7 @@ const Popup: React.FC<PopupProps> = ({ open, title, message, inputs = [], action
 		overlayPointerDownRef.current = false;
 	};
 
-	const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
+	const handleOverlayClick = (event: ReactMouseEvent<HTMLDivElement>) => {
 		if (!overlayPointerDownRef.current) {
 			return;
 		}

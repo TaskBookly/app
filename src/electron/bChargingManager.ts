@@ -81,14 +81,24 @@ class SecretDataManager {
 		return defaultData;
 	}
 
-	private isValidSecretData(data: any): data is SecretData {
-		return typeof data === "object" && data !== null && typeof data.currentCharges === "number" && typeof data.timeLeftTillNextCharge === "number" && typeof data.breakChargesSinceLastUse === "number" && typeof data.lastWorkTimeTracked === "number" && typeof data.totalWorkTimeAccumulated === "number";
+	private isValidSecretData(data: unknown): data is SecretData {
+		if (typeof data !== "object" || data === null) {
+			return false;
+		}
+		const candidate = data as Partial<SecretData>;
+		return (
+			typeof candidate.currentCharges === "number" &&
+			typeof candidate.timeLeftTillNextCharge === "number" &&
+			typeof candidate.breakChargesSinceLastUse === "number" &&
+			typeof candidate.lastWorkTimeTracked === "number" &&
+			typeof candidate.totalWorkTimeAccumulated === "number" &&
+			(candidate.version === undefined || typeof candidate.version === "number")
+		);
 	}
 
-	private migrateDataIfNeeded(data: any): SecretData {
-		// Add version if missing (for v1 data)
+	private migrateDataIfNeeded(data: SecretData): SecretData {
 		if (!data.version) {
-			data.version = 1;
+			return { ...data, version: 1 };
 		}
 		return data;
 	}
@@ -144,7 +154,7 @@ class SecretDataManager {
 		hmacNew.update(encrypted);
 		const expectedHashNew = hmacNew.digest();
 
-		let useNewFormat = hash.equals(expectedHashNew);
+		const useNewFormat = hash.equals(expectedHashNew);
 
 		// If new format fails, try old format for backward compatibility
 		if (!useNewFormat) {
@@ -175,8 +185,10 @@ class SecretDataManager {
 
 						return decrypted;
 					}
-				} catch (error) {
-					// Legacy key attempt failed, continue with original error
+				} catch (legacyError) {
+					if (process.env.NODE_ENV !== "production") {
+						console.debug("Legacy key validation failed", legacyError);
+					}
 				}
 
 				throw new Error("Data integrity check failed");
