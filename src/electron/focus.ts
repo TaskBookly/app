@@ -479,7 +479,7 @@ class FocusTimer extends EventEmitter {
 		if (this.disposed) {
 			return;
 		}
-		if (Notification.isSupported() && (FocusTimer.settings.notifsFocus === "notifsOnly" || FocusTimer.settings.notifsFocus === "all")) {
+		if (Notification.isSupported() && FocusTimer.settings.notifsFocus === "all") {
 			const notif = new Notification({
 				title: `Your ${this.session} session has ended!`,
 				urgency: "critical",
@@ -498,9 +498,7 @@ class FocusTimer extends EventEmitter {
 
 			notif.show();
 		}
-		if (FocusTimer.settings.notifsFocus === "soundOnly" || FocusTimer.settings.notifsFocus === "all") {
-			this.safeSendToRenderer("play-sound", "notifs/sessionComplete.ogg");
-		}
+		this.safeSendToRenderer("play-sound", "notifs/sessionComplete.ogg");
 
 		this.nextSession();
 	}
