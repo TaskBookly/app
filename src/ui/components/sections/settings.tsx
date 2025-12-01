@@ -93,7 +93,6 @@ const Settings = () => {
 	const notifOptions: SelectionMenuOption[] = [
 		{ label: "None", value: "none" },
 		{ label: "Sound Only", value: "soundOnly" },
-		{ label: "Notifications Only", value: "notifsOnly" },
 		{ label: "Notifications & Sound", value: "all" },
 	];
 
@@ -167,7 +166,7 @@ const Settings = () => {
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_general_misc" header={{ title: "Connections", icon: faLink }}>
-						<SwitchConfig name="Discord Rich Presence" description={"If enabled, focus activity will be shared to your Discord client and displayed under your profile.\nShare my activity must be enabled in Discord Settings > Activity Privacy for this to work."} value={getSetting("discordRichPresence") === "true"} onChange={() => setSetting("discordRichPresence", getSetting("discordRichPresence") === "true" ? "false" : "true")} />
+						<SwitchConfig name="Discord Rich Presence" description={"If enabled, focus activity will be shared to your Discord client and displayed under your profile while a focus session is running.\nShare my activity must be enabled in Discord Settings > Activity Privacy for this to work."} value={getSetting("discordRichPresence") === "true"} onChange={() => setSetting("discordRichPresence", getSetting("discordRichPresence") === "true" ? "false" : "true")} />
 					</Container>
 					<Container name="settings_general_reset">
 						<ContainerGroup>
@@ -223,7 +222,8 @@ const Settings = () => {
 				<>
 					<Container name="settings_notifs">
 						<ContainerGroup>
-							<SelectionMenuConfig name="Focus timers" menu={{ options: focusTimerOptions }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
+							<Hint type="warning" label="Make sure to go to your system settings and grant TaskBookly highest priority for notifications or they may be silenced while you're on Do Not Disturb! (Sound will still play)"></Hint>
+							<SelectionMenuConfig name="Focus timers" description="Period completions" menu={{ options: focusTimerOptions }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
 						</ContainerGroup>
 					</Container>
 				</>

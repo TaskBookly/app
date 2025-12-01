@@ -383,10 +383,10 @@ const Focus = () => {
 			</Container>
 			{getSetting("breakChargingEnabled") === "true" ? (
 				<Container name="focus_breakCharging" header={{ title: "Break Charging", icon: faBolt, buttons: [{ icon: faInfoCircle, onClick: { action: () => open({ title: "Break Charging", message: "As you work, you'll progress towards earning break charges. These grant you the ability to extend breaks by a few minutes as a reward for working hard!", actions: [] }) } }] }}>
-					<ButtonActionConfig name="Charge Break" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Use break charge", icon: faBolt }} onClick={handleUseBreakCharge}>
+					<ButtonActionConfig name="Charge Break" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "1", icon: faBolt }} onClick={handleUseBreakCharge}>
 						<div className="groupList">
 							<h3 style={{ margin: 0, marginBlockEnd: "-15px" }}>
-								You have
+								You have{" "}
 								<b className="breakChargesCounter">
 									<FontAwesomeIcon icon={faBolt} />
 									{breakChargesLeft}
