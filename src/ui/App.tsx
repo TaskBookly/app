@@ -13,6 +13,7 @@ function App() {
 	const popupRef = useRef(popup);
 	const [isMaximized, setIsMaximized] = useState(false);
 	const [platform, setPlatform] = useState<string>("");
+	const [buildInfo, setBuildInfo] = useState<TaskBooklyBuildInfo | null>(null);
 
 	useEffect(() => {
 		popupRef.current = popup;
@@ -22,6 +23,15 @@ function App() {
 		jumpToSection("focus");
 
 		window.electron.build.getPlatform().then(setPlatform);
+		let cancelled = false;
+		window.electron.build
+			.getInfo()
+			.then((info) => {
+				if (!cancelled) {
+					setBuildInfo(info);
+				}
+			})
+			.catch((error) => console.warn("Failed to load build info", error));
 
 		window.electron.onJumpToSection((section: string) => {
 			jumpToSection(section);
@@ -78,6 +88,7 @@ function App() {
 
 		// Cleanup function to clear timeouts when section component unmounts
 		return () => {
+			cancelled = true;
 			clearAllHideTimeouts();
 			removeCloseRequestListener?.();
 		};
@@ -112,7 +123,14 @@ function App() {
 
 	return (
 		<SettingsProvider>
-			<div id="titlebar">
+			<div id="titlebar" className={platform === "darwin" ? "is-mac" : undefined}>
+				{buildInfo && buildInfo.channel !== "stable" ? (
+					<div id="buildInfo">
+						<label id="buildInfoVersion">{`v${buildInfo.version}`}</label>
+						<label id="buildInfoChannel">{buildInfo.channel}</label>
+						<label id="buildInfoBuildNumber">{buildInfo.buildNumber}</label>
+					</div>
+				) : null}
 				<div id="windowControls">
 					{platform !== "darwin" ? (
 						<>

@@ -60,6 +60,12 @@ export function getBuildInfo(): BuildInfo {
 		version: app.getVersion(),
 	};
 
+	const isDevRuntime = !app.isPackaged && process.env.NODE_ENV !== "production";
+	if (isDevRuntime) {
+		cachedInfo = defaults;
+		return cachedInfo;
+	}
+
 	try {
 		const metadataPath = resolveMetadataPath();
 		if (metadataPath) {

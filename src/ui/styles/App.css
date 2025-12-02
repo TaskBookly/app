@@ -115,6 +115,10 @@
 	left: 0;
 }
 
+#titlebar.is-mac {
+	padding-left: 60px;
+}
+
 #titlebar #windowControls {
 	position: absolute;
 	top: 0;
@@ -136,9 +140,7 @@
 		padding: 10px;
 
 		.buttonIcon {
-			transition:
-				scale 0.2s,
-				opacity 0.2s;
+			transition: scale 0.2s, opacity 0.2s;
 			opacity: 60%;
 		}
 	}
@@ -292,6 +294,33 @@
 			width: 100%;
 			white-space: nowrap;
 		}
+	}
+}
+
+#buildInfo {
+	padding-inline: 15px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 16px;
+
+	#buildInfoVersion {
+		opacity: 60%;
+	}
+
+	#buildInfoChannel {
+		text-transform: uppercase;
+		background-color: var(--clr-primary-a20);
+		color: var(--clr-surface-a10);
+		border-radius: 1em;
+		font-size: 12px;
+		font-weight: bolder;
+		padding: 2px 8px;
+		height: 100%;
+	}
+
+	#buildInfoBuildNumber {
+		opacity: 50%;
 	}
 }
 
@@ -460,9 +489,7 @@ div.groupList {
 	position: relative;
 	overflow: hidden;
 	background: linear-gradient(90deg, var(--clr-primary-a0) 0%, var(--clr-primary-a30) 50%, var(--clr-primary-a0) 100%);
-	animation:
-		chargeGlow 2s ease-in-out infinite alternate,
-		chargingShimmer 1.5s ease-in-out infinite;
+	animation: chargeGlow 2s ease-in-out infinite alternate, chargingShimmer 1.5s ease-in-out infinite;
 }
 
 @keyframes chargeGlow {
@@ -470,9 +497,7 @@ div.groupList {
 		box-shadow: 0 0 5px rgba(0, 0, 0, 0);
 	}
 	100% {
-		box-shadow:
-			0 0 20px var(--clr-primary-glow),
-			0 0 40px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 0 20px var(--clr-primary-glow), 0 0 40px rgba(0, 0, 0, 0.15);
 	}
 }
 
