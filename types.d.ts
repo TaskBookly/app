@@ -1,3 +1,10 @@
+interface TaskBooklyBuildInfo {
+	channel: "stable" | "beta" | "dev";
+	buildNumber: string;
+	version: string;
+	generatedAt?: string;
+}
+
 interface Window {
 	electron: {
 		sidebar: {
@@ -11,6 +18,7 @@ interface Window {
 			getPlatform: () => Promise<NodeJS.Platform>;
 			getElectronVersion: () => Promise<string>;
 			getChromeVersion: () => Promise<string>;
+			getInfo: () => Promise<TaskBooklyBuildInfo>;
 		};
 		focus: {
 			start: () => void;

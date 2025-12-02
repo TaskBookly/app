@@ -10,6 +10,8 @@ import { getDefaultSettings } from "../common/settingsDefaults.js";
 import FocusTimer from "./focus.js";
 import FocusPresetStore from "./focusPresetStore.js";
 
+import { getBuildInfo } from "./buildInfo.js";
+
 import electronUpdPkg from "electron-updater";
 import { startupDisRPC } from "./discordRPC.js";
 
@@ -271,10 +273,15 @@ function updateMenu() {
 
 app.whenReady().then(() => {
 	autoUpdater.autoDownload = false;
+	const buildInfo = getBuildInfo();
+	const updaterChannel = buildInfo.channel === "stable" ? "latest" : buildInfo.channel;
+	autoUpdater.allowPrerelease = buildInfo.channel !== "stable";
+	autoUpdater.channel = updaterChannel;
+
 	focusPresetStore = new FocusPresetStore();
 	const settings = loadSettings();
 
-	if (!isDev()) {
+	if (!isDev() && buildInfo.channel === "stable") {
 		autoUpdater.checkForUpdates();
 	}
 
@@ -409,6 +416,10 @@ app.whenReady().then(() => {
 
 	ipcMain.handle("get-app-version", () => {
 		return appVersion;
+	});
+
+	ipcMain.handle("get-build-info", () => {
+		return buildInfo;
 	});
 
 	ipcMain.handle("get-node-env", () => {

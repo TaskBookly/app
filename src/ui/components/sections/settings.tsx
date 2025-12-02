@@ -10,6 +10,8 @@ import { usePopup } from "../PopupProvider";
 const Settings = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
 	const [appVersion, setAppVersion] = useState<string>("Loading...");
+	const [buildChannel, setBuildChannel] = useState<string>("Loading...");
+	const [buildNumber, setBuildNumber] = useState<string>("Loading...");
 	const [nodeEnv, setNodeEnv] = useState<string>("Loading...");
 	const [platform, setPlatform] = useState<NodeJS.Platform | null>(null);
 	const [electronVersion, setElectronVersion] = useState<string>("Loading...");
@@ -49,16 +51,26 @@ const Settings = () => {
 	}, []);
 
 	useEffect(() => {
-		Promise.all([window.electron.build.getVersion(), window.electron.build.getNodeEnv(), window.electron.build.getPlatform()])
-			.then(([version, env, platform]) => {
-				setAppVersion(version);
+		Promise.all([window.electron.build.getInfo(), window.electron.build.getNodeEnv(), window.electron.build.getPlatform()])
+			.then(([info, env, platform]) => {
+				setAppVersion(info.version ?? "Unknown");
+				setBuildChannel(info.channel.toUpperCase());
+				setBuildNumber(info.buildNumber ?? "Unknown");
 				setNodeEnv(env);
 				setPlatform(platform);
 			})
-			.catch((error) => {
-				console.error("Failed to get app info:", error);
-				setAppVersion("Unknown");
+			.catch(async (error) => {
+				console.error("Failed to get build info:", error);
+				setBuildChannel("Unknown");
+				setBuildNumber("Unknown");
 				setNodeEnv("Unknown");
+				try {
+					const fallbackVersion = await window.electron.build.getVersion();
+					setAppVersion(fallbackVersion);
+				} catch (versionError) {
+					console.error("Failed to get app version fallback:", versionError);
+					setAppVersion("Unknown");
+				}
 			});
 	}, []);
 
@@ -238,13 +250,15 @@ const Settings = () => {
 					<Container name="settings_about_appPackage">
 						<ContainerGroup>
 							<InfoConfig name="Version" data={appVersion} copyButton />
-							<ButtonActionConfig name="User Data" button={{ text: "Open Folder", icon: faFolderOpen }} onClick={handleOpenSettingsDirectory} />
+							<InfoConfig name="Channel" data={buildChannel} />
+							<InfoConfig name="Build" data={buildNumber} copyButton />
+							<ButtonActionConfig name="App Data" button={{ text: "Open Folder", icon: faFolderOpen }} onClick={handleOpenSettingsDirectory} />
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_about_appAboutMisc">
 						<ContainerGroup>
-							<InfoConfig name="Environment" data={nodeEnv} copyButton />
-							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} copyButton />
+							<InfoConfig name="Node Environment" data={nodeEnv} />
+							<InfoConfig name="Platform" data={platform ? platform.toString() : "Unknown"} />
 							<InfoConfig name="Electron Version" data={electronVersion} copyButton />
 							<InfoConfig name="Chromium Version" data={chromeVersion} copyButton />
 						</ContainerGroup>
@@ -273,7 +287,7 @@ const Settings = () => {
 							</>
 						),
 					},
-			  ]
+				]
 			: []),
 	];
 

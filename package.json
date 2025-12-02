@@ -17,11 +17,12 @@
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
-		"publish": "npm run transpile:electron && npm run build && electron-builder --mac --win --publish=always",
-		"dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal",
-		"dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
-		"test:mac": "npm run transpile:electron && npm run build && electron-builder --mac --universal --config.mac.target=dir --publish=never",
-		"test:win": "npm run transpile:electron && npm run build && electron-builder --win --x64 --config.win.target=dir --publish=never"
+		"package": "node ./scripts/package.mjs",
+		"publish": "npm run package -- --mac --win --publish=always",
+		"dist:mac": "npm run package -- --mac --universal",
+		"dist:win": "npm run package -- --win --x64",
+		"test:mac": "npm run package -- --mac --universal --config.mac.target=dir --publish=never",
+		"test:win": "npm run package -- --win --x64 --config.win.target=dir --publish=never"
 	},
 	"build": {
 		"appId": "com.taskbookly.app",

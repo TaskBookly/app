@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld("electron", {
 		getPlatform: () => ipcRenderer.invoke("get-platform"),
 		getElectronVersion: () => ipcRenderer.invoke("get-electron-version"),
 		getChromeVersion: () => ipcRenderer.invoke("get-chrome-version"),
+		getInfo: () => ipcRenderer.invoke("get-build-info"),
 	},
 	focus: {
 		start: () => ipcRenderer.send("focus-start"),
