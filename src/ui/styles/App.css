@@ -115,11 +115,6 @@
 	left: 0;
 }
 
-#titlebar #windowIcon {
-	margin-left: 5px;
-	height: 100%;
-}
-
 #titlebar #windowControls {
 	position: absolute;
 	top: 0;
@@ -141,7 +136,9 @@
 		padding: 10px;
 
 		.buttonIcon {
-			transition: scale 0.2s, opacity 0.2s;
+			transition:
+				scale 0.2s,
+				opacity 0.2s;
 			opacity: 60%;
 		}
 	}
@@ -463,7 +460,9 @@ div.groupList {
 	position: relative;
 	overflow: hidden;
 	background: linear-gradient(90deg, var(--clr-primary-a0) 0%, var(--clr-primary-a30) 50%, var(--clr-primary-a0) 100%);
-	animation: chargeGlow 2s ease-in-out infinite alternate, chargingShimmer 1.5s ease-in-out infinite;
+	animation:
+		chargeGlow 2s ease-in-out infinite alternate,
+		chargingShimmer 1.5s ease-in-out infinite;
 }
 
 @keyframes chargeGlow {
@@ -471,7 +470,9 @@ div.groupList {
 		box-shadow: 0 0 5px rgba(0, 0, 0, 0);
 	}
 	100% {
-		box-shadow: 0 0 20px var(--clr-primary-glow), 0 0 40px rgba(0, 0, 0, 0.15);
+		box-shadow:
+			0 0 20px var(--clr-primary-glow),
+			0 0 40px rgba(0, 0, 0, 0.15);
 	}
 }
 
