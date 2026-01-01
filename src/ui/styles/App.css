@@ -55,9 +55,20 @@
 
 	#sbIcon {
 		width: 65px;
-		height: auto;
-		max-width: 100%;
-		color: var(--clr-primary-a20);
+		height: 50px;
+		margin-bottom: 10px;
+		flex-shrink: 0;
+		display: block;
+		background-color: var(--clr-primary-a20);
+		mask-repeat: no-repeat;
+		mask-position: center;
+		mask-size: contain;
+		-webkit-mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		-webkit-mask-size: contain;
+		border-radius: 12px;
+		box-shadow: 0 12px 24px color-mix(in srgb, var(--clr-primary-a20) 40%, transparent);
+		transition: background-color 0.3s ease;
 	}
 
 	.buttonIcon {
