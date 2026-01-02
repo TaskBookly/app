@@ -464,7 +464,7 @@ const Popup = ({ open, title, message, inputs = [], actions, onAction, onDismiss
 													if (!option) {
 														return;
 													}
-													if (typeof option.onClick === "function") {
+													if ("onClick" in option && typeof option.onClick === "function") {
 														option.onClick();
 													}
 													if (action.onMenuSelect) action.onMenuSelect(option.value, resolvedValues);
