@@ -44,7 +44,7 @@
 			"category": "public.app-category.productivity"
 		},
 		"win": {
-			"icon": "build-resources/icons/windows/icon.ico",
+			"icon": "build-resources/icons/icon.ico",
 			"target": {
 				"target": "nsis",
 				"arch": [
