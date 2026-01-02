@@ -297,13 +297,13 @@
 	display: none;
 }
 
-.popupCloseButton:hover:not(:disabled),
-.popupCloseButton:focus-visible:not(:disabled) {
+.popupCloseButton:hover:not(:disabled, [aria-disabled="true"]),
+.popupCloseButton:focus-visible:not(:disabled, [aria-disabled="true"]) {
 	background: var(--clr-surface-a20);
 	cursor: pointer;
 }
 
-.popupCloseButton:active:not(:disabled) {
+.popupCloseButton:active:not(:disabled, [aria-disabled="true"]) {
 	background: var(--clr-surface-a30);
 }
 

@@ -41,6 +41,7 @@ interface ConfigDefaults {
 interface SwitchProps extends ConfigDefaults {
 	value: boolean;
 	onChange?: () => void;
+	tooltip?: string;
 }
 
 interface ButtonActionProps extends ConfigDefaults {
@@ -113,7 +114,7 @@ const InfoConfig = ({ name, data, copyButton = false, hint, availableOn = ["wind
 	);
 };
 
-const SwitchConfig = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["windows", "mac"], children }: SwitchProps) => {
+const SwitchConfig = ({ name, description, disabled = false, hint, value, onChange = () => {}, availableOn = ["windows", "mac"], children, tooltip }: SwitchProps) => {
 	const platform = getPlatform();
 	if (availableOn && !availableOn.includes(platform)) return null;
 
@@ -124,7 +125,7 @@ const SwitchConfig = ({ name, description, disabled = false, hint, value, onChan
 					<h3 className="settingLabel">{name}</h3>
 					<p className="settingDesc">{description}</p>
 				</span>
-				<span className="settingInput">
+				<span className="settingInput" data-tooltip={tooltip}>
 					<input disabled={disabled} checked={value} type="checkbox" className="switchInput" onChange={onChange} />
 				</span>
 			</div>

@@ -160,7 +160,7 @@
 		display: none;
 	}
 
-	button:hover:not(:disabled) {
+	button:hover:not(:disabled, [aria-disabled="true"]) {
 		.buttonIcon {
 			opacity: 100%;
 		}
@@ -168,13 +168,13 @@
 		scale: inherit;
 	}
 
-	#wc_close:hover:not(:disabled),
-	#wc_close:active:not(:disabled) {
+	#wc_close:hover:not(:disabled, [aria-disabled="true"]),
+	#wc_close:active:not(:disabled, [aria-disabled="true"]) {
 		color: white;
 		background-color: red;
 	}
 
-	button:active:not(:disabled) {
+	button:active:not(:disabled, [aria-disabled="true"]) {
 		.buttonIcon {
 			scale: 0.85;
 		}

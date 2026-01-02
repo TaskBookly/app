@@ -5,9 +5,8 @@
 	"license": "MIT",
 	"type": "module",
 	"productName": "TaskBookly",
-	"copyright": "(C) 2025 TaskBookly LLC",
-	"author": "TaskBookly LLC",
-	"description": "A task management and focus tool.",
+	"author": "CodeDevelops",
+	"description": "A time management and focus tool.",
 	"main": "dist-electron/electron/main.js",
 	"scripts": {
 		"transpile:electron": "tsc -p src/electron/tsconfig.json",
@@ -35,7 +34,7 @@
 			"dist-electron/electron/preload.cjs"
 		],
 		"mac": {
-			"icon": "build-resources/icons/mac/icon.png",
+			"icon": "build-resources/icons/icon.icns",
 			"target": {
 				"target": "dmg",
 				"arch": [
@@ -45,19 +44,27 @@
 			"category": "public.app-category.productivity"
 		},
 		"win": {
-			"icon": "build-resources/icons/windows/icon.png",
+			"icon": "build-resources/icons/windows/icon.ico",
 			"target": {
 				"target": "nsis",
 				"arch": [
-					"x64"
+					"x64",
+					"arm64"
 				]
 			}
+		},
+		"dmg": {
+			"title": "Install ${productName}"
 		},
 		"nsis": {
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true,
 			"runAfterFinish": true,
-			"shortcutName": "TaskBookly"
+			"shortcutName": "${productName}",
+			"uninstallDisplayName": "${productName}",
+			"installerSidebar": "build-resources/installer/banners/install.png",
+			"uninstallerSidebar": "build-resources/installer/banners/uninstall.png",
+			"license": "LICENSE"
 		},
 		"publish": {
 			"provider": "github",

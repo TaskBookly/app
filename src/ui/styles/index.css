@@ -101,14 +101,14 @@ button > * {
 	z-index: 2;
 }
 
-button:hover:not(:disabled, .selected),
-button:focus-visible:not(:disabled, .selected) {
+button:hover:not(:disabled, [aria-disabled="true"], .selected),
+button:focus-visible:not(:disabled, [aria-disabled="true"], .selected) {
 	cursor: pointer;
 	scale: 1.025;
 	background-color: var(--clr-surface-a30);
 }
 
-button:active:not(:disabled, .selected) {
+button:active:not(:disabled, [aria-disabled="true"], .selected) {
 	background-color: var(--clr-surface-a20);
 	scale: 0.9;
 }
@@ -127,13 +127,13 @@ button.type-primary::before {
 	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-button-selected-surface-highlights));
 }
 
-button.type-primary:hover:not(:disabled, .selected),
-button.type-primary:focus-visible:not(:disabled, .selected) {
+button.type-primary:hover:not(:disabled, [aria-disabled="true"], .selected),
+button.type-primary:focus-visible:not(:disabled, [aria-disabled="true"], .selected) {
 	background-color: var(--clr-primary-a30);
 }
 
 button.type-primary,
-button.type-primary:active:not(:disabled, .selected) {
+button.type-primary:active:not(:disabled, [aria-disabled="true"], .selected) {
 	color: var(--clr-text-button-selected);
 	background-color: var(--clr-primary-a10);
 }
@@ -142,14 +142,14 @@ button.type-danger::before {
 	background: linear-gradient(0deg, #ff4545, #fd7f7f);
 }
 
-button.type-danger:hover:not(:disabled, .selected),
-button.type-danger:focus-visible:not(:disabled, .selected) {
+button.type-danger:hover:not(:disabled, [aria-disabled="true"], .selected),
+button.type-danger:focus-visible:not(:disabled, [aria-disabled="true"], .selected) {
 	background-color: #fd7f7f;
 	color: #fff;
 }
 
 button.type-danger,
-button.type-danger:active:not(:disabled, .selected) {
+button.type-danger:active:not(:disabled, [aria-disabled="true"], .selected) {
 	background-color: #ff4545;
 	color: #fff;
 }
@@ -223,8 +223,23 @@ input[type="checkbox"]:checked:active::before {
 	transition: transform 0.08s;
 }
 
-:disabled {
+.dropdown-option:active input[type="checkbox"]::before {
+	transform: scale(0.92);
+	transition: transform 0.08s;
+}
+
+.dropdown-option:active input[type="checkbox"]:checked::before {
+	transform: translateX(1.5em) scale(0.92);
+	transition: transform 0.08s;
+}
+
+:disabled,
+[aria-disabled="true"] {
 	opacity: 60%;
+	cursor: not-allowed;
+}
+
+input:disabled {
 	pointer-events: none;
 }
 
@@ -282,7 +297,7 @@ input[type="checkbox"]:checked:active::before {
 	cursor: pointer;
 	border-radius: 0.7em;
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	font-weight: 700;
 	background-color: none;
 	gap: 1em;
@@ -403,6 +418,7 @@ input[type="checkbox"]:checked:active::before {
 	background-color: var(--clr-surface-a30);
 	position: absolute;
 	top: 0.5;
+	bottom: 0.5;
 	left: 0;
 	right: 0;
 	transform: translateY(-50%);

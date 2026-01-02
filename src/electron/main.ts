@@ -271,301 +271,314 @@ function updateMenu() {
 	}
 }
 
-app.whenReady().then(() => {
-	autoUpdater.autoDownload = false;
-	const buildInfo = getBuildInfo();
-	const updaterChannel = buildInfo.channel === "stable" ? "latest" : buildInfo.channel;
-	autoUpdater.allowPrerelease = buildInfo.channel !== "stable";
-	autoUpdater.channel = updaterChannel;
+const gotInsLock = app.requestSingleInstanceLock();
 
-	focusPresetStore = new FocusPresetStore();
-	const settings = loadSettings();
-
-	if (!isDev() && buildInfo.channel === "stable") {
-		autoUpdater.checkForUpdates();
-	}
-
-	startupDisRPC();
-
-	mainWindow = new BrowserWindow({
-		title: "TaskBookly",
-		webPreferences: {
-			preload: getPreloadPath(),
-			devTools: isDev(),
-			nodeIntegration: false,
-			contextIsolation: true,
-			webSecurity: true,
-			allowRunningInsecureContent: false,
-			experimentalFeatures: false,
-		},
-		minWidth: 600,
-		minHeight: 500,
-		autoHideMenuBar: true,
-		frame: false,
-		titleBarStyle: process.platform === "darwin" ? "hiddenInset" : undefined,
-		backgroundColor: "#000000",
-		fullscreenable: false,
-	});
-
-	const initialPreset = focusPresetStore.getSelectedPreset();
-	focusTimer = new FocusTimer(mainWindow, settings, initialPreset);
-
-	focusTimer.forceDataUpdate();
-
-	mainWindow.on("close", (event) => {
-		if (allowWindowClose) {
-			allowWindowClose = false;
-			return;
-		}
-
-		const shouldConfirmClose = Boolean(focusTimer) && focusTimer.status !== "stopped";
-		const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
-		if (!shouldConfirmClose || !hasRenderer) {
-			return;
-		}
-
-		event.preventDefault();
-		if (pendingClosePrompt) {
-			return;
-		}
-		pendingClosePrompt = true;
-
-		mainWindow.show();
-		mainWindow.webContents.send("window-close-requested");
-	});
-
-	focusTimer.on("timer-update", (eventType, data) => {
-		const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
-		if (!hasRenderer) {
-			return;
-		}
-		if (eventType !== "tick") {
-			updateMenu();
-		}
-		mainWindow.webContents.send("focus-timer-update", data);
-	});
-
-	ipcMain.on("focus-start", () => {
-		focusTimer.start();
-	});
-
-	ipcMain.on("focus-pause", () => {
-		focusTimer.pause();
-	});
-
-	ipcMain.on("focus-resume", () => {
-		focusTimer.resume();
-	});
-
-	ipcMain.on("focus-stop", () => {
-		focusTimer.stop();
-	});
-
-	ipcMain.on("focus-request-data-update", () => {
-		focusTimer.forceDataUpdate();
-	});
-
-	ipcMain.on("focus-add-time", (_, seconds: number) => {
-		focusTimer.addTime(seconds);
-	});
-
-	ipcMain.handle("focus-use-charge", () => {
-		return focusTimer.useBreakCharge();
-	});
-
-	ipcMain.handle("open-userdata", () => {
-		const userDataPath = app.getPath("userData");
-		shell.openPath(userDataPath);
-	});
-
-	ipcMain.handle("sys-theme", () => {
-		return nativeTheme.shouldUseDarkColors ? "dark" : "light";
-	});
-
-	ipcMain.on("open-shell-url", (_, url) => {
-		shell.openExternal(url);
-	});
-
-	nativeTheme.on("updated", () => {
-		mainWindow.webContents.send("sys-theme-changed", nativeTheme.shouldUseDarkColors ? "dark" : "light");
-	});
-
-	autoUpdater.on("update-available", (data) => {
-		if (Notification.isSupported()) {
-			const notif = new Notification({
-				title: "Update Available",
-				subtitle: `v${data.version}`,
-				body: "A new TaskBookly update is available to download!",
-				silent: true,
-			});
-
-			notif.on("click", () => shell.openExternal("https://taskbookly.framer.website/download"));
-			notif.show();
-			mainWindow.webContents.send("play-sound", "notifs/info.ogg");
+if (!gotInsLock) {
+	app.quit();
+} else {
+	app.on("second-instance", () => {
+		if (mainWindow) {
+			if (mainWindow.isMinimized()) mainWindow.restore();
+			mainWindow.focus();
 		}
 	});
 
-	ipcMain.on("toggle-sidebar", () => {
-		sidebarCollapsed = !sidebarCollapsed;
-		mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
-	});
+	app.whenReady().then(() => {
+		autoUpdater.autoDownload = false;
+		const buildInfo = getBuildInfo();
+		const updaterChannel = buildInfo.channel === "stable" ? "latest" : buildInfo.channel;
+		autoUpdater.allowPrerelease = buildInfo.channel !== "stable";
+		autoUpdater.channel = updaterChannel;
 
-	ipcMain.handle("get-sidebar-state", () => {
-		return sidebarCollapsed;
-	});
-
-	ipcMain.handle("get-app-version", () => {
-		return appVersion;
-	});
-
-	ipcMain.handle("get-build-info", () => {
-		return buildInfo;
-	});
-
-	ipcMain.handle("get-node-env", () => {
-		return process.env.NODE_ENV || "production";
-	});
-
-	ipcMain.handle("get-platform", () => {
-		return process.platform;
-	});
-
-	ipcMain.handle("get-electron-version", () => {
-		return process.versions.electron || "unknown";
-	});
-
-	ipcMain.handle("get-chrome-version", () => {
-		return process.versions.chrome || process.versions.v8 || "unknown";
-	});
-
-	ipcMain.handle("settings-load", () => {
-		return loadSettings();
-	});
-
-	ipcMain.handle("settings-get", (_event, key: string) => {
+		focusPresetStore = new FocusPresetStore();
 		const settings = loadSettings();
-		return settings[key] || "";
-	});
 
-	ipcMain.handle("settings-set", (_event, key: string, value: string) => {
-		const defaultSettings = getDefaultSettings(process.platform);
-
-		if (!(key in defaultSettings)) {
-			console.warn(`Attempted to set unknown setting: ${key}`);
-			return false;
+		if (!isDev() && buildInfo.channel === "stable") {
+			autoUpdater.checkForUpdates();
 		}
 
-		const settings = loadSettings();
-		settings[key] = value;
-		saveSettings(settings);
+		startupDisRPC();
 
-		FocusTimer.updateSettings(settings);
+		mainWindow = new BrowserWindow({
+			title: "TaskBookly",
+			webPreferences: {
+				preload: getPreloadPath(),
+				devTools: isDev(),
+				nodeIntegration: false,
+				contextIsolation: true,
+				webSecurity: true,
+				allowRunningInsecureContent: false,
+				experimentalFeatures: false,
+			},
+			minWidth: 600,
+			minHeight: 500,
+			autoHideMenuBar: true,
+			frame: false,
+			titleBarStyle: process.platform === "darwin" ? "hiddenInset" : undefined,
+			backgroundColor: "#000000",
+			fullscreenable: false,
+		});
 
-		// Force data update when break charge related settings change
-		if (key === "breakChargingEnabled" || key === "workTimePerCharge" || key === "breakChargeExtensionAmount" || key === "breakChargeCooldown") {
-			focusTimer.forceDataUpdate();
-		}
+		const initialPreset = focusPresetStore.getSelectedPreset();
+		focusTimer = new FocusTimer(mainWindow, settings, initialPreset);
 
-		return true;
-	});
-
-	const getPresetPayload = () => ({
-		presets: focusPresetStore.getPresets(),
-		selectedPresetId: focusPresetStore.getSelectedPresetId(),
-	});
-
-	ipcMain.handle("focus-presets-list", () => {
-		return getPresetPayload();
-	});
-
-	ipcMain.handle("focus-presets-create", (_event, preset: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
-		return focusPresetStore.createPreset(preset);
-	});
-
-	ipcMain.handle("focus-presets-update", (_event, presetId: string, payload: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
-		const updated = focusPresetStore.updatePreset(presetId, payload);
-		if (updated && focusPresetStore.getSelectedPresetId() === presetId) {
-			FocusTimer.setActivePreset(updated);
-			focusTimer.forceDataUpdate();
-		}
-		return updated;
-	});
-
-	ipcMain.handle("focus-presets-delete", (_event, presetId: string) => {
-		const result = focusPresetStore.deletePreset(presetId);
-		if (result) {
-			const activePreset = focusPresetStore.getSelectedPreset();
-			FocusTimer.setActivePreset(activePreset);
-			focusTimer.forceDataUpdate();
-		}
-		return result;
-	});
-
-	ipcMain.handle("focus-presets-set-active", (_event, presetId: string) => {
-		const preset = focusPresetStore.setSelectedPreset(presetId);
-		FocusTimer.setActivePreset(preset);
 		focusTimer.forceDataUpdate();
-		return { selectedPresetId: preset.id };
-	});
 
-	// Window control handlers
-	ipcMain.on("window-minimize", () => {
-		mainWindow.minimize();
-	});
+		mainWindow.on("close", (event) => {
+			if (allowWindowClose) {
+				allowWindowClose = false;
+				return;
+			}
 
-	ipcMain.on("window-maximize", () => {
-		if (mainWindow.isMaximized()) {
-			mainWindow.restore();
-		} else {
-			mainWindow.maximize();
-		}
-	});
+			const shouldConfirmClose = Boolean(focusTimer) && focusTimer.status !== "stopped";
+			const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
+			if (!shouldConfirmClose || !hasRenderer) {
+				return;
+			}
 
-	ipcMain.on("window-close", () => {
-		mainWindow.close();
-	});
+			event.preventDefault();
+			if (pendingClosePrompt) {
+				return;
+			}
+			pendingClosePrompt = true;
 
-	ipcMain.handle("window-is-maximized", () => {
-		return mainWindow.isMaximized();
-	});
+			mainWindow.show();
+			mainWindow.webContents.send("window-close-requested");
+		});
 
-	ipcMain.handle("window-close-decision", (_event, shouldClose: boolean) => {
-		pendingClosePrompt = false;
-		if (!mainWindow || mainWindow.isDestroyed()) {
-			return false;
-		}
-		if (shouldClose) {
-			allowWindowClose = true;
+		focusTimer.on("timer-update", (eventType, data) => {
+			const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
+			if (!hasRenderer) {
+				return;
+			}
+			if (eventType !== "tick") {
+				updateMenu();
+			}
+			mainWindow.webContents.send("focus-timer-update", data);
+		});
+
+		ipcMain.on("focus-start", () => {
+			focusTimer.start();
+		});
+
+		ipcMain.on("focus-pause", () => {
+			focusTimer.pause();
+		});
+
+		ipcMain.on("focus-resume", () => {
+			focusTimer.resume();
+		});
+
+		ipcMain.on("focus-stop", () => {
+			focusTimer.stop();
+		});
+
+		ipcMain.on("focus-request-data-update", () => {
+			focusTimer.forceDataUpdate();
+		});
+
+		ipcMain.on("focus-add-time", (_, seconds: number) => {
+			focusTimer.addTime(seconds);
+		});
+
+		ipcMain.handle("focus-use-charge", () => {
+			return focusTimer.useBreakCharge();
+		});
+
+		ipcMain.handle("open-userdata", () => {
+			const userDataPath = app.getPath("userData");
+			shell.openPath(userDataPath);
+		});
+
+		ipcMain.handle("sys-theme", () => {
+			return nativeTheme.shouldUseDarkColors ? "dark" : "light";
+		});
+
+		ipcMain.on("open-shell-url", (_, url) => {
+			shell.openExternal(url);
+		});
+
+		nativeTheme.on("updated", () => {
+			mainWindow.webContents.send("sys-theme-changed", nativeTheme.shouldUseDarkColors ? "dark" : "light");
+		});
+
+		autoUpdater.on("update-available", (data) => {
+			if (Notification.isSupported()) {
+				const notif = new Notification({
+					title: "Update Available",
+					subtitle: `v${data.version}`,
+					body: "A new TaskBookly update is available to download!",
+					silent: true,
+				});
+
+				notif.on("click", () => shell.openExternal("https://taskbookly.framer.website/download"));
+				notif.show();
+				mainWindow.webContents.send("play-sound", "notifs/info.ogg");
+			}
+		});
+
+		ipcMain.on("toggle-sidebar", () => {
+			sidebarCollapsed = !sidebarCollapsed;
+			mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+		});
+
+		ipcMain.handle("get-sidebar-state", () => {
+			return sidebarCollapsed;
+		});
+
+		ipcMain.handle("get-app-version", () => {
+			return appVersion;
+		});
+
+		ipcMain.handle("get-build-info", () => {
+			return buildInfo;
+		});
+
+		ipcMain.handle("get-node-env", () => {
+			return process.env.NODE_ENV || "production";
+		});
+
+		ipcMain.handle("get-platform", () => {
+			return process.platform;
+		});
+
+		ipcMain.handle("get-electron-version", () => {
+			return process.versions.electron || "unknown";
+		});
+
+		ipcMain.handle("get-chrome-version", () => {
+			return process.versions.chrome || process.versions.v8 || "unknown";
+		});
+
+		ipcMain.handle("settings-load", () => {
+			return loadSettings();
+		});
+
+		ipcMain.handle("settings-get", (_event, key: string) => {
+			const settings = loadSettings();
+			return settings[key] || "";
+		});
+
+		ipcMain.handle("settings-set", (_event, key: string, value: string) => {
+			const defaultSettings = getDefaultSettings(process.platform);
+
+			if (!(key in defaultSettings)) {
+				console.warn(`Attempted to set unknown setting: ${key}`);
+				return false;
+			}
+
+			const settings = loadSettings();
+			settings[key] = value;
+			saveSettings(settings);
+
+			FocusTimer.updateSettings(settings);
+
+			// Force data update when break charge related settings change
+			if (key === "breakChargingEnabled" || key === "workTimePerCharge" || key === "breakChargeExtensionAmount" || key === "breakChargeCooldown") {
+				focusTimer.forceDataUpdate();
+			}
+
+			return true;
+		});
+
+		const getPresetPayload = () => ({
+			presets: focusPresetStore.getPresets(),
+			selectedPresetId: focusPresetStore.getSelectedPresetId(),
+		});
+
+		ipcMain.handle("focus-presets-list", () => {
+			return getPresetPayload();
+		});
+
+		ipcMain.handle("focus-presets-create", (_event, preset: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
+			return focusPresetStore.createPreset(preset);
+		});
+
+		ipcMain.handle("focus-presets-update", (_event, presetId: string, payload: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
+			const updated = focusPresetStore.updatePreset(presetId, payload);
+			if (updated && focusPresetStore.getSelectedPresetId() === presetId) {
+				FocusTimer.setActivePreset(updated);
+				focusTimer.forceDataUpdate();
+			}
+			return updated;
+		});
+
+		ipcMain.handle("focus-presets-delete", (_event, presetId: string) => {
+			const result = focusPresetStore.deletePreset(presetId);
+			if (result) {
+				const activePreset = focusPresetStore.getSelectedPreset();
+				FocusTimer.setActivePreset(activePreset);
+				focusTimer.forceDataUpdate();
+			}
+			return result;
+		});
+
+		ipcMain.handle("focus-presets-set-active", (_event, presetId: string) => {
+			const preset = focusPresetStore.setSelectedPreset(presetId);
+			FocusTimer.setActivePreset(preset);
+			focusTimer.forceDataUpdate();
+			return { selectedPresetId: preset.id };
+		});
+
+		// Window control handlers
+		ipcMain.on("window-minimize", () => {
+			mainWindow.minimize();
+		});
+
+		ipcMain.on("window-maximize", () => {
+			if (mainWindow.isMaximized()) {
+				mainWindow.restore();
+			} else {
+				mainWindow.maximize();
+			}
+		});
+
+		ipcMain.on("window-close", () => {
 			mainWindow.close();
+		});
+
+		ipcMain.handle("window-is-maximized", () => {
+			return mainWindow.isMaximized();
+		});
+
+		ipcMain.handle("window-close-decision", (_event, shouldClose: boolean) => {
+			pendingClosePrompt = false;
+			if (!mainWindow || mainWindow.isDestroyed()) {
+				return false;
+			}
+			if (shouldClose) {
+				allowWindowClose = true;
+				mainWindow.close();
+			}
+			return shouldClose;
+		});
+
+		// Listen for window state changes
+		mainWindow.on("maximize", () => {
+			mainWindow.webContents.send("window-state-changed", { maximized: true });
+		});
+
+		mainWindow.on("unmaximize", () => {
+			mainWindow.webContents.send("window-state-changed", { maximized: false });
+		});
+
+		mainWindow.webContents.on("render-process-gone", async (_, error) => {
+			promptProcessFailure(error);
+		});
+
+		app.on("child-process-gone", async (_, error) => {
+			promptProcessFailure(error);
+		});
+
+		if (isDev()) {
+			mainWindow.loadURL("http://localhost:5123");
+		} else {
+			mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
 		}
-		return shouldClose;
+
+		updateMenu();
 	});
-
-	// Listen for window state changes
-	mainWindow.on("maximize", () => {
-		mainWindow.webContents.send("window-state-changed", { maximized: true });
-	});
-
-	mainWindow.on("unmaximize", () => {
-		mainWindow.webContents.send("window-state-changed", { maximized: false });
-	});
-
-	mainWindow.webContents.on("render-process-gone", async (_, error) => {
-		promptProcessFailure(error);
-	});
-
-	app.on("child-process-gone", async (_, error) => {
-		promptProcessFailure(error);
-	});
-
-	if (isDev()) {
-		mainWindow.loadURL("http://localhost:5123");
-	} else {
-		mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
-	}
-
-	updateMenu();
-});
+}
 
 app.on("window-all-closed", () => {
 	if (focusTimer) {

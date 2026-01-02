@@ -3,7 +3,7 @@ import IcoButton, { Container, ActionMenu, type ActionMenuOption, SelectionMenu,
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faInfoCircle, faMugSaucer, faPause, faPencil, faPlay, faPlus, faStop, faStopwatch } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faInfoCircle, faMugSaucer, faPause, faPencil, faPlay, faPlus, faStop, faStopwatch, faVolumeLow } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { usePopup } from "../PopupProvider";
 import type { FocusPreset } from "../../../common/focusPresets";
@@ -21,6 +21,9 @@ const Focus = () => {
 	const [cooldownBreaksLeft, setCooldownBreaksLeft] = useState<number>(0);
 	const [isCharging, setIsCharging] = useState<boolean>(false);
 	const [chargeUsedThisSession, setChargeUsedThisSession] = useState<boolean>(false);
+
+	const [soundEnabled, setSoundEnabled] = useState(true);
+	const [selectedSound, setSelectedSound] = useState("lofi");
 
 	const { open, confirm } = usePopup();
 
@@ -333,6 +336,26 @@ const Focus = () => {
 		return null;
 	};
 
+	const soundOptions: ActionMenuOption[] = [
+		{
+			type: "toggle",
+			label: "Sound Enabled",
+			icon: faVolumeLow,
+			value: soundEnabled,
+			onChange: () => setSoundEnabled(!soundEnabled),
+		},
+		{ type: "separator", label: "Sounds" },
+		{
+			type: "selectionGroup",
+			value: selectedSound,
+			onChange: setSelectedSound,
+			options: [
+				{ label: "White Noise", value: "white_noise", icon: faVolumeLow },
+				{ label: "White Noise", value: "whitwe_noise", icon: faVolumeLow },
+			],
+		},
+	];
+
 	return (
 		<>
 			{timerStatus !== "stopped" ? (
@@ -354,7 +377,7 @@ const Focus = () => {
 			<Container name="focus_controls">
 				<div className="groupList">
 					<div id="focusPresets" className="buttonGroup">
-						<SelectionMenu options={presetOptions} value={selectedPresetId} onChange={handlePresetChange} searchable placeholder="Choose preset" disabled={timerStatus !== "stopped"} />
+						<SelectionMenu options={presetOptions} value={selectedPresetId} onChange={handlePresetChange} searchable placeholder="Choose Preset" disabled={timerStatus !== "stopped"} tooltip={timerStatus === "stopped" ? "Change Preset" : "Stop this session to change presets"} />
 						{timerStatus === "stopped" ? (
 							<>
 								<IcoButton icon={faPlus} tooltip="Create Preset" onClick={{ action: handleNewPreset }} />
@@ -365,7 +388,7 @@ const Focus = () => {
 					<div className="buttonGroup">
 						{timerStatus === "counting" ? (
 							<>
-								<IcoButton text="Pause" icon={faPause} disabled={currentSession === "break" || currentSession === "transition"} onClick={{ action: handlePause }} />
+								<IcoButton text="Pause" icon={faPause} disabled={currentSession === "break" || currentSession === "transition"} tooltip={currentSession === "break" || currentSession === "transition" ? "You cannot pause during this period" : undefined} onClick={{ action: handlePause }} />
 								<IcoButton text="Stop" icon={faStop} onClick={{ action: handleStop }} />
 							</>
 						) : timerStatus === "paused" ? (
@@ -376,8 +399,8 @@ const Focus = () => {
 						) : (
 							<IcoButton text="Start" icon={faPlay} onClick={{ action: handleStart }} />
 						)}
-
 						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value: string) => handleAddTime(parseInt(value, 10))} button={<IcoButton icon={faStopwatch} text="Add Time" />} /> : null}
+						<ActionMenu options={soundOptions} button={<IcoButton icon={faVolumeLow} text="Sound" />} />
 					</div>
 				</div>
 			</Container>
