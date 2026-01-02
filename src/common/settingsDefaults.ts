@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS_CONFIG = {
 	breakChargeExtensionAmount: "10",
 	breakChargeCooldown: "0",
 	workTimePerCharge: "60",
+	autoSoundMode: "false",
 };
 
 const PLATFORM_SPECIFIC_DEFAULTS: Record<string, Record<string, string>> = {
