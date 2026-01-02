@@ -16,6 +16,7 @@ interface IcoButtonProps {
 	id?: string;
 	className?: string;
 	tooltip?: string;
+	style?: CSSProperties;
 }
 
 interface ContainerProps {
@@ -82,7 +83,7 @@ const Container = ({ name, header, children, id, className = "" }: ContainerProp
 	);
 };
 
-const IcoButton = ({ text, icon, iconWidthAuto = false, disabled = false, onClick, id, className, tooltip }: IcoButtonProps) => {
+const IcoButton = ({ text, icon, iconWidthAuto = false, disabled = false, onClick, id, className, tooltip, style }: IcoButtonProps) => {
 	const handleClick = () => {
 		if (disabled) return;
 		if (onClick?.action) {
@@ -94,7 +95,7 @@ const IcoButton = ({ text, icon, iconWidthAuto = false, disabled = false, onClic
 	};
 
 	return (
-		<button data-sect={onClick?.jumpToSection} id={id} className={className} aria-disabled={disabled} onClick={handleClick} data-tooltip={tooltip}>
+		<button data-sect={onClick?.jumpToSection} id={id} className={className} aria-disabled={disabled} onClick={handleClick} data-tooltip={tooltip} style={style}>
 			{icon ? <FontAwesomeIcon className="buttonIcon" icon={icon} widthAuto={iconWidthAuto ? true : false} /> : null}
 			{text ? <span className="buttonText">{text}</span> : null}
 		</button>
@@ -132,6 +133,8 @@ interface SelectionMenuValueOption {
 	data?: MenuOptionData[];
 	type?: "option";
 	icon?: IconProp;
+	disabled?: boolean;
+	processing?: boolean;
 }
 
 type SelectionMenuOption = SelectionMenuValueOption | MenuSeparatorOption;
@@ -278,14 +281,15 @@ const SelectionMenu = ({ options, value, onChange, disabled = false, searchable 
 	}, [options]);
 
 	return (
-		<div className={className} style={{ display: "inline-block", position: "relative", ...(style ?? {}) }}>
+		<div className={className} style={{ display: "inline-flex", position: "relative", ...(style ?? {}) }}>
 			<div
 				ref={buttonRef}
 				onClick={() => {
 					if (!disabled) setOpen((o) => !o);
 				}}
+				style={{ display: "flex", flex: 1 }}
 			>
-				<button type="button" className={`custom-dropdown${open ? " selected" : ""}`} aria-disabled={disabled} aria-haspopup="listbox" aria-expanded={open} data-tooltip={tooltip}>
+				<button type="button" className={`custom-dropdown${open ? " selected" : ""}`} aria-disabled={disabled} aria-haspopup="listbox" aria-expanded={open} data-tooltip={tooltip} style={{ height: "100%", width: "100%" }}>
 					<span>{selectedLabel}</span>
 					<FontAwesomeIcon icon={faAngleDown} />
 				</button>
@@ -307,12 +311,14 @@ const SelectionMenu = ({ options, value, onChange, disabled = false, searchable 
 							key={opt.value}
 							className={`dropdown-option${opt.value === value ? " selected" : ""}`}
 							onClick={() => {
+								if (opt.disabled) return;
 								onChange(opt.value);
 								setOpen(false);
 								setSearch("");
 							}}
 							role="option"
 							aria-selected={opt.value === value}
+							aria-disabled={opt.disabled}
 						>
 							<div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
 								{hasIcons && <div style={{ width: "1.25em", display: "flex", justifyContent: "center", flexShrink: 0 }}>{opt.icon ? <FontAwesomeIcon className="dd-icon" icon={opt.icon} /> : null}</div>}
@@ -332,7 +338,7 @@ const SelectionMenu = ({ options, value, onChange, disabled = false, searchable 
 									) : null}
 								</span>
 							</div>
-							<span className="dd-check">{opt.value === value ? <FontAwesomeIcon icon={faCheck} widthAuto /> : null}</span>
+							<span className="dd-check">{opt.processing ? <FontAwesomeIcon spin icon={faCompass} /> : opt.value === value ? <FontAwesomeIcon icon={faCheck} /> : null}</span>
 						</div>
 					);
 				})}
@@ -348,6 +354,8 @@ interface ActionMenuValueOption {
 	icon?: IconProp;
 	onClick?: () => void;
 	type?: "option";
+	disabled?: boolean;
+	processing?: boolean;
 }
 
 interface ActionMenuToggleOption {
@@ -357,13 +365,14 @@ interface ActionMenuToggleOption {
 	value: boolean;
 	onChange: (value: boolean) => void;
 	icon?: IconProp;
+	disabled?: boolean;
 }
 
 interface ActionMenuSelectionGroupOption {
 	type: "selectionGroup";
 	value: string;
 	onChange: (value: string) => void;
-	options: { label: string; value: string; icon?: IconProp }[];
+	options: { label: string; value: string; icon?: IconProp; disabled?: boolean; processing?: boolean }[];
 }
 
 type ActionMenuOption = ActionMenuValueOption | MenuSeparatorOption | ActionMenuToggleOption | ActionMenuSelectionGroupOption;
@@ -416,16 +425,18 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 	}, [open, search]);
 
 	return (
-		<div style={{ display: "inline-block", position: "relative" }} data-tooltip={tooltip}>
+		<div style={{ display: "inline-flex", position: "relative" }} data-tooltip={tooltip}>
 			<div
 				ref={buttonRef}
 				onClick={() => {
 					if (!isDisabled) setOpen((o) => !o);
 				}}
+				style={{ display: "flex", flex: 1 }}
 			>
 				{isValidElement(button)
-					? cloneElement(button as ReactElement<{ className?: string; disabled?: boolean }>, {
+					? cloneElement(button as ReactElement<{ className?: string; disabled?: boolean; style?: CSSProperties }>, {
 							className: [(button as ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
+							style: { height: "100%", ...(button as ReactElement<{ style?: CSSProperties }>).props.style },
 					  })
 					: button}
 			</div>
@@ -447,11 +458,13 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 								key={`toggle-${index}`}
 								className="dropdown-option"
 								onClick={(e) => {
+									if (opt.disabled) return;
 									e.stopPropagation();
 									opt.onChange(!opt.value);
 								}}
 								role="menuitemcheckbox"
 								aria-checked={opt.value}
+								aria-disabled={opt.disabled}
 							>
 								<div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
 									{hasIcons && <div style={{ width: "1.25em", display: "flex", justifyContent: "center", flexShrink: 0 }}>{opt.icon ? <FontAwesomeIcon className="dd-icon" icon={opt.icon} /> : null}</div>}
@@ -474,11 +487,13 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 										key={subOpt.value}
 										className={`dropdown-option${opt.value === subOpt.value ? " selected" : ""}`}
 										onClick={(e) => {
+											if (subOpt.disabled) return;
 											e.stopPropagation();
 											opt.onChange(subOpt.value);
 										}}
 										role="menuitemradio"
 										aria-checked={opt.value === subOpt.value}
+										aria-disabled={subOpt.disabled}
 									>
 										<div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
 											{hasIcons && <div style={{ width: "1.25em", display: "flex", justifyContent: "center", flexShrink: 0 }}>{subOpt.icon ? <FontAwesomeIcon className="dd-icon" icon={subOpt.icon} /> : null}</div>}
@@ -486,7 +501,7 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 												<label className="dd-mainLabel">{subOpt.label}</label>
 											</span>
 										</div>
-										{opt.value === subOpt.value && <FontAwesomeIcon icon={faCheck} />}
+										<span className="dd-check">{subOpt.processing ? <FontAwesomeIcon spin icon={faCompass} /> : opt.value === subOpt.value ? <FontAwesomeIcon icon={faCheck} /> : null}</span>
 									</div>
 								))}
 							</div>
@@ -513,6 +528,7 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 									{opt.subLabel && <label className="dd-subLabel">{opt.subLabel}</label>}
 								</span>
 							</div>
+							<span className="dd-check">{opt.processing ? <FontAwesomeIcon spin icon={faCompass} /> : null}</span>
 						</div>
 					);
 				})}

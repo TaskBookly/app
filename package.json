@@ -63,8 +63,7 @@
 			"shortcutName": "${productName}",
 			"uninstallDisplayName": "${productName}",
 			"installerSidebar": "build-resources/installer/banners/install.png",
-			"uninstallerSidebar": "build-resources/installer/banners/uninstall.png",
-			"license": "LICENSE"
+			"uninstallerSidebar": "build-resources/installer/banners/uninstall.png"
 		},
 		"publish": {
 			"provider": "github",

@@ -3,10 +3,12 @@ import IcoButton, { Container, ActionMenu, type ActionMenuOption, SelectionMenu,
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faCloudBolt, faCloudShowersHeavy, faCloudShowersWater, faFire, faHourglassHalf, faInfoCircle, faLeaf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faRotate, faStop, faStopwatch, faVolumeLow, faWater, faWind } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faCloudBolt, faCloudShowersHeavy, faCloudShowersWater, faFire, faInfoCircle, faLeaf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faRotate, faStop, faStopwatch, faVolumeLow, faWater, faWind } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { usePopup } from "../PopupProvider";
 import type { FocusPreset } from "../../../common/focusPresets";
+
+const soundModules = import.meta.glob("../../assets/audio/focusSounds/*.mp3", { eager: true, query: "?url", import: "default" });
 
 const Focus = () => {
 	const { setSetting, getSetting } = useSettings();
@@ -24,6 +26,7 @@ const Focus = () => {
 
 	const [selectedSound, setSelectedSound] = useState("rain");
 	const [soundStatus, setSoundStatus] = useState<"playing" | "stopped">("stopped");
+	const [isSoundLoading, setIsSoundLoading] = useState<boolean>(false);
 	const audioContextRef = useRef<AudioContext | null>(null);
 	const gainNodeRef = useRef<GainNode | null>(null);
 	const activeSourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
@@ -414,36 +417,61 @@ const Focus = () => {
 				return;
 			}
 
-			// If playing a different sound, fade out and stop first
-			if (activeSourceNodeRef.current) {
-				await fadeAudio(0, 2000);
-				if (actionIdRef.current !== myId) return;
-				try {
-					activeSourceNodeRef.current.stop();
-				} catch (e) {
-					// Ignore
-				}
-				activeSourceNodeRef.current = null;
-			}
+			// Start loading if needed
+			let buffer: AudioBuffer | null | undefined = bufferCacheRef.current.get(soundName);
+			let loadTask: Promise<AudioBuffer | null | undefined> = Promise.resolve(buffer);
 
-			// Load buffer
-			let buffer = bufferCacheRef.current.get(soundName);
 			if (!buffer) {
-				try {
-					const response = await fetch(`/src/ui/assets/audio/focusSounds/${soundName}.mp3`);
-					const arrayBuffer = await response.arrayBuffer();
-					buffer = await ctx.decodeAudioData(arrayBuffer);
-					bufferCacheRef.current.set(soundName, buffer);
-				} catch (error) {
-					console.error("Failed to load sound:", error);
-					if (actionIdRef.current === myId) {
-						setSoundStatus("stopped");
+				setIsSoundLoading(true);
+				loadTask = (async () => {
+					try {
+						const soundPath = `../../assets/audio/focusSounds/${soundName}.mp3`;
+						const soundUrl = soundModules[soundPath] as string;
+						if (!soundUrl) throw new Error(`Sound not found: ${soundName}`);
+
+						const response = await fetch(soundUrl);
+						const arrayBuffer = await response.arrayBuffer();
+						const decoded = await ctx.decodeAudioData(arrayBuffer);
+						bufferCacheRef.current.set(soundName, decoded);
+						return decoded;
+					} catch (error) {
+						console.error("Failed to load sound:", error);
+						return null;
 					}
-					return;
-				}
+				})();
 			}
 
-			if (actionIdRef.current !== myId) return;
+			// Start fading if needed
+			const fadeTask = async () => {
+				if (activeSourceNodeRef.current) {
+					await fadeAudio(0, 2000);
+					if (actionIdRef.current !== myId) return;
+					try {
+						if (activeSourceNodeRef.current) {
+							activeSourceNodeRef.current.stop();
+						}
+					} catch (e) {
+						// Ignore
+					}
+					activeSourceNodeRef.current = null;
+				}
+			};
+
+			// Wait for both
+			const [loadedBuffer] = await Promise.all([loadTask, fadeTask()]);
+			buffer = loadedBuffer;
+
+			if (actionIdRef.current !== myId) {
+				setIsSoundLoading(false);
+				return;
+			}
+
+			setIsSoundLoading(false);
+
+			if (!buffer) {
+				setSoundStatus("stopped");
+				return;
+			}
 
 			// Create source and play
 			const source = ctx.createBufferSource();
@@ -490,16 +518,22 @@ const Focus = () => {
 			return "You've already used a charge this break session.";
 		}
 		if (cooldownBreaksLeft > 0) {
-			return `You need to take ${cooldownBreaksLeft} more ${cooldownBreaksLeft === 1 ? "break" : "breaks"} before you can charge another break.`;
+			return `You need to take ${cooldownBreaksLeft} more ${cooldownBreaksLeft === 1 ? "break" : "breaks"} before you can charge another one.`;
 		}
-		return null;
+		if (breakChargesLeft <= 0) {
+			return "You have no charges! You can get some by working.";
+		}
+		if (currentSession !== "break") {
+			return "You can use a charge during a break period.";
+		}
+		return "Charge Ready!";
 	};
 
 	const soundOptions: ActionMenuOption[] = [
 		{
 			type: "toggle",
-			label: "Auto-Sound Mode",
-			subLabel: "Start/Stop sounds based on the current period",
+			label: "Auto-Play Mode",
+			subLabel: "Auto start/stop sounds based on the current period",
 			icon: faRotate,
 			value: getSetting("autoSoundMode") === "true",
 			onChange: () => setSetting("autoSoundMode", getSetting("autoSoundMode") === "true" ? "false" : "true"),
@@ -524,7 +558,7 @@ const Focus = () => {
 				{ label: "Rain", value: "rain", icon: faCloudShowersHeavy },
 				{ label: "Indoor Rain", value: "indoorRain", icon: faCloudShowersWater },
 				{ label: "Thunderstorm", value: "thunderstorm", icon: faCloudBolt },
-				{ label: "Ocean Waves", value: "oceanWaves", icon: faWater },
+				{ label: "Ocean Waves", value: "oceanWaves", icon: faWater, processing: true },
 				{ label: "Forest Ambience", value: "forest", icon: faLeaf },
 				{ label: "Campfire", value: "campfire", icon: faFire },
 				{ label: "Wind", value: "wind", icon: faWind },
@@ -532,7 +566,7 @@ const Focus = () => {
 				{ label: "White Noise", value: "whiteNoise", icon: faVolumeLow },
 				{ label: "Pink Noise", value: "pinkNoise", icon: faVolumeLow },
 				{ label: "Brown Noise", value: "brownNoise", icon: faVolumeLow },
-			],
+			].map((opt) => ({ ...opt, processing: isSoundLoading && opt.value === selectedSound })),
 		},
 	];
 
@@ -580,13 +614,14 @@ const Focus = () => {
 							<IcoButton text="Start" icon={faPlay} onClick={{ action: handleStart }} />
 						)}
 						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value: string) => handleAddTime(parseInt(value, 10))} button={<IcoButton icon={faStopwatch} text="Add Time" />} /> : null}
+
 						<ActionMenu options={soundOptions} button={<IcoButton icon={faVolumeLow} text="Sound" />} />
 					</div>
 				</div>
 			</Container>
 			{getSetting("breakChargingEnabled") === "true" ? (
 				<Container name="focus_breakCharging" header={{ title: "Break Charging", icon: faBolt, buttons: [{ icon: faInfoCircle, onClick: { action: () => open({ title: "Break Charging", message: "As you work, you'll progress towards earning break charges. These grant you the ability to extend breaks by a few minutes as a reward for working hard!", actions: [] }) } }] }}>
-					<ButtonActionConfig name="Charge Break" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "1", icon: faBolt }} onClick={handleUseBreakCharge}>
+					<ButtonActionConfig name="Charge Break" description={getCooldownMessage() ?? undefined} disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Charge Break", icon: faBolt }} onClick={handleUseBreakCharge}>
 						<div className="groupList">
 							<h3 style={{ margin: 0, marginBlockEnd: "-15px" }}>
 								You have{" "}
@@ -606,11 +641,6 @@ const Focus = () => {
 								className={isCharging ? "charging-effect" : ""}
 							/>
 						</div>
-						{getCooldownMessage() ? (
-							<p>
-								<FontAwesomeIcon icon={faHourglassHalf} /> {getCooldownMessage()}
-							</p>
-						) : null}
 					</ButtonActionConfig>
 				</Container>
 			) : null}

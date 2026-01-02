@@ -369,8 +369,12 @@ input:disabled {
 	}
 }
 
-.dropdown-option:hover {
+.dropdown-option:hover:not([aria-disabled="true"]):not(.selected) {
 	background-color: var(--clr-surface-a20);
+}
+
+.dropdown-option[aria-disabled="true"] {
+	cursor: not-allowed;
 }
 
 .dropdown-option.selected {

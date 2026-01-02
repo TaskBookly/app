@@ -202,7 +202,7 @@ const Settings = () => {
 
 					<Container name="settings_focus_sounnds">
 						<ContainerGroup>
-							<SwitchConfig name="Auto-Sound Mode" description="If enabled, focus sounds will automatically play during work periods and stop during break and transition periods." value={getSetting("autoSoundMode") === "true"} onChange={() => setSetting("autoSoundMode", getSetting("autoSoundMode") === "true" ? "false" : "true")} />
+							<SwitchConfig name="Auto-Play Mode" description="If enabled, focus sounds will automatically play during work periods and stop during break and transition periods or while a focus session is inactive." value={getSetting("autoSoundMode") === "true"} onChange={() => setSetting("autoSoundMode", getSetting("autoSoundMode") === "true" ? "false" : "true")} />
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_focus_transition" header={{ title: "Transition Periods", icon: faAnglesRight }}>
@@ -239,7 +239,7 @@ const Settings = () => {
 				<>
 					<Container name="settings_notifs">
 						<ContainerGroup>
-							<Hint type="warning" label="Make sure to go to your system settings and grant TaskBookly highest priority for notifications or they may be silenced while you're on Do Not Disturb! (Sound will still play)"></Hint>
+							<Hint type="warning" label="Make sure to go to your system settings and grant TaskBookly highest priority for notifications or they may be hidden while you're on Do Not Disturb! (Sound will still play)"></Hint>
 							<SelectionMenuConfig name="Focus timers" description="Period completions" menu={{ options: focusTimerOptions }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
 						</ContainerGroup>
 					</Container>
@@ -292,7 +292,7 @@ const Settings = () => {
 							</>
 						),
 					},
-				]
+			  ]
 			: []),
 	];
 
