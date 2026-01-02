@@ -16,6 +16,27 @@ const channelShortcuts = new Map([
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 
+// Load .env file manually since we are not using dotenv package
+try {
+	const envPath = path.join(repoRoot, ".env");
+	const envContent = readFileSync(envPath, "utf8");
+	envContent.split("\n").forEach((line) => {
+		const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)?\s*$/);
+		if (match) {
+			const key = match[1];
+			let value = match[2] || "";
+			if (value.length > 1 && value.startsWith('"') && value.endsWith('"')) {
+				value = value.slice(1, -1);
+			}
+			if (!process.env[key]) {
+				process.env[key] = value;
+			}
+		}
+	});
+} catch (e) {
+	// Ignore
+}
+
 function showUsage() {
 	console.log(`Usage: npm run package -- [options] [electron-builder args]
 
