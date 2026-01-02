@@ -200,6 +200,11 @@ const Settings = () => {
 						</ContainerGroup>
 					</Container>
 
+					<Container name="settings_focus_sounnds">
+						<ContainerGroup>
+							<SwitchConfig name="Auto-Sound Mode" description="If enabled, focus sounds will automatically play during work periods and stop during break and transition periods." value={getSetting("autoSoundMode") === "true"} onChange={() => setSetting("autoSoundMode", getSetting("autoSoundMode") === "true" ? "false" : "true")} />
+						</ContainerGroup>
+					</Container>
 					<Container name="settings_focus_transition" header={{ title: "Transition Periods", icon: faAnglesRight }}>
 						<ContainerGroup>
 							<SwitchConfig name="Enable transition periods" description="Add a brief pause between work and break periods to save your work, stretch, or mentally prepare for the next session." value={getSetting("transitionPeriodsEnabled") === "true"} onChange={() => setSetting("transitionPeriodsEnabled", getSetting("transitionPeriodsEnabled") === "true" ? "false" : "true")} />

@@ -1,15 +1,15 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import IcoButton, { Container, ActionMenu, type ActionMenuOption, SelectionMenu, type SelectionMenuOption } from "../core";
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faInfoCircle, faMugSaucer, faPause, faPencil, faPlay, faPlus, faStop, faStopwatch, faVolumeLow } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faCloudBolt, faCloudShowersHeavy, faCloudShowersWater, faFire, faHourglassHalf, faInfoCircle, faLeaf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faRotate, faStop, faStopwatch, faVolumeLow, faWater, faWind } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { usePopup } from "../PopupProvider";
 import type { FocusPreset } from "../../../common/focusPresets";
 
 const Focus = () => {
-	const { getSetting } = useSettings();
+	const { setSetting, getSetting } = useSettings();
 	const [currentSession, setCurrentSession] = useState<"work" | "break" | "transition">("work");
 	const [timerStatus, setTimerStatus] = useState<"counting" | "paused" | "stopped">("stopped");
 	const [breakChargesLeft, setBreakChargesLeft] = useState<number>(0);
@@ -22,8 +22,14 @@ const Focus = () => {
 	const [isCharging, setIsCharging] = useState<boolean>(false);
 	const [chargeUsedThisSession, setChargeUsedThisSession] = useState<boolean>(false);
 
-	const [soundEnabled, setSoundEnabled] = useState(true);
-	const [selectedSound, setSelectedSound] = useState("lofi");
+	const [selectedSound, setSelectedSound] = useState("rain");
+	const [soundStatus, setSoundStatus] = useState<"playing" | "stopped">("stopped");
+	const audioContextRef = useRef<AudioContext | null>(null);
+	const gainNodeRef = useRef<GainNode | null>(null);
+	const activeSourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+	const bufferCacheRef = useRef<Map<string, AudioBuffer>>(new Map());
+	const currentSoundNameRef = useRef<string | null>(null);
+	const actionIdRef = useRef(0);
 
 	const { open, confirm } = usePopup();
 
@@ -260,8 +266,8 @@ const Focus = () => {
 
 			// Check if we're gaining charge progress (charging effect)
 			const newProgress = data.chargeProgressPercentage || 0;
-			// Show charging effect when actively working (work session + counting)
-			setIsCharging(data.session === "work" && data.status === "counting");
+			// Show charging effect when actively working (work session + counting) and break charging is enabled
+			setIsCharging(data.session === "work" && data.status === "counting" && getSetting("breakChargingEnabled") === "true");
 			setChargeProgressPercentage(newProgress);
 
 			setIsOnCooldown(data.isOnCooldown || false);
@@ -279,6 +285,24 @@ const Focus = () => {
 		window.electron.focus.requestDataUpdate();
 
 		return cleanup;
+	}, []);
+
+	// Cleanup audio on unmount
+	useEffect(() => {
+		return () => {
+			if (activeSourceNodeRef.current) {
+				try {
+					activeSourceNodeRef.current.stop();
+				} catch (e) {
+					// Ignore
+				}
+				activeSourceNodeRef.current = null;
+			}
+			if (audioContextRef.current) {
+				audioContextRef.current.close();
+				audioContextRef.current = null;
+			}
+		};
 	}, []);
 
 	useEffect(() => {
@@ -326,6 +350,141 @@ const Focus = () => {
 		await window.electron.focus.useBreakCharge();
 	};
 
+	const initAudioContext = () => {
+		if (!audioContextRef.current) {
+			const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+			audioContextRef.current = new AudioContextClass();
+			gainNodeRef.current = audioContextRef.current.createGain();
+			gainNodeRef.current.connect(audioContextRef.current.destination);
+		}
+		return audioContextRef.current;
+	};
+
+	const fadeAudio = (targetVolume: number, duration: number = 2000): Promise<void> => {
+		const ctx = initAudioContext();
+		const gainNode = gainNodeRef.current!;
+
+		if (ctx.state === "suspended") {
+			ctx.resume();
+		}
+
+		const currentTime = ctx.currentTime;
+		// Cancel any ongoing ramps
+		gainNode.gain.cancelScheduledValues(currentTime);
+
+		// Anchor the current value to prevent jumping
+		gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
+
+		// Use linear ramp for reliable fading
+		gainNode.gain.linearRampToValueAtTime(targetVolume, currentTime + duration / 1000);
+
+		return new Promise((resolve) => setTimeout(resolve, duration));
+	};
+
+	const playSound = useCallback(async (shouldPlay: boolean, soundName: string) => {
+		const myId = ++actionIdRef.current;
+		const targetStatus = shouldPlay ? "playing" : "stopped";
+
+		// Update UI immediately
+		setSoundStatus(targetStatus);
+
+		const ctx = initAudioContext();
+		const mainGain = gainNodeRef.current!;
+
+		if (!shouldPlay) {
+			// STOP
+			if (activeSourceNodeRef.current) {
+				await fadeAudio(0, 2000);
+				// Only stop if no new action has started
+				if (actionIdRef.current === myId) {
+					try {
+						activeSourceNodeRef.current.stop();
+					} catch (e) {
+						// Ignore
+					}
+					activeSourceNodeRef.current = null;
+					currentSoundNameRef.current = null;
+				}
+			}
+		} else {
+			// PLAY
+			// If already playing the same sound, just ensure volume is up
+			if (activeSourceNodeRef.current && currentSoundNameRef.current === soundName) {
+				await fadeAudio(0.5, 2000);
+				return;
+			}
+
+			// If playing a different sound, fade out and stop first
+			if (activeSourceNodeRef.current) {
+				await fadeAudio(0, 2000);
+				if (actionIdRef.current !== myId) return;
+				try {
+					activeSourceNodeRef.current.stop();
+				} catch (e) {
+					// Ignore
+				}
+				activeSourceNodeRef.current = null;
+			}
+
+			// Load buffer
+			let buffer = bufferCacheRef.current.get(soundName);
+			if (!buffer) {
+				try {
+					const response = await fetch(`/src/ui/assets/audio/focusSounds/${soundName}.mp3`);
+					const arrayBuffer = await response.arrayBuffer();
+					buffer = await ctx.decodeAudioData(arrayBuffer);
+					bufferCacheRef.current.set(soundName, buffer);
+				} catch (error) {
+					console.error("Failed to load sound:", error);
+					if (actionIdRef.current === myId) {
+						setSoundStatus("stopped");
+					}
+					return;
+				}
+			}
+
+			if (actionIdRef.current !== myId) return;
+
+			// Create source and play
+			const source = ctx.createBufferSource();
+			source.buffer = buffer;
+			source.loop = true;
+			source.connect(mainGain);
+
+			// Reset gain to 0 for fade in
+			mainGain.gain.cancelScheduledValues(ctx.currentTime);
+			mainGain.gain.setValueAtTime(0, ctx.currentTime);
+
+			source.start(0);
+			activeSourceNodeRef.current = source;
+			currentSoundNameRef.current = soundName;
+
+			await fadeAudio(0.5, 2000);
+		}
+	}, []);
+
+	const handlePlaySound = useCallback(() => {
+		playSound(soundStatus !== "playing", selectedSound);
+	}, [soundStatus, playSound, selectedSound]);
+
+	// Handle sound changes while playing (Manual Mode)
+	useEffect(() => {
+		const isAuto = getSetting("autoSoundMode") === "true";
+		if (!isAuto && soundStatus === "playing") {
+			playSound(true, selectedSound);
+		}
+	}, [selectedSound, getSetting, soundStatus, playSound]);
+
+	// Handle auto-sound mode
+	useEffect(() => {
+		const isAutoSoundEnabled = getSetting("autoSoundMode") === "true";
+		if (isAutoSoundEnabled) {
+			// Auto-sound mode: play during work, stop during break/transition
+			const shouldPlay = currentSession === "work" && timerStatus === "counting";
+			playSound(shouldPlay, selectedSound);
+		}
+	}, [getSetting, currentSession, timerStatus, playSound, selectedSound]);
+
 	const getCooldownMessage = () => {
 		if (chargeUsedThisSession) {
 			return "You've already used a charge this break session.";
@@ -339,19 +498,40 @@ const Focus = () => {
 	const soundOptions: ActionMenuOption[] = [
 		{
 			type: "toggle",
-			label: "Sound Enabled",
-			icon: faVolumeLow,
-			value: soundEnabled,
-			onChange: () => setSoundEnabled(!soundEnabled),
+			label: "Auto-Sound Mode",
+			subLabel: "Start/Stop sounds based on the current period",
+			icon: faRotate,
+			value: getSetting("autoSoundMode") === "true",
+			onChange: () => setSetting("autoSoundMode", getSetting("autoSoundMode") === "true" ? "false" : "true"),
 		},
+		...(getSetting("autoSoundMode") !== "true"
+			? [
+					{
+						type: "option",
+						label: soundStatus === "playing" ? "Stop" : "Play",
+						icon: soundStatus === "playing" ? faStop : faPlay,
+						value: "play",
+						onClick: handlePlaySound,
+					} as ActionMenuOption,
+			  ]
+			: []),
 		{ type: "separator", label: "Sounds" },
 		{
 			type: "selectionGroup",
 			value: selectedSound,
 			onChange: setSelectedSound,
 			options: [
-				{ label: "White Noise", value: "white_noise", icon: faVolumeLow },
-				{ label: "White Noise", value: "whitwe_noise", icon: faVolumeLow },
+				{ label: "Rain", value: "rain", icon: faCloudShowersHeavy },
+				{ label: "Indoor Rain", value: "indoorRain", icon: faCloudShowersWater },
+				{ label: "Thunderstorm", value: "thunderstorm", icon: faCloudBolt },
+				{ label: "Ocean Waves", value: "oceanWaves", icon: faWater },
+				{ label: "Forest Ambience", value: "forest", icon: faLeaf },
+				{ label: "Campfire", value: "campfire", icon: faFire },
+				{ label: "Wind", value: "wind", icon: faWind },
+
+				{ label: "White Noise", value: "whiteNoise", icon: faVolumeLow },
+				{ label: "Pink Noise", value: "pinkNoise", icon: faVolumeLow },
+				{ label: "Brown Noise", value: "brownNoise", icon: faVolumeLow },
 			],
 		},
 	];
