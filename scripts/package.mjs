@@ -16,9 +16,8 @@ const channelShortcuts = new Map([
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 
-// Load .env file manually since we are not using dotenv package
 try {
-	const envPath = path.join(repoRoot, ".env");
+	const envPath = path.join(repoRoot, "gh_secret.env");
 	const envContent = readFileSync(envPath, "utf8");
 	envContent.split("\n").forEach((line) => {
 		const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)?\s*$/);
