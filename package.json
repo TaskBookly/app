@@ -48,13 +48,20 @@
 		},
 		"win": {
 			"icon": "icons/icon.ico",
-			"target": {
-				"target": "nsis",
-				"arch": [
-					"x64",
-					"arm64"
-				]
-			}
+			"target": [
+				{
+					"target": "nsis",
+					"arch": [
+						"x64"
+					]
+				},
+				{
+					"target": "nsis",
+					"arch": [
+						"arm64"
+					]
+				}
+			]
 		},
 		"dmg": {
 			"title": "Install ${productName}"
