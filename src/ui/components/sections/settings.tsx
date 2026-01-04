@@ -256,7 +256,7 @@ const Settings = () => {
 						<ContainerGroup>
 							<InfoConfig name="Version" data={appVersion} copyButton />
 							<InfoConfig name="Channel" data={buildChannel} />
-							<InfoConfig name="Build" data={buildNumber} copyButton />
+							<InfoConfig name="Build Number" data={buildNumber} copyButton />
 							<ButtonActionConfig name="App Data" button={{ text: "Open Folder", icon: faFolderOpen }} onClick={handleOpenSettingsDirectory} />
 						</ContainerGroup>
 					</Container>

@@ -121,7 +121,7 @@
 	font-size: 1.1em;
 	-webkit-app-region: drag;
 	user-select: none;
-	z-index: 9999;
+	z-index: 20000;
 	top: 0;
 	left: 0;
 }
