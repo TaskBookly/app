@@ -50,8 +50,16 @@
 	height: 0;
 }
 
+.app-tooltip--bottom .app-tooltip-arrow {
+	top: 0;
+}
+
+.app-tooltip--top .app-tooltip-arrow {
+	bottom: 0;
+}
+
 .app-tooltip--bottom .app-tooltip-arrow::before {
-	top: -16px;
+	top: -8px;
 	border-left: 7px solid transparent;
 	border-right: 7px solid transparent;
 	border-bottom: 8px solid var(--clr-surface-a40);
@@ -59,7 +67,7 @@
 	z-index: 1;
 }
 .app-tooltip--bottom .app-tooltip-arrow::after {
-	top: -14px;
+	top: -6px;
 	border-left: 9px solid transparent;
 	border-right: 9px solid transparent;
 	border-bottom: 9px solid var(--clr-surface-a30);
@@ -68,7 +76,7 @@
 }
 
 .app-tooltip--top .app-tooltip-arrow::before {
-	bottom: -37px;
+	bottom: -8px;
 	border-left: 7px solid transparent;
 	border-right: 7px solid transparent;
 	border-top: 8px solid var(--clr-surface-a40);
@@ -76,7 +84,7 @@
 	z-index: 1;
 }
 .app-tooltip--top .app-tooltip-arrow::after {
-	bottom: -35px;
+	bottom: -6px;
 	border-left: 9px solid transparent;
 	border-right: 9px solid transparent;
 	border-top: 9px solid var(--clr-surface-a30);

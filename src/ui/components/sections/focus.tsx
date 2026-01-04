@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from "react";
-import IcoButton, { Container, ActionMenu, type ActionMenuOption } from "../core";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import IcoButton, { Container, ActionMenu, type ActionMenuOption, SelectionMenu, type SelectionMenuOption } from "../core";
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faHourglassHalf, faMugSaucer, faPause, faPlay, faPlus, faStop } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faCloudBolt, faCloudShowersHeavy, faCloudShowersWater, faFire, faInfoCircle, faLeaf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faRotate, faStop, faStopwatch, faVolumeLow, faWater, faWind } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { usePopup } from "../PopupProvider";
+import type { FocusPreset } from "../../../common/focusPresets";
 
-const Focus: React.FC = () => {
-	const { getSetting } = useSettings();
+const soundModules = import.meta.glob("../../assets/audio/focusSounds/*.mp3", { eager: true, query: "?url", import: "default" });
+
+const Focus = () => {
+	const { setSetting, getSetting } = useSettings();
 	const [currentSession, setCurrentSession] = useState<"work" | "break" | "transition">("work");
 	const [timerStatus, setTimerStatus] = useState<"counting" | "paused" | "stopped">("stopped");
 	const [breakChargesLeft, setBreakChargesLeft] = useState<number>(0);
@@ -19,6 +23,245 @@ const Focus: React.FC = () => {
 	const [cooldownBreaksLeft, setCooldownBreaksLeft] = useState<number>(0);
 	const [isCharging, setIsCharging] = useState<boolean>(false);
 	const [chargeUsedThisSession, setChargeUsedThisSession] = useState<boolean>(false);
+	const [clockFormat, setClockFormat] = useState<"12hr" | "24hr">("12hr");
+
+	useEffect(() => {
+		window.electron.system.getClockFormat().then(setClockFormat);
+	}, []);
+
+	const [selectedSound, setSelectedSound] = useState("rain");
+	const [soundStatus, setSoundStatus] = useState<"playing" | "stopped">("stopped");
+	const [isSoundLoading, setIsSoundLoading] = useState<boolean>(false);
+	const audioContextRef = useRef<AudioContext | null>(null);
+	const gainNodeRef = useRef<GainNode | null>(null);
+	const activeSourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+	const bufferCacheRef = useRef<Map<string, AudioBuffer>>(new Map());
+	const currentSoundNameRef = useRef<string | null>(null);
+	const actionIdRef = useRef(0);
+
+	const { open, confirm } = usePopup();
+
+	const [presets, setPresets] = useState<FocusPreset[]>([]);
+	const [selectedPresetId, setSelectedPresetId] = useState<string>("");
+
+	const refreshPresets = useCallback(async () => {
+		try {
+			const payload = await window.electron.focusPresets.list();
+			if (!payload) return;
+			setPresets(payload.presets);
+			const fallbackId = payload.selectedPresetId || payload.presets[0]?.id || "";
+			setSelectedPresetId(fallbackId);
+		} catch (error) {
+			console.error("Failed to load focus presets:", error);
+		}
+	}, []);
+
+	useEffect(() => {
+		refreshPresets();
+	}, [refreshPresets]);
+
+	const presetOptions = useMemo<SelectionMenuOption[]>(() => {
+		if (!presets.length) {
+			return [];
+		}
+
+		const options: SelectionMenuOption[] = [];
+		const builtInSections = new Map<string, FocusPreset[]>();
+		const sectionOrder: string[] = [];
+		const fallbackSectionLabel = "Built-in Presets";
+
+		const customPresets = presets.filter((preset) => !preset.builtIn);
+		if (customPresets.length > 0) {
+			options.push({ type: "separator", label: "Custom Presets" });
+			for (const preset of customPresets) {
+				options.push({
+					label: preset.name,
+					value: preset.id,
+					data: [
+						{
+							icon: faBriefcase,
+							data: `${preset.workDurationMinutes}m`,
+						},
+						{
+							icon: faMugSaucer,
+							data: `${preset.breakDurationMinutes}m`,
+						},
+					],
+				});
+			}
+		}
+
+		for (const preset of presets) {
+			if (!preset.builtIn) continue;
+			const sectionLabel = preset.section ?? fallbackSectionLabel;
+			if (!builtInSections.has(sectionLabel)) {
+				builtInSections.set(sectionLabel, []);
+				sectionOrder.push(sectionLabel);
+			}
+			builtInSections.get(sectionLabel)!.push(preset);
+		}
+
+		for (const sectionLabel of sectionOrder) {
+			const sectionPresets = builtInSections.get(sectionLabel);
+			if (!sectionPresets || sectionPresets.length === 0) {
+				continue;
+			}
+			options.push({ type: "separator", label: sectionLabel });
+			for (const preset of sectionPresets) {
+				options.push({
+					label: preset.name,
+					subLabel: preset.description ?? `Work ${preset.workDurationMinutes} min • Break ${preset.breakDurationMinutes} min`,
+					value: preset.id,
+					data: [
+						{
+							icon: faBriefcase,
+							data: `${preset.workDurationMinutes}m`,
+						},
+						{
+							icon: faMugSaucer,
+							data: `${preset.breakDurationMinutes}m`,
+						},
+					],
+				});
+			}
+		}
+
+		return options;
+	}, [presets]);
+
+	const selectedPreset = useMemo(() => presets.find((preset) => preset.id === selectedPresetId), [presets, selectedPresetId]);
+
+	const handlePresetChange = useCallback(
+		(presetId: string) => {
+			if (timerStatus !== "stopped") {
+				return;
+			}
+			setSelectedPresetId(presetId);
+			(async () => {
+				try {
+					await window.electron.focusPresets.setActive(presetId);
+				} catch (error) {
+					console.error("Failed to set active focus preset:", error);
+				} finally {
+					await refreshPresets();
+				}
+			})();
+		},
+		[timerStatus, refreshPresets]
+	);
+
+	const handleNewPreset = useCallback(async () => {
+		if (timerStatus !== "stopped") {
+			return;
+		}
+
+		const result = await open({
+			title: "New Focus Preset",
+			message: <p>Focus presets let you quickly swap between different work and break durations to suit what you are working on.</p>,
+			inputs: [
+				{ id: "name", label: "Preset name", type: "text", required: true, placeholder: "My preset" },
+				{ id: "workDuration", label: "Work duration (minutes)", description: "How long work sessions will last.", type: "number", min: 1, max: 180, step: 1, required: true, defaultValue: 25 },
+				{ id: "breakDuration", label: "Break duration (minutes)", description: "How long break sessions will last.", type: "number", min: 1, max: 60, step: 1, required: true, defaultValue: 5 },
+			],
+			actions: [
+				{ label: "Cancel", id: "cancel" },
+				{ label: "Create", id: "create", intent: "primary" },
+			],
+		});
+
+		if (result.actionId !== "create") {
+			return;
+		}
+
+		const name = typeof result.values.name === "string" ? result.values.name.trim() : "";
+		const workDuration = typeof result.values.workDuration === "number" ? result.values.workDuration : NaN;
+		const breakDuration = typeof result.values.breakDuration === "number" ? result.values.breakDuration : NaN;
+		const workValid = Number.isFinite(workDuration) && workDuration >= 1 && workDuration <= 180;
+		const breakValid = Number.isFinite(breakDuration) && breakDuration >= 1 && breakDuration <= 60;
+
+		if (!name || !workValid || !breakValid) {
+			return;
+		}
+
+		try {
+			const created = await window.electron.focusPresets.create({
+				name,
+				workDurationMinutes: workDuration,
+				breakDurationMinutes: breakDuration,
+			});
+			await window.electron.focusPresets.setActive(created.id);
+			await refreshPresets();
+		} catch (error) {
+			console.error("Failed to create focus preset:", error);
+		}
+	}, [open, refreshPresets, timerStatus]);
+
+	const handleEditPreset = useCallback(async () => {
+		if (timerStatus !== "stopped") {
+			return;
+		}
+
+		const preset = selectedPreset;
+		if (!preset || preset.builtIn) {
+			return;
+		}
+
+		const result = await open({
+			title: `Edit ${preset.name}`,
+			inputs: [
+				{ id: "name", label: "Preset name", type: "text", required: true, defaultValue: preset.name },
+				{ id: "workDuration", label: "Work duration (minutes)", type: "number", min: 1, max: 180, step: 1, required: true, defaultValue: preset.workDurationMinutes },
+				{ id: "breakDuration", label: "Break duration (minutes)", type: "number", min: 1, max: 60, step: 1, required: true, defaultValue: preset.breakDurationMinutes },
+			],
+			actions: [
+				{ label: "Delete", id: "delete", intent: "danger" },
+				{ label: "Cancel", id: "cancel" },
+				{ label: "Save", id: "save", intent: "primary" },
+			],
+		});
+
+		if (result.actionId === "delete") {
+			const result = await confirm({ title: `Delete ${preset.name}?`, message: "This cannot be undone!", confirmLabel: "Delete it!" });
+			if (result) {
+				try {
+					const success = await window.electron.focusPresets.delete(preset.id);
+					if (success) {
+						await refreshPresets();
+					}
+				} catch (error) {
+					console.error("Failed to delete focus preset:", error);
+				}
+			}
+			return;
+		}
+
+		if (result.actionId !== "save") {
+			return;
+		}
+
+		const name = typeof result.values.name === "string" ? result.values.name.trim() : "";
+		const workDuration = typeof result.values.workDuration === "number" ? result.values.workDuration : NaN;
+		const breakDuration = typeof result.values.breakDuration === "number" ? result.values.breakDuration : NaN;
+		const workValid = Number.isFinite(workDuration) && workDuration >= 1 && workDuration <= 180;
+		const breakValid = Number.isFinite(breakDuration) && breakDuration >= 1 && breakDuration <= 60;
+
+		if (!name || !workValid || !breakValid) {
+			return;
+		}
+
+		try {
+			const updated = await window.electron.focusPresets.update(preset.id, {
+				name,
+				workDurationMinutes: workDuration,
+				breakDurationMinutes: breakDuration,
+			});
+			if (updated) {
+				await refreshPresets();
+			}
+		} catch (error) {
+			console.error("Failed to update focus preset:", error);
+		}
+	}, [open, refreshPresets, selectedPreset, timerStatus, confirm]);
 
 	// Listen for timer updates from backend
 	useEffect(() => {
@@ -31,8 +274,8 @@ const Focus: React.FC = () => {
 
 			// Check if we're gaining charge progress (charging effect)
 			const newProgress = data.chargeProgressPercentage || 0;
-			// Show charging effect when actively working (work session + counting)
-			setIsCharging(data.session === "work" && data.status === "counting");
+			// Show charging effect when actively working (work session + counting) and break charging is enabled
+			setIsCharging(data.session === "work" && data.status === "counting" && getSetting("breakChargingEnabled") === "true");
 			setChargeProgressPercentage(newProgress);
 
 			setIsOnCooldown(data.isOnCooldown || false);
@@ -50,6 +293,24 @@ const Focus: React.FC = () => {
 		window.electron.focus.requestDataUpdate();
 
 		return cleanup;
+	}, []);
+
+	// Cleanup audio on unmount
+	useEffect(() => {
+		return () => {
+			if (activeSourceNodeRef.current) {
+				try {
+					activeSourceNodeRef.current.stop();
+				} catch (e) {
+					// Ignore
+				}
+				activeSourceNodeRef.current = null;
+			}
+			if (audioContextRef.current) {
+				audioContextRef.current.close();
+				audioContextRef.current = null;
+			}
+		};
 	}, []);
 
 	useEffect(() => {
@@ -97,15 +358,222 @@ const Focus: React.FC = () => {
 		await window.electron.focus.useBreakCharge();
 	};
 
+	const initAudioContext = () => {
+		if (!audioContextRef.current) {
+			const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+			audioContextRef.current = new AudioContextClass();
+			gainNodeRef.current = audioContextRef.current.createGain();
+			gainNodeRef.current.connect(audioContextRef.current.destination);
+		}
+		return audioContextRef.current;
+	};
+
+	const fadeAudio = (targetVolume: number, duration: number = 2000): Promise<void> => {
+		const ctx = initAudioContext();
+		const gainNode = gainNodeRef.current!;
+
+		if (ctx.state === "suspended") {
+			ctx.resume();
+		}
+
+		const currentTime = ctx.currentTime;
+		// Cancel any ongoing ramps
+		gainNode.gain.cancelScheduledValues(currentTime);
+
+		// Anchor the current value to prevent jumping
+		gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
+
+		// Use linear ramp for reliable fading
+		gainNode.gain.linearRampToValueAtTime(targetVolume, currentTime + duration / 1000);
+
+		return new Promise((resolve) => setTimeout(resolve, duration));
+	};
+
+	const playSound = useCallback(async (shouldPlay: boolean, soundName: string) => {
+		const myId = ++actionIdRef.current;
+		const targetStatus = shouldPlay ? "playing" : "stopped";
+
+		// Update UI immediately
+		setSoundStatus(targetStatus);
+
+		const ctx = initAudioContext();
+		const mainGain = gainNodeRef.current!;
+
+		if (!shouldPlay) {
+			// STOP
+			if (activeSourceNodeRef.current) {
+				await fadeAudio(0, 2000);
+				// Only stop if no new action has started
+				if (actionIdRef.current === myId) {
+					try {
+						activeSourceNodeRef.current.stop();
+					} catch (e) {
+						// Ignore
+					}
+					activeSourceNodeRef.current = null;
+					currentSoundNameRef.current = null;
+				}
+			}
+		} else {
+			// PLAY
+			// If already playing the same sound, just ensure volume is up
+			if (activeSourceNodeRef.current && currentSoundNameRef.current === soundName) {
+				await fadeAudio(0.5, 2000);
+				return;
+			}
+
+			// Start loading if needed
+			let buffer: AudioBuffer | null | undefined = bufferCacheRef.current.get(soundName);
+			let loadTask: Promise<AudioBuffer | null | undefined> = Promise.resolve(buffer);
+
+			if (!buffer) {
+				setIsSoundLoading(true);
+				loadTask = (async () => {
+					try {
+						const soundPath = `../../assets/audio/focusSounds/${soundName}.mp3`;
+						const soundUrl = soundModules[soundPath] as string;
+						if (!soundUrl) throw new Error(`Sound not found: ${soundName}`);
+
+						const response = await fetch(soundUrl);
+						const arrayBuffer = await response.arrayBuffer();
+						const decoded = await ctx.decodeAudioData(arrayBuffer);
+						bufferCacheRef.current.set(soundName, decoded);
+						return decoded;
+					} catch (error) {
+						console.error("Failed to load sound:", error);
+						return null;
+					}
+				})();
+			}
+
+			// Start fading if needed
+			const fadeTask = async () => {
+				if (activeSourceNodeRef.current) {
+					await fadeAudio(0, 2000);
+					if (actionIdRef.current !== myId) return;
+					try {
+						if (activeSourceNodeRef.current) {
+							activeSourceNodeRef.current.stop();
+						}
+					} catch (e) {
+						// Ignore
+					}
+					activeSourceNodeRef.current = null;
+				}
+			};
+
+			// Wait for both
+			const [loadedBuffer] = await Promise.all([loadTask, fadeTask()]);
+			buffer = loadedBuffer;
+
+			if (actionIdRef.current !== myId) {
+				setIsSoundLoading(false);
+				return;
+			}
+
+			setIsSoundLoading(false);
+
+			if (!buffer) {
+				setSoundStatus("stopped");
+				return;
+			}
+
+			// Create source and play
+			const source = ctx.createBufferSource();
+			source.buffer = buffer;
+			source.loop = true;
+			source.connect(mainGain);
+
+			// Reset gain to 0 for fade in
+			mainGain.gain.cancelScheduledValues(ctx.currentTime);
+			mainGain.gain.setValueAtTime(0, ctx.currentTime);
+
+			source.start(0);
+			activeSourceNodeRef.current = source;
+			currentSoundNameRef.current = soundName;
+
+			await fadeAudio(0.5, 2000);
+		}
+	}, []);
+
+	const handlePlaySound = useCallback(() => {
+		playSound(soundStatus !== "playing", selectedSound);
+	}, [soundStatus, playSound, selectedSound]);
+
+	// Handle sound changes while playing (Manual Mode)
+	useEffect(() => {
+		const isAuto = getSetting("autoSoundMode") === "true";
+		if (!isAuto && soundStatus === "playing") {
+			playSound(true, selectedSound);
+		}
+	}, [selectedSound, getSetting, soundStatus, playSound]);
+
+	// Handle auto-sound mode
+	useEffect(() => {
+		const isAutoSoundEnabled = getSetting("autoSoundMode") === "true";
+		if (isAutoSoundEnabled) {
+			// Auto-sound mode: play during work, stop during break/transition
+			const shouldPlay = currentSession === "work" && timerStatus === "counting";
+			playSound(shouldPlay, selectedSound);
+		}
+	}, [getSetting, currentSession, timerStatus, playSound, selectedSound]);
+
 	const getCooldownMessage = () => {
 		if (chargeUsedThisSession) {
 			return "You've already used a charge this break session.";
 		}
 		if (cooldownBreaksLeft > 0) {
-			return `You need to take ${cooldownBreaksLeft} more ${cooldownBreaksLeft === 1 ? "break" : "breaks"} before you can charge another break.`;
+			return `You need to take ${cooldownBreaksLeft} more ${cooldownBreaksLeft === 1 ? "break" : "breaks"} before you can charge another one.`;
 		}
-		return null;
+		if (breakChargesLeft <= 0) {
+			return "You have no charges! You can get some by working.";
+		}
+		if (currentSession !== "break") {
+			return "You can use a charge during a break period.";
+		}
+		return "Charge Ready!";
 	};
+
+	const soundOptions: ActionMenuOption[] = [
+		{
+			type: "toggle",
+			label: "Auto-Play Mode",
+			subLabel: "Auto start/stop sounds based on the current period",
+			icon: faRotate,
+			value: getSetting("autoSoundMode") === "true",
+			onChange: () => setSetting("autoSoundMode", getSetting("autoSoundMode") === "true" ? "false" : "true"),
+		},
+		...(getSetting("autoSoundMode") !== "true"
+			? [
+					{
+						type: "option",
+						label: soundStatus === "playing" ? "Stop" : "Play",
+						icon: soundStatus === "playing" ? faStop : faPlay,
+						value: "play",
+						onClick: handlePlaySound,
+					} as ActionMenuOption,
+			  ]
+			: []),
+		{ type: "separator", label: "Sounds" },
+		{
+			type: "selectionGroup",
+			value: selectedSound,
+			onChange: setSelectedSound,
+			options: [
+				{ label: "Rain", value: "rain", icon: faCloudShowersHeavy },
+				{ label: "Indoor Rain", value: "indoorRain", icon: faCloudShowersWater },
+				{ label: "Thunderstorm", value: "thunderstorm", icon: faCloudBolt },
+				{ label: "Ocean Waves", value: "oceanWaves", icon: faWater, processing: true },
+				{ label: "Forest Ambience", value: "forest", icon: faLeaf },
+				{ label: "Campfire", value: "campfire", icon: faFire },
+				{ label: "Wind", value: "wind", icon: faWind },
+
+				{ label: "White Noise", value: "whiteNoise", icon: faVolumeLow },
+				{ label: "Pink Noise", value: "pinkNoise", icon: faVolumeLow },
+				{ label: "Brown Noise", value: "brownNoise", icon: faVolumeLow },
+			].map((opt) => ({ ...opt, processing: isSoundLoading && opt.value === selectedSound })),
+		},
+	];
 
 	return (
 		<>
@@ -117,18 +585,29 @@ const Focus: React.FC = () => {
 							{currentSession === "work" ? "WORKING" : currentSession === "break" ? "TAKING A BREAK" : "TRANSITIONING"}
 						</div>
 
-						<label id="sessionTimer">{formatAsTime(timeLeftInSession)}</label>
-						<label id="sessionEndTime">{`Ending at ${formatAsClockTime(sessionExpectedFinishDate)}`}</label>
+						<label className={timerStatus === "paused" ? "paused" : undefined} id="sessionTimer">
+							{formatAsTime(timeLeftInSession)}
+						</label>
+						<label id="sessionEndTime">{`Ending at ${formatAsClockTime(sessionExpectedFinishDate, clockFormat)}`}</label>
 					</div>
 				</Container>
 			) : null}
 
 			<Container name="focus_controls">
 				<div className="groupList">
+					<div id="focusPresets" className="buttonGroup">
+						<SelectionMenu options={presetOptions} value={selectedPresetId} onChange={handlePresetChange} searchable placeholder="Choose Preset" disabled={timerStatus !== "stopped"} tooltip={timerStatus === "stopped" ? "Change Preset" : "Stop this session to change presets"} />
+						{timerStatus === "stopped" ? (
+							<>
+								<IcoButton icon={faPlus} tooltip="Create Preset" onClick={{ action: handleNewPreset }} />
+								<IcoButton icon={faPencil} tooltip={selectedPreset && selectedPreset.builtIn ? "Built-in presets cannot be edited" : "Edit Preset"} disabled={!selectedPreset || selectedPreset.builtIn} onClick={{ action: handleEditPreset }} />
+							</>
+						) : null}
+					</div>
 					<div className="buttonGroup">
 						{timerStatus === "counting" ? (
 							<>
-								<IcoButton text="Pause" icon={faPause} disabled={currentSession === "break" || currentSession === "transition"} onClick={{ action: handlePause }} />
+								<IcoButton text="Pause" icon={faPause} disabled={currentSession === "break" || currentSession === "transition"} tooltip={currentSession === "break" || currentSession === "transition" ? "You cannot pause during this period" : undefined} onClick={{ action: handlePause }} />
 								<IcoButton text="Stop" icon={faStop} onClick={{ action: handleStop }} />
 							</>
 						) : timerStatus === "paused" ? (
@@ -139,17 +618,23 @@ const Focus: React.FC = () => {
 						) : (
 							<IcoButton text="Start" icon={faPlay} onClick={{ action: handleStart }} />
 						)}
+						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value: string) => handleAddTime(parseInt(value, 10))} button={<IcoButton icon={faStopwatch} text="Add Time" />} /> : null}
 
-						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value) => handleAddTime(parseInt(value))} button={<IcoButton icon={faPlus} text="Add time" />} /> : null}
+						<ActionMenu options={soundOptions} button={<IcoButton icon={faVolumeLow} text="Sound" />} />
 					</div>
 				</div>
 			</Container>
 			{getSetting("breakChargingEnabled") === "true" ? (
-				<Container name="focus_breakCharging">
-					<ButtonActionConfig name="Break charging" description="You'll receive 'Break charges' after enough hours of working. These charges can be used once per break period and will extend them by a few minutes as a reward for working hard!" disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Use break charge", icon: faBolt }} onClick={handleUseBreakCharge}>
+				<Container name="focus_breakCharging" header={{ title: "Break Charging", icon: faBolt, buttons: [{ icon: faInfoCircle, onClick: { action: () => open({ title: "Break Charging", message: "As you work, you'll progress towards earning break charges. These grant you the ability to extend breaks by a few minutes as a reward for working hard!", actions: [] }) } }] }}>
+					<ButtonActionConfig name="Charge Break" description={getCooldownMessage() ?? undefined} disabled={currentSession !== "break" || timerStatus === "stopped" || breakChargesLeft <= 0 || isOnCooldown || chargeUsedThisSession} button={{ text: "Charge Break", icon: faBolt }} onClick={handleUseBreakCharge}>
 						<div className="groupList">
-							<h3 style={{ margin: 0, marginBlockEnd: "-5px" }}>
-								You have <b>{Math.max(0, breakChargesLeft)}</b> {breakChargesLeft === 1 ? "charge" : "charges"} left.
+							<h3 style={{ margin: 0, marginBlockEnd: "-15px" }}>
+								You have{" "}
+								<b className="breakChargesCounter">
+									<FontAwesomeIcon icon={faBolt} />
+									{breakChargesLeft}
+								</b>{" "}
+								left.
 							</h3>
 							<p>{timeLeftTillNextCharge < 60 ? <b>Less than 1 minute</b> : timeLeftTillNextCharge === 60 ? <b>1 minute</b> : Math.ceil(timeLeftTillNextCharge / 60) === 1 ? <b>1 minute</b> : <b>{Math.ceil(timeLeftTillNextCharge / 60)} minutes</b>} of work left till your next break charge is ready!</p>
 						</div>
@@ -161,11 +646,6 @@ const Focus: React.FC = () => {
 								className={isCharging ? "charging-effect" : ""}
 							/>
 						</div>
-						{getCooldownMessage() ? (
-							<p>
-								<FontAwesomeIcon icon={faHourglassHalf} /> {getCooldownMessage()}
-							</p>
-						) : null}
 					</ButtonActionConfig>
 				</Container>
 			) : null}

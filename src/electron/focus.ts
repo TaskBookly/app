@@ -1,6 +1,9 @@
 import { BrowserWindow, Notification } from "electron";
 import { EventEmitter } from "events";
 import SecretDataManager from "./bChargingManager.js";
+import { clearDisRPC, startupDisRPC, updateDisRPC } from "./discordRPC.js";
+import type { focusActivity } from "./discordRPC.js";
+import { BUILT_IN_FOCUS_PRESETS, type FocusPreset } from "../common/focusPresets.js";
 
 type SessionType = "none" | "work" | "break" | "transition";
 type SessionStatus = "counting" | "paused" | "stopped";
@@ -32,8 +35,10 @@ class FocusTimer extends EventEmitter {
 	private disposed: boolean;
 
 	private static settings: Record<string, string> = {};
+	private static activePreset: FocusPreset = BUILT_IN_FOCUS_PRESETS[0];
 
 	private static sessions: FocusSessions;
+	private static activeTimers: Set<FocusTimer> = new Set();
 
 	private _currentSession: SessionType;
 	private _sessionStatus: SessionStatus;
@@ -48,13 +53,16 @@ class FocusTimer extends EventEmitter {
 	private totalAddedTime: number;
 	private lastWorkTimeUpdate: number = 0;
 
-	constructor(window: BrowserWindow, settings: Record<string, string> = {}) {
+	constructor(window: BrowserWindow, settings: Record<string, string> = {}, activePreset?: FocusPreset) {
 		super(); // Initialize EventEmitter
 		this.mainWindow = window;
 		this.secretDataManager = SecretDataManager.getInstance();
 		this.handleWindowClosed = () => this.dispose();
 
 		FocusTimer.settings = settings;
+		if (activePreset) {
+			FocusTimer.activePreset = activePreset;
+		}
 		FocusTimer.updateSessionDurations();
 
 		// Initialize charge progress with current settings
@@ -76,16 +84,41 @@ class FocusTimer extends EventEmitter {
 		this.totalPausedDuration = 0;
 		this.totalAddedTime = 0;
 		this.mainWindow.once("closed", this.handleWindowClosed);
+
+		FocusTimer.activeTimers.add(this);
 	}
 
 	public static updateSettings(settings: Record<string, string>): void {
+		const previousPresence = FocusTimer.settings.discordRichPresence;
 		FocusTimer.settings = settings;
+		FocusTimer.updateSessionDurations();
 
 		// Recalculate charge progress if break charging is enabled
 		if (FocusTimer.settings.breakChargingEnabled === "true") {
 			const workTimePerCharge = parseInt(FocusTimer.settings.workTimePerCharge || "60");
 			const secretDataManager = SecretDataManager.getInstance();
 			secretDataManager.initializeChargeProgress(workTimePerCharge);
+		}
+
+		if (FocusTimer.settings.discordRichPresence !== "true") {
+			clearDisRPC();
+			return;
+		}
+
+		startupDisRPC();
+
+		if (previousPresence !== "true") {
+			let updated = false;
+			for (const timer of FocusTimer.activeTimers) {
+				if (timer.session !== "none" && timer.status !== "stopped") {
+					timer.forceDataUpdate();
+					updated = true;
+					break;
+				}
+			}
+			if (!updated) {
+				clearDisRPC();
+			}
 		}
 	}
 
@@ -96,6 +129,35 @@ class FocusTimer extends EventEmitter {
 		}
 		this.secretDataManager.forceUpdate();
 		this.emitTimerUpdate("action");
+	}
+
+	private emitDisRPCUpdate(data: TimerData) {
+		if (FocusTimer.settings.discordRichPresence !== "true") {
+			return;
+		}
+
+		if (data.session === "none" || data.status === "stopped") {
+			clearDisRPC();
+			return;
+		}
+
+		const periodType: focusActivity["periodType"] = data.session === "transition" ? "transition" : data.session;
+		let periodStartUnix: number | undefined;
+		let periodEndUnix: number | undefined;
+
+		if (data.status === "counting" && typeof data.expectedFinish === "number") {
+			periodEndUnix = Math.floor(data.expectedFinish / 1000);
+			const periodStartEpochMs = this.sessionStartTime + this.totalPausedDuration;
+			periodStartUnix = Math.floor(periodStartEpochMs / 1000);
+		}
+
+		const payload: focusActivity = {
+			periodType,
+			periodStartUnix,
+			periodEndUnix,
+		};
+
+		updateDisRPC(payload);
 	}
 
 	private emitTimerUpdate(eventType: "tick" | "action" | "sessionChange"): void {
@@ -141,15 +203,70 @@ class FocusTimer extends EventEmitter {
 			const sessionDurationMs = FocusTimer.sessions[this.session] * 60 * 1000;
 			data.expectedFinish = this.sessionStartTime + sessionDurationMs + this.totalAddedTime * 1000 + this.totalPausedDuration;
 		}
+		if (eventType === "action" || eventType === "sessionChange") {
+			this.emitDisRPCUpdate(data);
+		}
 		this.emit("timer-update", eventType, data);
 	}
 
+	private applyPresetUpdate(): void {
+		if (this.disposed) {
+			return;
+		}
+		if (this.session === "none") {
+			this.emitTimerUpdate("action");
+			return;
+		}
+
+		const sessionDurationMinutes = FocusTimer.sessions[this.session];
+		if (typeof sessionDurationMinutes !== "number" || !Number.isFinite(sessionDurationMinutes)) {
+			return;
+		}
+
+		const sessionDurationSeconds = Math.max(1, Math.floor(sessionDurationMinutes * 60));
+
+		if (this.status === "stopped") {
+			this.timeLeft = sessionDurationSeconds;
+			this.emitTimerUpdate("action");
+			return;
+		}
+
+		const referenceTime = this.status === "paused" ? this.pausedTime : Date.now();
+		const elapsedTime = Math.floor((referenceTime - this.sessionStartTime - this.totalPausedDuration) / 1000);
+		const newTimeLeft = sessionDurationSeconds - elapsedTime + this.totalAddedTime;
+
+		if (newTimeLeft <= 0) {
+			this.onSessionComplete();
+			return;
+		}
+
+		this.timeLeft = newTimeLeft;
+		if (this.session === "work") {
+			this.lastWorkTimeUpdate = referenceTime;
+		}
+		this.emitTimerUpdate("action");
+	}
+
 	private static updateSessionDurations(): void {
+		const preset = FocusTimer.activePreset ?? BUILT_IN_FOCUS_PRESETS[0];
+		const workMinutes = Number.isFinite(preset.workDurationMinutes) ? preset.workDurationMinutes : BUILT_IN_FOCUS_PRESETS[0].workDurationMinutes;
+		const breakMinutes = Number.isFinite(preset.breakDurationMinutes) ? preset.breakDurationMinutes : BUILT_IN_FOCUS_PRESETS[0].breakDurationMinutes;
+		const transitionMinutesRaw = parseFloat(FocusTimer.settings.transitionPeriodDuration);
+		const transitionMinutes = Number.isFinite(transitionMinutesRaw) ? transitionMinutesRaw : 0;
+
 		FocusTimer.sessions = {
-			work: parseFloat(FocusTimer.settings.workPeriodDuration),
-			break: parseFloat(FocusTimer.settings.breakPeriodDuration),
-			transition: parseFloat(FocusTimer.settings.transitionPeriodDuration),
+			work: workMinutes,
+			break: breakMinutes,
+			transition: transitionMinutes,
 		};
+	}
+
+	public static setActivePreset(preset: FocusPreset): void {
+		FocusTimer.activePreset = preset;
+		FocusTimer.updateSessionDurations();
+		for (const timer of FocusTimer.activeTimers) {
+			timer.applyPresetUpdate();
+		}
 	}
 	public dispose(): void {
 		if (this.disposed) {
@@ -175,6 +292,11 @@ class FocusTimer extends EventEmitter {
 
 		this.removeAllListeners();
 		this.secretDataManager.cleanup();
+		FocusTimer.activeTimers.delete(this);
+
+		if (FocusTimer.settings.discordRichPresence === "true") {
+			clearDisRPC();
+		}
 	}
 
 	private hasLiveRenderer(): boolean {
@@ -357,7 +479,7 @@ class FocusTimer extends EventEmitter {
 		if (this.disposed) {
 			return;
 		}
-		if (Notification.isSupported() && (FocusTimer.settings.notifsFocus === "notifsOnly" || FocusTimer.settings.notifsFocus === "all")) {
+		if (Notification.isSupported() && FocusTimer.settings.notifsFocus === "all") {
 			const notif = new Notification({
 				title: `Your ${this.session} session has ended!`,
 				urgency: "critical",
@@ -376,9 +498,7 @@ class FocusTimer extends EventEmitter {
 
 			notif.show();
 		}
-		if (FocusTimer.settings.notifsFocus === "soundOnly" || FocusTimer.settings.notifsFocus === "all") {
-			this.safeSendToRenderer("play-sound", "notifs/sessionComplete.ogg");
-		}
+		this.safeSendToRenderer("play-sound", "notifs/sessionComplete.ogg");
 
 		this.nextSession();
 	}

@@ -1,28 +1,84 @@
-import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell, nativeTheme } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell, nativeTheme, systemPreferences } from "electron";
 
 import path from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { fileURLToPath } from "url";
 
 import { isDev } from "./utils.js";
 import { getPreloadPath } from "./pathResolver.js";
-import { getDefaultSettings } from "./settings.js";
+import { getDefaultSettings } from "../common/settingsDefaults.js";
 
 import FocusTimer from "./focus.js";
+import FocusPresetStore from "./focusPresetStore.js";
+
+import { getBuildInfo } from "./buildInfo.js";
 
 import electronUpdPkg from "electron-updater";
-const { autoUpdater } = electronUpdPkg;
+import { startupDisRPC } from "./discordRPC.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { autoUpdater } = electronUpdPkg;
 
 if (process.platform === "win32") {
 	app.setAppUserModelId("com.taskbookly.app");
 }
 
-const packagePath = path.join(__dirname, "..", "package.json");
-const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
-const appVersion = packageJson.version;
+const suppressedErrorCodes = new Set(["EIO", "EPIPE"]);
+let hasShownMainProcessError = false;
+
+function handleMainProcessError(source: "uncaughtException" | "unhandledRejection", error: unknown) {
+	const err = error instanceof Error ? error : new Error(String(error));
+	const nodeError = err as NodeJS.ErrnoException;
+	if (nodeError.code && suppressedErrorCodes.has(nodeError.code)) {
+		console.warn(`[main] Suppressed ${nodeError.code} from ${source}: ${err.message}`);
+		return;
+	}
+	if (hasShownMainProcessError) {
+		console.error(`[main] Additional ${source}:`, err);
+		return;
+	}
+	hasShownMainProcessError = true;
+
+	const showDialog = () => {
+		dialog
+			.showMessageBox({
+				type: "error",
+				title: "Unexpected Error",
+				message: "TaskBookly encountered an unexpected error in the main process.",
+				detail: err.stack ?? err.message,
+				buttons: ["OK"],
+			})
+			.catch((dialogError) => {
+				console.error("Failed to present error dialog", dialogError);
+			});
+	};
+
+	if (app.isReady()) {
+		showDialog();
+	} else {
+		app.once("ready", showDialog);
+	}
+
+	console.error(`[main] ${source}:`, err);
+}
+
+process.on("uncaughtException", (error) => {
+	handleMainProcessError("uncaughtException", error);
+});
+
+process.on("unhandledRejection", (reason) => {
+	handleMainProcessError("unhandledRejection", reason);
+});
+
+if (isDev()) {
+	const simulatedCode = process.env.SIMULATE_MAIN_ERROR?.toUpperCase();
+	if (simulatedCode) {
+		process.nextTick(() => {
+			const simulatedError = Object.assign(new Error(`Simulated main-process error (${simulatedCode})`), { code: simulatedCode });
+			process.emit("uncaughtException", simulatedError);
+		});
+	}
+}
+
+export const appVersion: string = app.getVersion();
 
 const settingsPath = path.join(app.getPath("userData"), "settings.json");
 
@@ -69,6 +125,9 @@ let sidebarCollapsed: boolean = false;
 
 let mainWindow: BrowserWindow;
 let focusTimer: FocusTimer;
+let focusPresetStore: FocusPresetStore;
+let allowWindowClose = false;
+let pendingClosePrompt = false;
 
 // Function to build the focus menu based on current state
 function buildFocusMenu(): MenuItemConstructorOptions {
@@ -202,7 +261,7 @@ function updateMenu() {
 
 		menuTemplate.push({
 			role: "help",
-			submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Report an Issue...", click: () => shell.openExternal("https://github.com/TaskBookly/app/issues/new") }, { type: "normal", label: "Acknowledgements", click: () => shell.openExternal("https://github.com/TaskBookly/app?tab=readme-ov-file#-acknowledgements") }],
+			submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Report an Issue...", click: () => shell.openExternal("https://github.com/TaskBookly/app/issues/new") }, { type: "normal", label: "Acknowledgments", click: () => shell.openExternal("https://taskbookly.framer.website/acknowledgments") }],
 		});
 
 		const menu = Menu.buildFromTemplate(menuTemplate);
@@ -212,229 +271,322 @@ function updateMenu() {
 	}
 }
 
-app.whenReady().then(() => {
-	autoUpdater.autoDownload = false;
-	const settings = loadSettings();
+const gotInsLock = app.requestSingleInstanceLock();
 
-	if (settings.autoCheckForUpdates === "true") {
-		autoUpdater.checkForUpdates();
-	}
-
-	mainWindow = new BrowserWindow({
-		title: "TaskBookly",
-		webPreferences: {
-			preload: getPreloadPath(),
-			devTools: isDev(),
-			nodeIntegration: false,
-			contextIsolation: true,
-			webSecurity: true,
-			allowRunningInsecureContent: false,
-			experimentalFeatures: false,
-		},
-		minWidth: 600,
-		minHeight: 500,
-		autoHideMenuBar: true,
-		frame: false,
-		titleBarStyle: process.platform === "darwin" ? "hiddenInset" : undefined,
-		backgroundColor: "#000000",
-		fullscreenable: false,
-	});
-
-	focusTimer = new FocusTimer(mainWindow, settings);
-
-	focusTimer.forceDataUpdate();
-
-	focusTimer.on("timer-update", (eventType, data) => {
-		const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
-		if (!hasRenderer) {
-			return;
-		}
-		if (eventType !== "tick") {
-			updateMenu();
-		}
-		mainWindow.webContents.send("focus-timer-update", data);
-	});
-
-	ipcMain.on("focus-start", () => {
-		focusTimer.start();
-	});
-
-	ipcMain.on("focus-pause", () => {
-		focusTimer.pause();
-	});
-
-	ipcMain.on("focus-resume", () => {
-		focusTimer.resume();
-	});
-
-	ipcMain.on("focus-stop", () => {
-		focusTimer.stop();
-	});
-
-	ipcMain.on("focus-request-data-update", () => {
-		focusTimer.forceDataUpdate();
-	});
-
-	ipcMain.on("focus-add-time", (_, seconds: number) => {
-		focusTimer.addTime(seconds);
-	});
-
-	ipcMain.handle("focus-use-charge", () => {
-		return focusTimer.useBreakCharge();
-	});
-
-	ipcMain.handle("open-userdata", () => {
-		const userDataPath = app.getPath("userData");
-		shell.openPath(userDataPath);
-	});
-
-	ipcMain.handle("sys-theme", () => {
-		return nativeTheme.shouldUseDarkColors ? "dark" : "light";
-	});
-
-	ipcMain.on("open-shell-url", (_, url) => {
-		shell.openExternal(url);
-	});
-
-	nativeTheme.on("updated", () => {
-		mainWindow.webContents.send("sys-theme-changed", nativeTheme.shouldUseDarkColors ? "dark" : "light");
-	});
-
-	autoUpdater.on("update-available", (data) => {
-		if (Notification.isSupported()) {
-			const notif = new Notification({
-				title: "Update Available",
-				subtitle: `v${data.version}`,
-				body: "A new TaskBookly update is available to download!",
-				silent: true,
-			});
-
-			notif.on("click", () => shell.openExternal("https://github.com/TaskBookly/app/releases/latest"));
-			notif.show();
-			mainWindow.webContents.send("play-sound", "notifs/info.ogg");
+if (!gotInsLock) {
+	app.quit();
+} else {
+	app.on("second-instance", () => {
+		if (mainWindow) {
+			if (mainWindow.isMinimized()) mainWindow.restore();
+			mainWindow.focus();
 		}
 	});
 
-	ipcMain.on("toggle-sidebar", () => {
-		sidebarCollapsed = !sidebarCollapsed;
-		mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
-	});
+	app.whenReady().then(() => {
+		autoUpdater.autoDownload = false;
+		const buildInfo = getBuildInfo();
+		const updaterChannel = buildInfo.channel === "stable" ? "latest" : buildInfo.channel;
+		autoUpdater.allowPrerelease = buildInfo.channel !== "stable";
+		autoUpdater.channel = updaterChannel;
 
-	ipcMain.handle("get-sidebar-state", () => {
-		return sidebarCollapsed;
-	});
-
-	ipcMain.handle("get-app-version", () => {
-		return appVersion;
-	});
-
-	ipcMain.handle("get-node-env", () => {
-		return process.env.NODE_ENV || "production";
-	});
-
-	ipcMain.handle("get-platform", () => {
-		return process.platform;
-	});
-
-	ipcMain.handle("get-electron-version", () => {
-		return process.versions.electron || "unknown";
-	});
-
-	ipcMain.handle("get-chrome-version", () => {
-		return process.versions.chrome || process.versions.v8 || "unknown";
-	});
-
-	ipcMain.handle("settings-load", () => {
-		return loadSettings();
-	});
-
-	ipcMain.handle("settings-get", (_event, key: string) => {
+		focusPresetStore = new FocusPresetStore();
 		const settings = loadSettings();
-		return settings[key] || "";
-	});
 
-	ipcMain.handle("settings-set", (_event, key: string, value: string) => {
-		const defaultSettings = getDefaultSettings(process.platform);
-
-		if (!(key in defaultSettings)) {
-			console.warn(`Attempted to set unknown setting: ${key}`);
-			return false;
+		if (!isDev() && buildInfo.channel === "stable") {
+			autoUpdater.checkForUpdates();
 		}
 
-		const settings = loadSettings();
-		settings[key] = value;
-		saveSettings(settings);
+		startupDisRPC();
 
-		FocusTimer.updateSettings(settings);
-
-		// Force data update when break charge related settings change
-		if (key === "breakChargingEnabled" || key === "workTimePerCharge" || key === "breakChargeExtensionAmount" || key === "breakChargeCooldown") {
-			focusTimer.forceDataUpdate();
-		}
-
-		return true;
-	});
-
-	// Window control handlers
-	ipcMain.on("window-minimize", () => {
-		mainWindow.minimize();
-	});
-
-	ipcMain.on("window-maximize", () => {
-		if (mainWindow.isMaximized()) {
-			mainWindow.restore();
-		} else {
-			mainWindow.maximize();
-		}
-	});
-
-	ipcMain.on("window-close", () => {
-		mainWindow.close();
-	});
-
-	ipcMain.handle("window-is-maximized", () => {
-		return mainWindow.isMaximized();
-	});
-
-	// Listen for window state changes
-	mainWindow.on("maximize", () => {
-		mainWindow.webContents.send("window-state-changed", { maximized: true });
-	});
-
-	mainWindow.on("unmaximize", () => {
-		mainWindow.webContents.send("window-state-changed", { maximized: false });
-	});
-
-	mainWindow.webContents.on("render-process-gone", async (_, error) => {
-		const { response } = await dialog.showMessageBox({
-			type: "error",
-			message: "This is.. awkward",
-			detail: `
-			TaskBookly encountered a fatal error and crashed :(
-			Reason: ${error.reason} (Exit Code: ${error.exitCode})
-
-			If you continue to encounter this error, please open a new Issue on our GitHub Repository
-			`,
-			title: "Fatal Error",
-			buttons: ["Restart", "Close & Open Issue...", "Close"],
-			cancelId: 2,
+		mainWindow = new BrowserWindow({
+			title: "TaskBookly",
+			webPreferences: {
+				preload: getPreloadPath(),
+				devTools: isDev(),
+				nodeIntegration: false,
+				contextIsolation: true,
+				webSecurity: true,
+				allowRunningInsecureContent: false,
+				experimentalFeatures: false,
+			},
+			minWidth: 600,
+			minHeight: 500,
+			autoHideMenuBar: true,
+			frame: false,
+			titleBarStyle: process.platform === "darwin" ? "hiddenInset" : undefined,
+			backgroundColor: "#000000",
+			fullscreenable: false,
 		});
-		if (response === 0) {
-			app.relaunch();
-		} else if (response === 1) {
-			shell.openExternal("https://github.com/TaskBookly/app/issues/new");
+
+		const initialPreset = focusPresetStore.getSelectedPreset();
+		focusTimer = new FocusTimer(mainWindow, settings, initialPreset);
+
+		focusTimer.forceDataUpdate();
+
+		mainWindow.on("close", (event) => {
+			if (allowWindowClose) {
+				allowWindowClose = false;
+				return;
+			}
+
+			const shouldConfirmClose = Boolean(focusTimer) && focusTimer.status !== "stopped";
+			const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
+			if (!shouldConfirmClose || !hasRenderer) {
+				return;
+			}
+
+			event.preventDefault();
+			if (pendingClosePrompt) {
+				return;
+			}
+			pendingClosePrompt = true;
+
+			mainWindow.show();
+			mainWindow.webContents.send("window-close-requested");
+		});
+
+		focusTimer.on("timer-update", (eventType, data) => {
+			const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
+			if (!hasRenderer) {
+				return;
+			}
+			if (eventType !== "tick") {
+				updateMenu();
+			}
+			mainWindow.webContents.send("focus-timer-update", data);
+		});
+
+		ipcMain.on("focus-start", () => {
+			focusTimer.start();
+		});
+
+		ipcMain.on("focus-pause", () => {
+			focusTimer.pause();
+		});
+
+		ipcMain.on("focus-resume", () => {
+			focusTimer.resume();
+		});
+
+		ipcMain.on("focus-stop", () => {
+			focusTimer.stop();
+		});
+
+		ipcMain.on("focus-request-data-update", () => {
+			focusTimer.forceDataUpdate();
+		});
+
+		ipcMain.on("focus-add-time", (_, seconds: number) => {
+			focusTimer.addTime(seconds);
+		});
+
+		ipcMain.handle("focus-use-charge", () => {
+			return focusTimer.useBreakCharge();
+		});
+
+		ipcMain.handle("open-userdata", () => {
+			const userDataPath = app.getPath("userData");
+			shell.openPath(userDataPath);
+		});
+
+		ipcMain.handle("sys-theme", () => {
+			return nativeTheme.shouldUseDarkColors ? "dark" : "light";
+		});
+
+		ipcMain.handle("sys-clock-format", () => {
+			if (process.platform === "darwin") {
+				return systemPreferences.getUserDefault("AppleICUForce24HourTime", "boolean") ? "24hr" : "12hr";
+			}
+			const is24Hr = !new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions().hour12;
+			return is24Hr ? "24hr" : "12hr";
+		});
+
+		ipcMain.on("open-shell-url", (_, url) => {
+			shell.openExternal(url);
+		});
+
+		nativeTheme.on("updated", () => {
+			mainWindow.webContents.send("sys-theme-changed", nativeTheme.shouldUseDarkColors ? "dark" : "light");
+		});
+
+		autoUpdater.on("update-available", (data) => {
+			if (Notification.isSupported()) {
+				const notif = new Notification({
+					title: "Update Available",
+					subtitle: `v${data.version}`,
+					body: "A new TaskBookly update is available to download!",
+					silent: true,
+				});
+
+				notif.on("click", () => shell.openExternal("https://taskbookly.framer.website/download"));
+				notif.show();
+				mainWindow.webContents.send("play-sound", "notifs/info.ogg");
+			}
+		});
+
+		ipcMain.on("toggle-sidebar", () => {
+			sidebarCollapsed = !sidebarCollapsed;
+			mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+		});
+
+		ipcMain.handle("get-sidebar-state", () => {
+			return sidebarCollapsed;
+		});
+
+		ipcMain.handle("get-app-version", () => {
+			return appVersion;
+		});
+
+		ipcMain.handle("get-build-info", () => {
+			return buildInfo;
+		});
+
+		ipcMain.handle("get-node-env", () => {
+			return process.env.NODE_ENV || "production";
+		});
+
+		ipcMain.handle("get-platform", () => {
+			return process.platform;
+		});
+
+		ipcMain.handle("get-electron-version", () => {
+			return process.versions.electron || "unknown";
+		});
+
+		ipcMain.handle("get-chrome-version", () => {
+			return process.versions.chrome || process.versions.v8 || "unknown";
+		});
+
+		ipcMain.handle("settings-load", () => {
+			return loadSettings();
+		});
+
+		ipcMain.handle("settings-get", (_event, key: string) => {
+			const settings = loadSettings();
+			return settings[key] || "";
+		});
+
+		ipcMain.handle("settings-set", (_event, key: string, value: string) => {
+			const defaultSettings = getDefaultSettings(process.platform);
+
+			if (!(key in defaultSettings)) {
+				console.warn(`Attempted to set unknown setting: ${key}`);
+				return false;
+			}
+
+			const settings = loadSettings();
+			settings[key] = value;
+			saveSettings(settings);
+
+			FocusTimer.updateSettings(settings);
+
+			// Force data update when break charge related settings change
+			if (key === "breakChargingEnabled" || key === "workTimePerCharge" || key === "breakChargeExtensionAmount" || key === "breakChargeCooldown") {
+				focusTimer.forceDataUpdate();
+			}
+
+			return true;
+		});
+
+		const getPresetPayload = () => ({
+			presets: focusPresetStore.getPresets(),
+			selectedPresetId: focusPresetStore.getSelectedPresetId(),
+		});
+
+		ipcMain.handle("focus-presets-list", () => {
+			return getPresetPayload();
+		});
+
+		ipcMain.handle("focus-presets-create", (_event, preset: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
+			return focusPresetStore.createPreset(preset);
+		});
+
+		ipcMain.handle("focus-presets-update", (_event, presetId: string, payload: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
+			const updated = focusPresetStore.updatePreset(presetId, payload);
+			if (updated && focusPresetStore.getSelectedPresetId() === presetId) {
+				FocusTimer.setActivePreset(updated);
+				focusTimer.forceDataUpdate();
+			}
+			return updated;
+		});
+
+		ipcMain.handle("focus-presets-delete", (_event, presetId: string) => {
+			const result = focusPresetStore.deletePreset(presetId);
+			if (result) {
+				const activePreset = focusPresetStore.getSelectedPreset();
+				FocusTimer.setActivePreset(activePreset);
+				focusTimer.forceDataUpdate();
+			}
+			return result;
+		});
+
+		ipcMain.handle("focus-presets-set-active", (_event, presetId: string) => {
+			const preset = focusPresetStore.setSelectedPreset(presetId);
+			FocusTimer.setActivePreset(preset);
+			focusTimer.forceDataUpdate();
+			return { selectedPresetId: preset.id };
+		});
+
+		// Window control handlers
+		ipcMain.on("window-minimize", () => {
+			mainWindow.minimize();
+		});
+
+		ipcMain.on("window-maximize", () => {
+			if (mainWindow.isMaximized()) {
+				mainWindow.restore();
+			} else {
+				mainWindow.maximize();
+			}
+		});
+
+		ipcMain.on("window-close", () => {
+			mainWindow.close();
+		});
+
+		ipcMain.handle("window-is-maximized", () => {
+			return mainWindow.isMaximized();
+		});
+
+		ipcMain.handle("window-close-decision", (_event, shouldClose: boolean) => {
+			pendingClosePrompt = false;
+			if (!mainWindow || mainWindow.isDestroyed()) {
+				return false;
+			}
+			if (shouldClose) {
+				allowWindowClose = true;
+				mainWindow.close();
+			}
+			return shouldClose;
+		});
+
+		// Listen for window state changes
+		mainWindow.on("maximize", () => {
+			mainWindow.webContents.send("window-state-changed", { maximized: true });
+		});
+
+		mainWindow.on("unmaximize", () => {
+			mainWindow.webContents.send("window-state-changed", { maximized: false });
+		});
+
+		mainWindow.webContents.on("render-process-gone", async (_, error) => {
+			promptProcessFailure(error);
+		});
+
+		app.on("child-process-gone", async (_, error) => {
+			promptProcessFailure(error);
+		});
+
+		if (isDev()) {
+			mainWindow.loadURL("http://localhost:5123");
+		} else {
+			mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
 		}
-		app.quit();
+
+		updateMenu();
 	});
-
-	if (isDev()) {
-		mainWindow.loadURL("http://localhost:5123");
-	} else {
-		mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
-	}
-
-	updateMenu();
-});
+}
 
 app.on("window-all-closed", () => {
 	if (focusTimer) {
@@ -442,3 +594,25 @@ app.on("window-all-closed", () => {
 	}
 	app.quit();
 });
+
+async function promptProcessFailure(error: Electron.Details | Electron.RenderProcessGoneDetails) {
+	const { response } = await dialog.showMessageBox({
+		type: "error",
+		message: "This is.. awkward",
+		detail: `
+			TaskBookly encountered a fatal error and crashed :(
+			Reason: ${error.reason} (Exit Code: ${error.exitCode})
+
+			If you continue to encounter this error, please open a new Issue on our GitHub Repository
+			`,
+		title: "Fatal Error",
+		buttons: ["Restart", "Close & Open Issue...", "Close"],
+		cancelId: 2,
+	});
+	if (response === 0) {
+		app.relaunch();
+	} else if (response === 1) {
+		shell.openExternal("https://github.com/TaskBookly/app/issues/new");
+	}
+	app.quit();
+}

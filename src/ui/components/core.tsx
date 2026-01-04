@@ -1,4 +1,5 @@
-import React from "react";
+import { cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, Dispatch, ReactElement, ReactNode, RefObject, SetStateAction } from "react";
 import { jumpToSection } from "./nav";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -15,17 +16,34 @@ interface IcoButtonProps {
 	id?: string;
 	className?: string;
 	tooltip?: string;
+	style?: CSSProperties;
 }
 
-const ContainerGroup: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+interface ContainerProps {
+	name: string;
+	header?: {
+		title: string;
+		icon: IconProp;
+		buttons?: IcoButtonProps[];
+	};
+	id?: string;
+	className?: string;
+	children?: ReactNode;
+}
+
+interface ContainerGroupProps {
+	children?: ReactNode;
+}
+
+const ContainerGroup = ({ children }: ContainerGroupProps) => {
 	return children ? <div className="containerGroup">{children}</div> : null;
 };
 
-const Container: React.FC<{ name: string; header?: { title: string; icon: IconProp }; id?: string; className?: string; children?: React.ReactNode }> = ({ name, header, children, id, className = "" }) => {
-	const [isVisible, setIsVisible] = React.useState(true);
-	const contentRef = React.useRef<HTMLDivElement>(null);
+const Container = ({ name, header, children, id, className = "" }: ContainerProps) => {
+	const [isVisible, setIsVisible] = useState(true);
+	const contentRef = useRef<HTMLDivElement>(null);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (contentRef.current) {
 			const hasVisibleContent =
 				contentRef.current.children.length > 0 &&
@@ -43,9 +61,18 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: IconPr
 		<div data-container={name} id={id} className={`container ${className}`}>
 			{header ? (
 				<div className="containerHeader">
-					<h2>{header.title}</h2>
+					<div className="containerHeaderTitle">
+						<FontAwesomeIcon icon={header.icon} widthAuto />
+						<h2>{header.title}</h2>
+					</div>
 
-					<FontAwesomeIcon icon={header.icon} widthAuto />
+					{header.buttons ? (
+						<div className="containerHeaderButtons buttonGroup">
+							{header.buttons.map((buttonProps, index) => (
+								<IcoButton key={buttonProps.id ?? `header-btn-${index}`} {...buttonProps} />
+							))}
+						</div>
+					) : null}
 				</div>
 			) : null}
 
@@ -56,8 +83,9 @@ const Container: React.FC<{ name: string; header?: { title: string; icon: IconPr
 	);
 };
 
-const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, iconWidthAuto = false, disabled = false, onClick, id, className, tooltip }) => {
+const IcoButton = ({ text, icon, iconWidthAuto = false, disabled = false, onClick, id, className, tooltip, style }: IcoButtonProps) => {
 	const handleClick = () => {
+		if (disabled) return;
 		if (onClick?.action) {
 			onClick.action();
 		}
@@ -67,14 +95,19 @@ const IcoButton: React.FC<IcoButtonProps> = ({ text, icon, iconWidthAuto = false
 	};
 
 	return (
-		<button data-sect={onClick?.jumpToSection} id={id} className={className} disabled={disabled} onClick={handleClick} data-tooltip={tooltip}>
+		<button data-sect={onClick?.jumpToSection} id={id} className={className} aria-disabled={disabled} onClick={handleClick} data-tooltip={tooltip} style={style}>
 			{icon ? <FontAwesomeIcon className="buttonIcon" icon={icon} widthAuto={iconWidthAuto ? true : false} /> : null}
 			{text ? <span className="buttonText">{text}</span> : null}
 		</button>
 	);
 };
 
-const Hint: React.FC<{ type: HintType; label: string }> = ({ type, label }) => {
+interface HintProps {
+	type: HintType;
+	label: string;
+}
+
+const Hint = ({ type, label }: HintProps) => {
 	return (
 		<div className={`hint hintType-${type}`}>
 			<FontAwesomeIcon className="hintIcon" icon={type === "info" ? faCircleInfo : type === "warning" ? faWarning : type === "error" ? faCircleXmark : type === "success" ? faCircleCheck : type === "processing" ? faCompass : faCircleQuestion} />
@@ -83,11 +116,28 @@ const Hint: React.FC<{ type: HintType; label: string }> = ({ type, label }) => {
 	);
 };
 
-interface SelectionMenuOption {
+type MenuOptionData = {
+	icon: IconProp;
+	data: string | number | boolean;
+};
+
+type MenuSeparatorOption = {
+	type: "separator";
+	label?: string;
+};
+
+interface SelectionMenuValueOption {
 	label: string;
 	subLabel?: string;
 	value: string;
+	data?: MenuOptionData[];
+	type?: "option";
+	icon?: IconProp;
+	disabled?: boolean;
+	processing?: boolean;
 }
+
+type SelectionMenuOption = SelectionMenuValueOption | MenuSeparatorOption;
 
 interface SelectionMenuProps {
 	options: SelectionMenuOption[];
@@ -97,22 +147,24 @@ interface SelectionMenuProps {
 	searchable?: boolean;
 	placeholder?: string;
 	className?: string;
+	style?: CSSProperties;
+	tooltip?: string;
 }
 
 // Shared dropdown menu props type
 interface DropdownMenuProps {
 	open: boolean;
-	buttonRef: React.RefObject<HTMLDivElement | null>;
-	menuRef: React.RefObject<HTMLDivElement | null>;
-	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-	setMenuAbove: React.Dispatch<React.SetStateAction<boolean>>;
+	buttonRef: RefObject<HTMLDivElement | null>;
+	menuRef: RefObject<HTMLDivElement | null>;
+	setOpen: Dispatch<SetStateAction<boolean>>;
+	setMenuAbove: Dispatch<SetStateAction<boolean>>;
 	menuAbove: boolean;
-	children: React.ReactNode;
+	children: ReactNode;
 	className?: string;
 }
 
-const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, setOpen, setMenuAbove, menuAbove, children, className = "" }) => {
-	React.useEffect(() => {
+const DropdownMenu = ({ open, buttonRef, menuRef, setOpen, setMenuAbove, menuAbove, children, className = "" }: DropdownMenuProps) => {
+	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
 			if (buttonRef.current && menuRef.current && !buttonRef.current.contains(event.target as Node) && !menuRef.current.contains(event.target as Node)) {
 				setOpen(false);
@@ -143,7 +195,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, s
 		};
 	}, [open, buttonRef, menuRef, setOpen]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (open && buttonRef.current && menuRef.current) {
 			const rect = buttonRef.current.getBoundingClientRect();
 			const menu = menuRef.current;
@@ -195,30 +247,49 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ open, buttonRef, menuRef, s
 	);
 };
 
-const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange, disabled = false, searchable = false, placeholder = "Select..." }) => {
-	const [search, setSearch] = React.useState("");
-	const ref = React.useRef<HTMLDivElement>(null);
-	const buttonRef = React.useRef<HTMLDivElement>(null);
-	const [open, setOpen] = React.useState(false);
-	const [menuAbove, setMenuAbove] = React.useState(false);
-	const menuRef = React.useRef<HTMLDivElement>(null);
+const SelectionMenu = ({ options, value, onChange, disabled = false, searchable = false, placeholder = "Select...", className = "", style, tooltip }: SelectionMenuProps) => {
+	const [search, setSearch] = useState("");
+	const buttonRef = useRef<HTMLDivElement>(null);
+	const [open, setOpen] = useState(false);
+	const [menuAbove, setMenuAbove] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
 
-	const filteredOptions = searchable && search ? options.filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())) : options;
-	const selectedLabel = options.find((opt) => opt.value === value)?.label || placeholder;
+	const selectedLabel = useMemo(() => {
+		const match = options.find((opt): opt is SelectionMenuValueOption => opt.type !== "separator" && opt.value === value);
+		return match?.label ?? placeholder;
+	}, [options, value, placeholder]);
 
-	React.useEffect(() => {
+	const filteredOptions = useMemo(() => {
+		if (!searchable || !search.trim()) {
+			return options;
+		}
+		const lower = search.trim().toLowerCase();
+		return options.filter((opt) => {
+			if (opt.type === "separator") {
+				return false;
+			}
+			return opt.label.toLowerCase().includes(lower) || opt.subLabel?.toLowerCase().includes(lower);
+		});
+	}, [options, search, searchable]);
+
+	useEffect(() => {
 		if (!open && search) setSearch("");
 	}, [open, search]);
 
+	const hasIcons = useMemo(() => {
+		return options.some((opt) => opt.type !== "separator" && opt.icon);
+	}, [options]);
+
 	return (
-		<div ref={ref} style={{ display: "inline-block", position: "relative" }}>
+		<div className={className} style={{ display: "inline-flex", position: "relative", ...(style ?? {}) }}>
 			<div
 				ref={buttonRef}
 				onClick={() => {
 					if (!disabled) setOpen((o) => !o);
 				}}
+				style={{ display: "flex", flex: 1 }}
 			>
-				<button type="button" className={`custom-dropdown${open ? " selected" : ""}`} disabled={disabled} aria-haspopup="listbox" aria-expanded={open}>
+				<button type="button" className={`custom-dropdown${open ? " selected" : ""}`} aria-disabled={disabled} aria-haspopup="listbox" aria-expanded={open} data-tooltip={tooltip} style={{ height: "100%", width: "100%" }}>
 					<span>{selectedLabel}</span>
 					<FontAwesomeIcon icon={faAngleDown} />
 				</button>
@@ -226,114 +297,246 @@ const SelectionMenu: React.FC<SelectionMenuProps> = ({ options, value, onChange,
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove}>
 				{searchable && <input type="text" className="dropdown-search" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} disabled={disabled} autoFocus />}
 				{filteredOptions.length === 0 && <div className="dropdown-empty">No options</div>}
-				{filteredOptions.map((opt) => (
-					<div
-						key={opt.value}
-						className={`dropdown-option${opt.value === value ? " selected" : ""}`}
-						onClick={() => {
-							onChange(opt.value);
-							setOpen(false);
-							setSearch("");
-						}}
-						role="option"
-						aria-selected={opt.value === value}
-					>
-						<span className="dd-labels">
-							<label className="dd-mainLabel">{opt.label}</label>
-							<label className="dd-subLabel">{opt.subLabel}</label>
-						</span>
-						<span className="dd-check">{opt.value === value ? <FontAwesomeIcon icon={faCheck} widthAuto /> : null}</span>
-					</div>
-				))}
+				{filteredOptions.map((opt, index) => {
+					if (opt.type === "separator") {
+						return (
+							<div key={`separator-${index}`} className="dropdown-separator" role="separator">
+								<div className="dropdown-separator-line"></div>
+								<div className="dropdown-separator-label">{opt.label ? <span>{opt.label}</span> : null}</div>
+							</div>
+						);
+					}
+					return (
+						<div
+							key={opt.value}
+							className={`dropdown-option${opt.value === value ? " selected" : ""}`}
+							onClick={() => {
+								if (opt.disabled) return;
+								onChange(opt.value);
+								setOpen(false);
+								setSearch("");
+							}}
+							role="option"
+							aria-selected={opt.value === value}
+							aria-disabled={opt.disabled}
+						>
+							<div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+								{hasIcons && <div style={{ width: "1.25em", display: "flex", justifyContent: "center", flexShrink: 0 }}>{opt.icon ? <FontAwesomeIcon className="dd-icon" icon={opt.icon} /> : null}</div>}
+								<span className="dd-labels">
+									<label className="dd-mainLabel">{opt.label}</label>
+									<label className="dd-subLabel">{opt.subLabel}</label>
+
+									{opt.data ? (
+										<div className="dd-data">
+											{opt.data.map((d, i) => (
+												<div key={i} className="dd-data-item">
+													<FontAwesomeIcon icon={d.icon} />
+													<span>{String(d.data)}</span>
+												</div>
+											))}
+										</div>
+									) : null}
+								</span>
+							</div>
+							<span className="dd-check">{opt.processing ? <FontAwesomeIcon spin icon={faCompass} /> : opt.value === value ? <FontAwesomeIcon icon={faCheck} /> : null}</span>
+						</div>
+					);
+				})}
 			</DropdownMenu>
 		</div>
 	);
 };
 
-interface ActionMenuOption {
+interface ActionMenuValueOption {
 	label: string;
 	subLabel?: string;
 	value: string;
 	icon?: IconProp;
 	onClick?: () => void;
+	type?: "option";
+	disabled?: boolean;
+	processing?: boolean;
 }
 
+interface ActionMenuToggleOption {
+	type: "toggle";
+	label: string;
+	subLabel?: string;
+	value: boolean;
+	onChange: (value: boolean) => void;
+	icon?: IconProp;
+	disabled?: boolean;
+}
+
+interface ActionMenuSelectionGroupOption {
+	type: "selectionGroup";
+	value: string;
+	onChange: (value: string) => void;
+	options: { label: string; value: string; icon?: IconProp; disabled?: boolean; processing?: boolean }[];
+}
+
+type ActionMenuOption = ActionMenuValueOption | MenuSeparatorOption | ActionMenuToggleOption | ActionMenuSelectionGroupOption;
+
 interface ActionMenuProps {
-	button: React.ReactNode;
+	button: ReactNode;
 	options: ActionMenuOption[];
 	className?: string;
 	searchable?: boolean;
 	onOptionSelect?: (value: string) => void;
+	tooltip?: string;
 }
 
-const ActionMenu: React.FC<ActionMenuProps> = ({ button, options, className = "", searchable = false, onOptionSelect }) => {
-	const ref = React.useRef<HTMLDivElement>(null);
-	const buttonRef = React.useRef<HTMLDivElement>(null);
-	const [open, setOpen] = React.useState(false);
-	const [menuAbove, setMenuAbove] = React.useState(false);
-	const menuRef = React.useRef<HTMLDivElement>(null);
-	const [search, setSearch] = React.useState("");
+const ActionMenu = ({ button, options, className = "", searchable = false, onOptionSelect, tooltip }: ActionMenuProps) => {
+	const buttonRef = useRef<HTMLDivElement>(null);
+	const [open, setOpen] = useState(false);
+	const [menuAbove, setMenuAbove] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
+	const [search, setSearch] = useState("");
 
 	// Infer disabled from button prop if possible
-	let isDisabled = false;
-	if (React.isValidElement(button) && (button.props as { disabled?: boolean })?.disabled) {
-		isDisabled = true;
-	}
+	const isDisabled = isValidElement(button) && Boolean((button.props as { disabled?: boolean })?.disabled);
 
-	function getFilteredOptions(opts: ActionMenuOption[], search: string): ActionMenuOption[] {
-		if (!search) return opts;
-		const lower = search.toLowerCase();
-		return opts.filter((opt) => opt.label.toLowerCase().includes(lower));
+	function getFilteredOptions(opts: ActionMenuOption[], searchValue: string): ActionMenuOption[] {
+		if (!searchValue) return opts;
+		const lower = searchValue.toLowerCase();
+		return opts.filter((opt) => {
+			if (opt.type === "separator") {
+				return false;
+			}
+			if (opt.type === "selectionGroup") {
+				return opt.options.some((o) => o.label.toLowerCase().includes(lower));
+			}
+			return opt.label.toLowerCase().includes(lower) || opt.subLabel?.toLowerCase().includes(lower);
+		});
 	}
-	const filteredOptions = getFilteredOptions(options, search);
+	const filteredOptions = useMemo(() => getFilteredOptions(options, search), [options, search]);
 
-	React.useEffect(() => {
+	const hasIcons = useMemo(() => {
+		return options.some((opt) => {
+			if (opt.type === "separator") return false;
+			if (opt.type === "selectionGroup") return opt.options.some((o) => o.icon);
+			if (opt.type === "toggle") return opt.icon;
+			return opt.icon;
+		});
+	}, [options]);
+
+	useEffect(() => {
 		if (!open && search) setSearch("");
 	}, [open, search]);
 
 	return (
-		<div ref={ref} style={{ display: "inline-block", position: "relative" }}>
+		<div style={{ display: "inline-flex", position: "relative" }} data-tooltip={tooltip}>
 			<div
 				ref={buttonRef}
 				onClick={() => {
 					if (!isDisabled) setOpen((o) => !o);
 				}}
+				style={{ display: "flex", flex: 1 }}
 			>
-				{React.isValidElement(button)
-					? React.cloneElement(button as React.ReactElement<{ className?: string; disabled?: boolean }>, {
-							className: [(button as React.ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
+				{isValidElement(button)
+					? cloneElement(button as ReactElement<{ className?: string; disabled?: boolean; style?: CSSProperties }>, {
+							className: [(button as ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
+							style: { height: "100%", ...(button as ReactElement<{ style?: CSSProperties }>).props.style },
 					  })
 					: button}
 			</div>
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove} className={className}>
 				{searchable && <input type="text" className="dropdown-search" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} autoFocus />}
 				{filteredOptions.length === 0 && <div className="dropdown-empty">No options</div>}
-				{filteredOptions.map((opt) => (
-					<div
-						key={opt.value}
-						className={`dropdown-option`}
-						onClick={() => {
-							setOpen(false);
-							if (onOptionSelect) {
-								onOptionSelect(opt.value);
-							} else if (opt.onClick) {
-								opt.onClick();
-							}
-						}}
-						role="menuitem"
-					>
-						<span className="dd-labels">
-							<label className="dd-mainLabel">{opt.label}</label>
-							<label className="dd-subLabel">{opt.subLabel}</label>
-						</span>
-						{opt.icon && <FontAwesomeIcon className="dd-icon" icon={opt.icon} />}
-					</div>
-				))}
+				{filteredOptions.map((opt, index) => {
+					if (opt.type === "separator") {
+						return (
+							<div key={`separator-${index}`} className="dropdown-separator" role="separator">
+								<div className="dropdown-separator-line"></div>
+								<div className="dropdown-separator-label">{opt.label ? <span>{opt.label}</span> : null}</div>
+							</div>
+						);
+					}
+					if (opt.type === "toggle") {
+						return (
+							<div
+								key={`toggle-${index}`}
+								className="dropdown-option"
+								onClick={(e) => {
+									if (opt.disabled) return;
+									e.stopPropagation();
+									opt.onChange(!opt.value);
+								}}
+								role="menuitemcheckbox"
+								aria-checked={opt.value}
+								aria-disabled={opt.disabled}
+							>
+								<div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+									{hasIcons && <div style={{ width: "1.25em", display: "flex", justifyContent: "center", flexShrink: 0 }}>{opt.icon ? <FontAwesomeIcon className="dd-icon" icon={opt.icon} /> : null}</div>}
+									<span className="dd-labels">
+										<label className="dd-mainLabel">{opt.label}</label>
+										{opt.subLabel && <label className="dd-subLabel">{opt.subLabel}</label>}
+									</span>
+								</div>
+								<div className="switchInput" style={{ pointerEvents: "none" }}>
+									<input type="checkbox" checked={opt.value} readOnly />
+								</div>
+							</div>
+						);
+					}
+					if (opt.type === "selectionGroup") {
+						return (
+							<div key={`group-${index}`} className="dropdown-group">
+								{opt.options.map((subOpt) => (
+									<div
+										key={subOpt.value}
+										className={`dropdown-option${opt.value === subOpt.value ? " selected" : ""}`}
+										onClick={(e) => {
+											if (subOpt.disabled) return;
+											e.stopPropagation();
+											opt.onChange(subOpt.value);
+										}}
+										role="menuitemradio"
+										aria-checked={opt.value === subOpt.value}
+										aria-disabled={subOpt.disabled}
+									>
+										<div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+											{hasIcons && <div style={{ width: "1.25em", display: "flex", justifyContent: "center", flexShrink: 0 }}>{subOpt.icon ? <FontAwesomeIcon className="dd-icon" icon={subOpt.icon} /> : null}</div>}
+											<span className="dd-labels">
+												<label className="dd-mainLabel">{subOpt.label}</label>
+											</span>
+										</div>
+										<span className="dd-check">{subOpt.processing ? <FontAwesomeIcon spin icon={faCompass} /> : opt.value === subOpt.value ? <FontAwesomeIcon icon={faCheck} /> : null}</span>
+									</div>
+								))}
+							</div>
+						);
+					}
+					return (
+						<div
+							key={opt.value}
+							className={`dropdown-option`}
+							onClick={() => {
+								setOpen(false);
+								if (onOptionSelect) {
+									onOptionSelect(opt.value);
+								} else if (opt.onClick) {
+									opt.onClick();
+								}
+							}}
+							role="menuitem"
+						>
+							<div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+								{hasIcons && <div style={{ width: "1.25em", display: "flex", justifyContent: "center", flexShrink: 0 }}>{opt.icon ? <FontAwesomeIcon className="dd-icon" icon={opt.icon} /> : null}</div>}
+								<span className="dd-labels">
+									<label className="dd-mainLabel">{opt.label}</label>
+									{opt.subLabel && <label className="dd-subLabel">{opt.subLabel}</label>}
+								</span>
+							</div>
+							<span className="dd-check">{opt.processing ? <FontAwesomeIcon spin icon={faCompass} /> : null}</span>
+						</div>
+					);
+				})}
 			</DropdownMenu>
 		</div>
 	);
 };
 
 export { ContainerGroup, Container, SelectionMenu, ActionMenu, Hint };
-export type { SelectionMenuOption, ActionMenuOption, HintType };
+export type { SelectionMenuOption, SelectionMenuValueOption, ActionMenuOption, HintType };
 export default IcoButton;

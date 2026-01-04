@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect, useState, type ComponentType } from "react";
 
 const hideTimeouts = new Map<string, number>();
 
@@ -60,10 +60,15 @@ function jumpToSection(section: string): { found: boolean; element?: HTMLButtonE
 	return { found: false };
 }
 
-const Section: React.FC<{ name: string; displayTitle?: string }> = ({ name, displayTitle }) => {
-	const [SectionComponent, setSectionComponent] = React.useState<React.ComponentType | null>(null);
+interface SectionProps {
+	name: string;
+	displayTitle?: string;
+}
 
-	React.useEffect(() => {
+const Section = ({ name, displayTitle }: SectionProps) => {
+	const [SectionComponent, setSectionComponent] = useState<ComponentType | null>(null);
+
+	useEffect(() => {
 		let isMounted = true;
 		import(`./sections/${name}.tsx`).then((mod) => {
 			if (isMounted) setSectionComponent(() => mod.default);
@@ -73,7 +78,7 @@ const Section: React.FC<{ name: string; displayTitle?: string }> = ({ name, disp
 		};
 	}, [name]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		const sectionElement = document.querySelector(`section[data-section="${name}"]`) as HTMLElement;
 		if (sectionElement) {
 			const handleAnimationEnd = (event: AnimationEvent) => {
