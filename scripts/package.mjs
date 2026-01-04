@@ -186,7 +186,7 @@ if (isPublishing && channel === "dev") {
 	process.exit(1);
 }
 
-const inferredReleaseType = isPublishing ? (channel === "beta" ? "prerelease" : "release") : null;
+const inferredReleaseType = isPublishing ? "draft" : null;
 
 const packagePath = path.join(repoRoot, "package.json");
 const pkg = JSON.parse(readFileSync(packagePath, "utf8"));
