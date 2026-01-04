@@ -42,6 +42,7 @@ interface Window {
 		};
 		system: {
 			getTheme: () => Promise<string>;
+			getClockFormat: () => Promise<"12hr" | "24hr">;
 			onThemeChange: (callback: (theme: string) => void) => void;
 		};
 		settings: {

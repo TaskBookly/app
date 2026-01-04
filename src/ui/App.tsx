@@ -48,7 +48,6 @@ function App() {
 			const soundMap: Record<string, string> = {
 				"notifs/info.ogg": new URL("./assets/audio/notifs/info.ogg", import.meta.url).href,
 				"notifs/sessionComplete.ogg": new URL("./assets/audio/notifs/sessionComplete.ogg", import.meta.url).href,
-				"notifs/sessionTransition.ogg": new URL("./assets/audio/notifs/sessionTransition.ogg", import.meta.url).href,
 				"notifs/success.ogg": new URL("./assets/audio/notifs/success.ogg", import.meta.url).href,
 				"notifs/warning.ogg": new URL("./assets/audio/notifs/warning.ogg", import.meta.url).href,
 				"notifs/error.ogg": new URL("./assets/audio/notifs/error.ogg", import.meta.url).href,

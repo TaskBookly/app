@@ -42,6 +42,7 @@ contextBridge.exposeInMainWorld("electron", {
 	},
 	system: {
 		getTheme: () => ipcRenderer.invoke("sys-theme"),
+		getClockFormat: () => ipcRenderer.invoke("sys-clock-format"),
 		onThemeChange: (callback) => {
 			ipcRenderer.on("sys-theme-changed", (_event: any, theme: string) => callback(theme));
 			// Return cleanup function

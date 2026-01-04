@@ -26,6 +26,9 @@
 	"build": {
 		"appId": "com.taskbookly.app",
 		"artifactName": "${productName}-${version}-${arch}.${ext}",
+		"directories": {
+			"buildResources": "build-resources"
+		},
 		"files": [
 			"dist-electron",
 			"dist-react"
@@ -34,7 +37,7 @@
 			"dist-electron/electron/preload.cjs"
 		],
 		"mac": {
-			"icon": "build-resources/icons/icon.icns",
+			"icon": "icons/icon.icns",
 			"target": {
 				"target": "dmg",
 				"arch": [
@@ -44,7 +47,7 @@
 			"category": "public.app-category.productivity"
 		},
 		"win": {
-			"icon": "build-resources/icons/icon.ico",
+			"icon": "icons/icon.ico",
 			"target": {
 				"target": "nsis",
 				"arch": [
@@ -62,8 +65,8 @@
 			"runAfterFinish": true,
 			"shortcutName": "${productName}",
 			"uninstallDisplayName": "${productName}",
-			"installerSidebar": "build-resources/installer/banners/install.png",
-			"uninstallerSidebar": "build-resources/installer/banners/uninstall.png"
+			"installerSidebar": "installer/banners/install.bmp",
+			"uninstallerSidebar": "installer/banners/uninstall.bmp"
 		},
 		"publish": {
 			"provider": "github",

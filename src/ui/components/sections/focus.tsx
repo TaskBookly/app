@@ -23,6 +23,11 @@ const Focus = () => {
 	const [cooldownBreaksLeft, setCooldownBreaksLeft] = useState<number>(0);
 	const [isCharging, setIsCharging] = useState<boolean>(false);
 	const [chargeUsedThisSession, setChargeUsedThisSession] = useState<boolean>(false);
+	const [clockFormat, setClockFormat] = useState<"12hr" | "24hr">("12hr");
+
+	useEffect(() => {
+		window.electron.system.getClockFormat().then(setClockFormat);
+	}, []);
 
 	const [selectedSound, setSelectedSound] = useState("rain");
 	const [soundStatus, setSoundStatus] = useState<"playing" | "stopped">("stopped");
@@ -583,7 +588,7 @@ const Focus = () => {
 						<label className={timerStatus === "paused" ? "paused" : undefined} id="sessionTimer">
 							{formatAsTime(timeLeftInSession)}
 						</label>
-						<label id="sessionEndTime">{`Ending at ${formatAsClockTime(sessionExpectedFinishDate)}`}</label>
+						<label id="sessionEndTime">{`Ending at ${formatAsClockTime(sessionExpectedFinishDate, clockFormat)}`}</label>
 					</div>
 				</Container>
 			) : null}

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell, nativeTheme } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell, nativeTheme, systemPreferences } from "electron";
 
 import path from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
@@ -392,6 +392,14 @@ if (!gotInsLock) {
 
 		ipcMain.handle("sys-theme", () => {
 			return nativeTheme.shouldUseDarkColors ? "dark" : "light";
+		});
+
+		ipcMain.handle("sys-clock-format", () => {
+			if (process.platform === "darwin") {
+				return systemPreferences.getUserDefault("AppleICUForce24HourTime", "boolean") ? "24hr" : "12hr";
+			}
+			const is24Hr = !new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions().hour12;
+			return is24Hr ? "24hr" : "12hr";
 		});
 
 		ipcMain.on("open-shell-url", (_, url) => {
