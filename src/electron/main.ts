@@ -14,6 +14,7 @@ import { getBuildInfo } from "./buildInfo.js";
 
 import electronUpdPkg from "electron-updater";
 import { startupDisRPC } from "./discordRPC.js";
+import { error } from "console";
 
 const { autoUpdater } = electronUpdPkg;
 
@@ -294,7 +295,11 @@ if (!gotInsLock) {
 		const settings = loadSettings();
 
 		if (!isDev() && buildInfo.channel === "stable") {
-			autoUpdater.checkForUpdates();
+			try {
+				autoUpdater.checkForUpdates();
+			} catch (err) {
+				console.error("Failed to check for updates:", err);
+			}
 		}
 
 		startupDisRPC();
