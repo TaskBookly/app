@@ -92,14 +92,14 @@ const Settings = () => {
 		{ label: "System", value: "system" },
 		{ label: "Bookly Light", value: "light" },
 		{ label: "Bookly Dark", value: "dark" },
+		{ label: "Lavender Mist", value: "lavenderMist" },
+		{ label: "Strawberry Splash", value: "strawberrySplash" },
 		{ label: "Autumn Spice", value: "autumnSpice" },
 		{ label: "Catppuccin", value: "catppuccin" },
-		{ label: "Midnight Ocean", value: "midnightOcean" },
-		{ label: "Strawberry Splash", value: "strawberrySplash" },
 		{ label: "Forest Glass", value: "forestGlass" },
-		{ label: "Lavender Mist", value: "lavenderMist" },
-		{ label: "Retro Console", value: "retroConsole" },
+		{ label: "Midnight Ocean", value: "midnightOcean" },
 		{ label: "Monochrome Ink", value: "monochromeInk" },
+		{ label: "Retro Console", value: "retroConsole" },
 	];
 
 	const notifOptions: SelectionMenuOption[] = [
@@ -292,7 +292,7 @@ const Settings = () => {
 							</>
 						),
 					},
-			  ]
+				]
 			: []),
 	];
 
