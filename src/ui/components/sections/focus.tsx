@@ -147,7 +147,7 @@ const Focus = () => {
 				}
 			})();
 		},
-		[timerStatus, refreshPresets]
+		[timerStatus, refreshPresets],
 	);
 
 	const handleNewPreset = useCallback(async () => {
@@ -552,7 +552,7 @@ const Focus = () => {
 						value: "play",
 						onClick: handlePlaySound,
 					} as ActionMenuOption,
-			  ]
+				]
 			: []),
 		{ type: "separator", label: "Sounds" },
 		{

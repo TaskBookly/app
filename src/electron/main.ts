@@ -14,7 +14,6 @@ import { getBuildInfo } from "./buildInfo.js";
 
 import electronUpdPkg from "electron-updater";
 import { startupDisRPC } from "./discordRPC.js";
-import { error } from "console";
 
 const { autoUpdater } = electronUpdPkg;
 
@@ -185,7 +184,7 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 				label: "Use Break Charge",
 				enabled: !focusTimer.chargeUsedThisSession && focusTimer.chargesLeft > 0 && !focusTimer.isOnCooldown,
 				click: () => focusTimer.useBreakCharge(),
-			}
+			},
 		);
 	}
 
@@ -205,7 +204,7 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 					{ type: "normal", label: "15 Minutes", click: () => focusTimer.addTime(900) },
 					{ type: "normal", label: "20 Minutes", click: () => focusTimer.addTime(1200) },
 				],
-			}
+			},
 		);
 	}
 
