@@ -3,7 +3,7 @@ import IcoButton, { Container, ActionMenu, type ActionMenuOption, SelectionMenu,
 import { ButtonActionConfig } from "../config";
 import { formatAsTime, formatAsClockTime } from "../../utils/format";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBolt, faBriefcase, faCloudBolt, faCloudShowersHeavy, faCloudShowersWater, faFire, faInfoCircle, faLeaf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faRotate, faStop, faStopwatch, faVolumeLow, faWater, faWind } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBolt, faBriefcase, faCloudBolt, faCloudShowersHeavy, faCloudShowersWater, faFire, faInfoCircle, faLeaf, faMugSaucer, faPause, faPencil, faPlay, faPlus, faRotate, faStop, faStopwatch, faVolumeHigh, faVolumeLow, faVolumeMedium, faVolumeMute, faWater, faWind } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { usePopup } from "../PopupProvider";
 import type { FocusPreset } from "../../../common/focusPresets";
@@ -32,6 +32,9 @@ const Focus = () => {
 	const [selectedSound, setSelectedSound] = useState("rain");
 	const [soundStatus, setSoundStatus] = useState<"playing" | "stopped">("stopped");
 	const [isSoundLoading, setIsSoundLoading] = useState<boolean>(false);
+	const [soundVolume, setSoundVolume] = useState<number>(50);
+	const soundVolumeRef = useRef(soundVolume);
+	soundVolumeRef.current = soundVolume;
 	const audioContextRef = useRef<AudioContext | null>(null);
 	const gainNodeRef = useRef<GainNode | null>(null);
 	const activeSourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
@@ -418,7 +421,7 @@ const Focus = () => {
 			// PLAY
 			// If already playing the same sound, just ensure volume is up
 			if (activeSourceNodeRef.current && currentSoundNameRef.current === soundName) {
-				await fadeAudio(0.5, 2000);
+				await fadeAudio(soundVolumeRef.current / 100, 2000);
 				return;
 			}
 
@@ -492,7 +495,7 @@ const Focus = () => {
 			activeSourceNodeRef.current = source;
 			currentSoundNameRef.current = soundName;
 
-			await fadeAudio(0.5, 2000);
+			await fadeAudio(soundVolumeRef.current / 100, 2000);
 		}
 	}, []);
 
@@ -517,6 +520,17 @@ const Focus = () => {
 			playSound(shouldPlay, selectedSound);
 		}
 	}, [getSetting, currentSession, timerStatus, playSound, selectedSound]);
+
+	// Apply volume changes to the gain node in real time
+	useEffect(() => {
+		if (gainNodeRef.current && audioContextRef.current && soundStatus === "playing") {
+			const ctx = audioContextRef.current;
+			const gain = gainNodeRef.current;
+			gain.gain.cancelScheduledValues(ctx.currentTime);
+			gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+			gain.gain.linearRampToValueAtTime(soundVolume / 100, ctx.currentTime + 0.05);
+		}
+	}, [soundVolume, soundStatus]);
 
 	const getCooldownMessage = () => {
 		if (chargeUsedThisSession) {
@@ -554,6 +568,18 @@ const Focus = () => {
 					} as ActionMenuOption,
 				]
 			: []),
+		{
+			type: "range",
+			label: "Volume",
+			value: soundVolume,
+			min: 0,
+			max: 100,
+			step: 5,
+			showValue: true,
+			formatValue: (v: number) => `${v}%`,
+			onChange: setSoundVolume,
+			icon: soundVolume >= 75 ? faVolumeHigh : soundVolume >= 50 ? faVolumeMedium : soundVolume > 0 ? faVolumeLow : faVolumeMute,
+		},
 		{ type: "separator", label: "Sounds" },
 		{
 			type: "selectionGroup",
@@ -563,7 +589,7 @@ const Focus = () => {
 				{ label: "Rain", value: "rain", icon: faCloudShowersHeavy },
 				{ label: "Indoor Rain", value: "indoorRain", icon: faCloudShowersWater },
 				{ label: "Thunderstorm", value: "thunderstorm", icon: faCloudBolt },
-				{ label: "Ocean Waves", value: "oceanWaves", icon: faWater, processing: true },
+				{ label: "Ocean Waves", value: "oceanWaves", icon: faWater },
 				{ label: "Forest Ambience", value: "forest", icon: faLeaf },
 				{ label: "Campfire", value: "campfire", icon: faFire },
 				{ label: "Wind", value: "wind", icon: faWind },
@@ -620,7 +646,7 @@ const Focus = () => {
 						)}
 						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value: string) => handleAddTime(parseInt(value, 10))} button={<IcoButton icon={faStopwatch} text="Add Time" />} /> : null}
 
-						<ActionMenu options={soundOptions} button={<IcoButton icon={faVolumeLow} text="Sound" />} />
+						<ActionMenu options={soundOptions} button={<IcoButton className={soundStatus === "playing" ? "type-primary" : undefined} icon={soundStatus !== "playing" ? faVolumeLow : soundVolume >= 75 ? faVolumeHigh : soundVolume >= 50 ? faVolumeMedium : soundVolume > 0 ? faVolumeLow : faVolumeMute} text="Sound" />} />
 					</div>
 				</div>
 			</Container>

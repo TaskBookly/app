@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
+import { cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, Dispatch, ReactElement, ReactNode, RefObject, SetStateAction } from "react";
 import { jumpToSection } from "./nav";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -348,12 +348,12 @@ const SelectionMenu = ({ options, value, onChange, disabled = false, searchable 
 };
 
 interface ActionMenuValueOption {
+	type?: "option";
 	label: string;
 	subLabel?: string;
 	value: string;
 	icon?: IconProp;
 	onClick?: () => void;
-	type?: "option";
 	disabled?: boolean;
 	processing?: boolean;
 }
@@ -375,7 +375,22 @@ interface ActionMenuSelectionGroupOption {
 	options: { label: string; value: string; icon?: IconProp; disabled?: boolean; processing?: boolean }[];
 }
 
-type ActionMenuOption = ActionMenuValueOption | MenuSeparatorOption | ActionMenuToggleOption | ActionMenuSelectionGroupOption;
+interface ActionMenuRangeOption {
+	type: "range";
+	label: string;
+	subLabel?: string;
+	value: number;
+	onChange: (value: number) => void;
+	min?: number;
+	max?: number;
+	step?: number;
+	icon?: IconProp;
+	disabled?: boolean;
+	showValue?: boolean;
+	formatValue?: (value: number) => string;
+}
+
+type ActionMenuOption = ActionMenuValueOption | MenuSeparatorOption | ActionMenuToggleOption | ActionMenuSelectionGroupOption | ActionMenuRangeOption;
 
 interface ActionMenuProps {
 	button: ReactNode;
@@ -406,6 +421,9 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 			if (opt.type === "selectionGroup") {
 				return opt.options.some((o) => o.label.toLowerCase().includes(lower));
 			}
+			if (opt.type === "range") {
+				return opt.label.toLowerCase().includes(lower) || opt.subLabel?.toLowerCase().includes(lower);
+			}
 			return opt.label.toLowerCase().includes(lower) || opt.subLabel?.toLowerCase().includes(lower);
 		});
 	}
@@ -416,6 +434,7 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 			if (opt.type === "separator") return false;
 			if (opt.type === "selectionGroup") return opt.options.some((o) => o.icon);
 			if (opt.type === "toggle") return opt.icon;
+			if (opt.type === "range") return opt.icon;
 			return opt.icon;
 		});
 	}, [options]);
@@ -437,7 +456,7 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 					? cloneElement(button as ReactElement<{ className?: string; disabled?: boolean; style?: CSSProperties }>, {
 							className: [(button as ReactElement<{ className?: string }>).props.className || "", open ? "selected" : ""].filter(Boolean).join(" "),
 							style: { height: "100%", ...(button as ReactElement<{ style?: CSSProperties }>).props.style },
-					  })
+						})
 					: button}
 			</div>
 			<DropdownMenu open={open} buttonRef={buttonRef} menuRef={menuRef} setOpen={setOpen} setMenuAbove={setMenuAbove} menuAbove={menuAbove} className={className}>
@@ -476,6 +495,21 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 								<div className="switchInput" style={{ pointerEvents: "none" }}>
 									<input type="checkbox" checked={opt.value} readOnly />
 								</div>
+							</div>
+						);
+					}
+					if (opt.type === "range") {
+						return (
+							<div key={`range-${index}`} className="dropdown-option dropdown-option--range" onClick={(e) => e.stopPropagation()} aria-disabled={opt.disabled}>
+								<div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1 }}>
+									{hasIcons && <div style={{ width: "1.25em", display: "flex", justifyContent: "center", flexShrink: 0 }}>{opt.icon ? <FontAwesomeIcon className="dd-icon" icon={opt.icon} /> : null}</div>}
+									<span className="dd-labels">
+										<label className="dd-mainLabel">{opt.label}</label>
+										{opt.subLabel && <label className="dd-subLabel">{opt.subLabel}</label>}
+									</span>
+									{opt.showValue !== false ? <span className="dd-range-value">{opt.formatValue ? opt.formatValue(opt.value) : String(opt.value)}</span> : null}
+								</div>
+								<RangeInput value={opt.value} onChange={opt.onChange} min={opt.min} max={opt.max} step={opt.step} disabled={opt.disabled} showValue={false} formatValue={opt.formatValue} className="dropdown-range" />
 							</div>
 						);
 					}
@@ -537,6 +571,107 @@ const ActionMenu = ({ button, options, className = "", searchable = false, onOpt
 	);
 };
 
-export { ContainerGroup, Container, SelectionMenu, ActionMenu, Hint };
-export type { SelectionMenuOption, SelectionMenuValueOption, ActionMenuOption, HintType };
+interface RangeInputProps {
+	value: number;
+	onChange: (value: number) => void;
+	min?: number;
+	max?: number;
+	step?: number;
+	disabled?: boolean;
+	className?: string;
+	style?: CSSProperties;
+	tooltip?: string;
+	showValue?: boolean;
+	formatValue?: (value: number) => string;
+}
+
+const RangeInput = ({ value, onChange, min = 0, max = 100, step = 1, disabled = false, className = "", style, tooltip, showValue = true, formatValue }: RangeInputProps) => {
+	const trackRef = useRef<HTMLDivElement>(null);
+	const [isDragging, setIsDragging] = useState(false);
+	const pointerIdRef = useRef<number | null>(null);
+
+	const percent = useMemo(() => {
+		return ((value - min) / (max - min)) * 100;
+	}, [value, min, max]);
+
+	const displayValue = useMemo(() => {
+		if (formatValue) return formatValue(value);
+		return String(value);
+	}, [value, formatValue]);
+
+	const computeValue = useCallback(
+		(clientX: number) => {
+			if (!trackRef.current) return value;
+			const rect = trackRef.current.getBoundingClientRect();
+			const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+			const raw = min + ratio * (max - min);
+			const stepped = Math.round(raw / step) * step;
+			// Clamp and fix floating point
+			const decimals = (step.toString().split(".")[1] || "").length;
+			return Math.min(max, Math.max(min, parseFloat(stepped.toFixed(decimals))));
+		},
+		[min, max, step, value],
+	);
+
+	const handlePointerDown = (e: React.PointerEvent) => {
+		if (disabled) return;
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(true);
+		onChange(computeValue(e.clientX));
+		if (trackRef.current) {
+			trackRef.current.setPointerCapture(e.pointerId);
+			pointerIdRef.current = e.pointerId;
+		}
+	};
+
+	const handlePointerMove = (e: React.PointerEvent) => {
+		if (!isDragging || disabled) return;
+		onChange(computeValue(e.clientX));
+	};
+
+	const handlePointerUp = useCallback(() => {
+		if (trackRef.current && pointerIdRef.current !== null) {
+			try {
+				trackRef.current.releasePointerCapture(pointerIdRef.current);
+			} catch {
+				/* already released */
+			}
+		}
+		pointerIdRef.current = null;
+		setIsDragging(false);
+	}, []);
+
+	useEffect(() => {
+		if (!isDragging) return;
+		const onGlobalUp = () => handlePointerUp();
+		window.addEventListener("pointerup", onGlobalUp);
+		window.addEventListener("pointercancel", onGlobalUp);
+		return () => {
+			window.removeEventListener("pointerup", onGlobalUp);
+			window.removeEventListener("pointercancel", onGlobalUp);
+		};
+	}, [isDragging, handlePointerUp]);
+
+	return (
+		<div className={`range-input ${className}`.trim()} style={style} data-tooltip={tooltip} aria-disabled={disabled}>
+			{showValue ? (
+				<div className="range-input__header">
+					<span className="range-input__value">{displayValue}</span>
+				</div>
+			) : null}
+			<div ref={trackRef} className={`range-input__interact${isDragging ? " dragging" : ""}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp}>
+				<div className="range-input__track">
+					<div className="range-input__fill" style={{ width: `${percent}%` }} />
+					<div className="range-input__thumb" style={{ left: `${percent}%` }}>
+						<div className="range-input__thumb-knob" />
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+};
+
+export { ContainerGroup, Container, SelectionMenu, ActionMenu, Hint, RangeInput };
+export type { SelectionMenuOption, SelectionMenuValueOption, ActionMenuOption, HintType, RangeInputProps };
 export default IcoButton;

@@ -181,7 +181,7 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 			{ type: "separator" },
 			{
 				type: "normal",
-				label: "Use Break Charge",
+				label: "Charge Break",
 				enabled: !focusTimer.chargeUsedThisSession && focusTimer.chargesLeft > 0 && !focusTimer.isOnCooldown,
 				click: () => focusTimer.useBreakCharge(),
 			},

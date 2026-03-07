@@ -28,7 +28,11 @@ textarea,
 .dropdown-option,
 .picture-picker__preview > div,
 #chargingProgress div {
-	transition: background-color 280ms cubic-bezier(0.2, 0, 0, 1), color 280ms cubic-bezier(0.2, 0, 0, 1), box-shadow 320ms cubic-bezier(0.2, 0, 0, 1), outline-color 240ms cubic-bezier(0.2, 0, 0, 1);
+	transition:
+		background-color 280ms cubic-bezier(0.2, 0, 0, 1),
+		color 280ms cubic-bezier(0.2, 0, 0, 1),
+		box-shadow 320ms cubic-bezier(0.2, 0, 0, 1),
+		outline-color 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 img {
@@ -64,7 +68,14 @@ button {
 	align-items: center;
 	justify-content: center;
 	gap: 0.5em;
-	transition: outline-color 0.25s, outline-offset 0.25s, outline-width 0.25s, scale 0.2s, background 0.2s, opacity 0.1s, color 0.25s;
+	transition:
+		outline-color 0.25s,
+		outline-offset 0.25s,
+		outline-width 0.25s,
+		scale 0.2s,
+		background 0.2s,
+		opacity 0.1s,
+		color 0.25s;
 	z-index: 0;
 	outline: none;
 
@@ -90,7 +101,9 @@ button::before {
 	border-radius: 1em;
 	padding: 1px;
 	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-button-surface-highlights));
-	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: 1;
@@ -191,7 +204,9 @@ input[type="checkbox"]::before {
 	height: 1.7em;
 	background-color: var(--clr-switch-thumb, var(--clr-surface-a60));
 	border-radius: 50%;
-	transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
+	transition:
+		transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+		background-color 0.2s;
 }
 input[type="checkbox"]::after {
 	content: "";
@@ -200,7 +215,9 @@ input[type="checkbox"]::after {
 	border-radius: 1em;
 	padding: 1px;
 	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-button-surface-highlights));
-	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: 1;
@@ -261,7 +278,9 @@ input:disabled {
 	z-index: 1000;
 	background-color: var(--clr-surface-a10);
 	border-radius: 1em;
-	box-shadow: 0 8px 32px var(--clr-surface-a30), 0 3px 80px var(--clr-surface-a30);
+	box-shadow:
+		0 8px 32px var(--clr-surface-a30),
+		0 3px 80px var(--clr-surface-a30);
 	max-height: 15em;
 	min-width: 160px;
 	width: max-content;
@@ -299,11 +318,13 @@ input:disabled {
 	display: flex;
 	align-items: center;
 	font-weight: 700;
-	background-color: none;
+	background-color: transparent;
 	gap: 1em;
 	justify-content: space-between;
 	position: relative;
-	transition: background-color 0.15s, color 0.15s;
+	transition:
+		background-color 0.15s,
+		color 0.15s;
 	margin: 0;
 	overflow: hidden;
 
@@ -391,7 +412,9 @@ input:disabled {
 	inset: 0;
 	border-radius: 0.6em;
 	padding: 1px;
-	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: 1;
@@ -516,4 +539,156 @@ input:disabled {
 	font-weight: 800;
 	pointer-events: none;
 	z-index: 5;
+}
+
+/* ── Range Input ── */
+
+.range-input {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4em;
+	width: 100%;
+}
+
+.range-input[aria-disabled="true"] {
+	opacity: 60%;
+	pointer-events: none;
+}
+
+.range-input__header {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+.range-input__value {
+	font-weight: 700;
+	font-size: 0.85rem;
+	opacity: 0.8;
+}
+
+.range-input__interact {
+	position: relative;
+	padding-block: 0.65em;
+	cursor: pointer;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.range-input__track {
+	position: relative;
+	height: 6px;
+	background-color: var(--clr-surface-a20);
+	border-radius: 1em;
+	pointer-events: none;
+	isolation: isolate;
+}
+
+/* Gradient rim light on track */
+.range-input__track::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 1em;
+	padding: 1px;
+	background: linear-gradient(0deg, var(--clr-surface-a20), var(--clr-button-surface-highlights));
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.range-input__fill {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	border-radius: 1em;
+	background-color: var(--clr-primary-a10);
+	pointer-events: none;
+	z-index: 1;
+	transition: width 0.05s linear;
+}
+
+/* Gradient rim on fill */
+.range-input__fill::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 1em;
+	padding: 1px;
+	background: linear-gradient(0deg, var(--clr-primary-a10), var(--clr-button-selected-surface-highlights));
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	pointer-events: none;
+	z-index: 2;
+}
+
+.range-input__thumb {
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 3;
+	pointer-events: none;
+	transition: left 0.05s linear;
+}
+
+.range-input__thumb-knob {
+	width: 1.15em;
+	height: 1.15em;
+	border-radius: 50%;
+	background-color: #fff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+	position: relative;
+	transition:
+		scale 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+		background-color 0.2s;
+}
+
+/* Hover & drag states */
+.range-input__interact:hover .range-input__thumb-knob {
+	scale: 1.15;
+}
+
+.range-input__interact.dragging .range-input__thumb-knob {
+	scale: 1.25;
+}
+
+.range-input__interact.dragging .range-input__fill,
+.range-input__interact.dragging .range-input__thumb {
+	transition: none;
+}
+
+/* Range inside dropdown menus */
+.dropdown-option--range {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0.25em;
+	cursor: default;
+}
+
+.dropdown-option--range:hover {
+	background-color: transparent;
+}
+
+.dropdown-range {
+	width: 100%;
+}
+
+.dropdown-range .range-input__header {
+	display: none;
+}
+
+.dd-range-value {
+	font-weight: 700;
+	font-size: 0.85rem;
+	opacity: 0.8;
+	margin-left: auto;
+	white-space: nowrap;
+	flex-shrink: 0;
 }
