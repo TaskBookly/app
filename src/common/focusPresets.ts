@@ -88,15 +88,6 @@ export const BUILT_IN_FOCUS_PRESETS: FocusPreset[] = [
 		builtIn: true,
 	},
 	{
-		id: "screen-break",
-		name: "Screen Break",
-		workDurationMinutes: 20,
-		breakDurationMinutes: 2,
-		description: "Keeps your eyes fresh during intense screen time",
-		section: "Quick Wins",
-		builtIn: true,
-	},
-	{
 		id: "rapid-batching",
 		name: "Rapid Batching",
 		workDurationMinutes: 30,

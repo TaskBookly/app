@@ -163,7 +163,7 @@ const Focus = () => {
 			message: <p>Focus presets let you quickly swap between different work and break durations to suit what you are working on.</p>,
 			inputs: [
 				{ id: "name", label: "Preset name", type: "text", required: true, placeholder: "My preset" },
-				{ id: "workDuration", label: "Work duration (minutes)", description: "How long work sessions will last.", type: "number", min: 1, max: 180, step: 1, required: true, defaultValue: 25 },
+				{ id: "workDuration", label: "Work duration (minutes)", description: "How long work sessions will last.", type: "number", min: 1, max: 300, step: 1, required: true, defaultValue: 25 },
 				{ id: "breakDuration", label: "Break duration (minutes)", description: "How long break sessions will last.", type: "number", min: 1, max: 60, step: 1, required: true, defaultValue: 5 },
 			],
 			actions: [
@@ -179,7 +179,7 @@ const Focus = () => {
 		const name = typeof result.values.name === "string" ? result.values.name.trim() : "";
 		const workDuration = typeof result.values.workDuration === "number" ? result.values.workDuration : NaN;
 		const breakDuration = typeof result.values.breakDuration === "number" ? result.values.breakDuration : NaN;
-		const workValid = Number.isFinite(workDuration) && workDuration >= 1 && workDuration <= 180;
+		const workValid = Number.isFinite(workDuration) && workDuration >= 1 && workDuration <= 300;
 		const breakValid = Number.isFinite(breakDuration) && breakDuration >= 1 && breakDuration <= 60;
 
 		if (!name || !workValid || !breakValid) {
@@ -213,7 +213,7 @@ const Focus = () => {
 			title: `Edit ${preset.name}`,
 			inputs: [
 				{ id: "name", label: "Preset name", type: "text", required: true, defaultValue: preset.name },
-				{ id: "workDuration", label: "Work duration (minutes)", type: "number", min: 1, max: 180, step: 1, required: true, defaultValue: preset.workDurationMinutes },
+				{ id: "workDuration", label: "Work duration (minutes)", type: "number", min: 1, max: 300, step: 1, required: true, defaultValue: preset.workDurationMinutes },
 				{ id: "breakDuration", label: "Break duration (minutes)", type: "number", min: 1, max: 60, step: 1, required: true, defaultValue: preset.breakDurationMinutes },
 			],
 			actions: [
@@ -245,7 +245,7 @@ const Focus = () => {
 		const name = typeof result.values.name === "string" ? result.values.name.trim() : "";
 		const workDuration = typeof result.values.workDuration === "number" ? result.values.workDuration : NaN;
 		const breakDuration = typeof result.values.breakDuration === "number" ? result.values.breakDuration : NaN;
-		const workValid = Number.isFinite(workDuration) && workDuration >= 1 && workDuration <= 180;
+		const workValid = Number.isFinite(workDuration) && workDuration >= 1 && workDuration <= 300;
 		const breakValid = Number.isFinite(breakDuration) && breakDuration >= 1 && breakDuration <= 60;
 
 		if (!name || !workValid || !breakValid) {
@@ -574,7 +574,7 @@ const Focus = () => {
 			value: soundVolume,
 			min: 0,
 			max: 100,
-			step: 5,
+			step: 1,
 			showValue: true,
 			formatValue: (v: number) => `${v}%`,
 			onChange: setSoundVolume,
@@ -646,7 +646,7 @@ const Focus = () => {
 						)}
 						{currentSession === "work" && timerStatus !== "stopped" ? <ActionMenu options={workSessionAddTimeOptions} onOptionSelect={(value: string) => handleAddTime(parseInt(value, 10))} button={<IcoButton icon={faStopwatch} text="Add Time" />} /> : null}
 
-						<ActionMenu options={soundOptions} button={<IcoButton className={soundStatus === "playing" ? "type-primary" : undefined} icon={soundStatus !== "playing" ? faVolumeLow : soundVolume >= 75 ? faVolumeHigh : soundVolume >= 50 ? faVolumeMedium : soundVolume > 0 ? faVolumeLow : faVolumeMute} text="Sound" />} />
+						<ActionMenu options={soundOptions} button={<IcoButton className={soundStatus === "playing" ? (soundVolume === 0 ? "type-danger" : "type-primary") : undefined} icon={soundStatus !== "playing" ? faVolumeLow : soundVolume >= 75 ? faVolumeHigh : soundVolume >= 50 ? faVolumeMedium : soundVolume > 0 ? faVolumeLow : faVolumeMute} text="Sound" />} />
 					</div>
 				</div>
 			</Container>

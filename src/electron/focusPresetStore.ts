@@ -65,7 +65,7 @@ class FocusPresetStore {
 		const preset: FocusPreset = {
 			id: this.generateId(),
 			name: sanitizeName(payload.name),
-			workDurationMinutes: clampDuration(payload.workDurationMinutes, 1, 180),
+			workDurationMinutes: clampDuration(payload.workDurationMinutes, 1, 300),
 			breakDurationMinutes: clampDuration(payload.breakDurationMinutes, 1, 60),
 			description: payload.description?.trim() || undefined,
 			builtIn: false,
@@ -84,7 +84,7 @@ class FocusPresetStore {
 		const updated: FocusPreset = {
 			...this.customPresets[index],
 			name: sanitizeName(payload.name),
-			workDurationMinutes: clampDuration(payload.workDurationMinutes, 1, 180),
+			workDurationMinutes: clampDuration(payload.workDurationMinutes, 1, 300),
 			breakDurationMinutes: clampDuration(payload.breakDurationMinutes, 1, 60),
 			description: payload.description?.trim() || undefined,
 		};
@@ -163,7 +163,7 @@ class FocusPresetStore {
 			return null;
 		}
 		const name = typeof preset.name === "string" ? sanitizeName(preset.name) : "Custom Preset";
-		const work = clampDuration(Number(preset.workDurationMinutes), 1, 180);
+		const work = clampDuration(Number(preset.workDurationMinutes), 1, 300);
 		const rest = clampDuration(Number(preset.breakDurationMinutes), 1, 60);
 		const description = typeof preset.description === "string" && preset.description.trim().length > 0 ? preset.description.trim() : undefined;
 		if (typeof preset.id !== "string" || preset.id.trim().length === 0) {
