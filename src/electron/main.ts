@@ -181,10 +181,10 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 			{ type: "separator" },
 			{
 				type: "normal",
-				label: "Use Break Charge",
+				label: "Charge Break",
 				enabled: !focusTimer.chargeUsedThisSession && focusTimer.chargesLeft > 0 && !focusTimer.isOnCooldown,
 				click: () => focusTimer.useBreakCharge(),
-			}
+			},
 		);
 	}
 
@@ -204,7 +204,7 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 					{ type: "normal", label: "15 Minutes", click: () => focusTimer.addTime(900) },
 					{ type: "normal", label: "20 Minutes", click: () => focusTimer.addTime(1200) },
 				],
-			}
+			},
 		);
 	}
 
@@ -294,7 +294,11 @@ if (!gotInsLock) {
 		const settings = loadSettings();
 
 		if (!isDev() && buildInfo.channel === "stable") {
-			autoUpdater.checkForUpdates();
+			try {
+				autoUpdater.checkForUpdates();
+			} catch (err) {
+				console.error("Failed to check for updates:", err);
+			}
 		}
 
 		startupDisRPC();

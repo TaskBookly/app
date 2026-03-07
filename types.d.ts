@@ -65,7 +65,7 @@ interface Window {
 	};
 }
 
-type FocusPresetSection = "Productivity Staples" | "Study & Learning" | "Work & Creative" | "Science-Based";
+type FocusPresetSection = "Everyday Productivity" | "Deep Focus & Creativity" | "Quick Wins" | "Study & Learning";
 
 interface FocusPreset {
 	id: string;

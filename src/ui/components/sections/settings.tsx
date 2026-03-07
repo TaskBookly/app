@@ -3,7 +3,7 @@ import { Container, ContainerGroup, type SelectionMenuOption, type SelectionMenu
 import Tabs, { type Tab } from "../Tabs";
 import InfoConfig, { SwitchConfig, ButtonActionConfig, SelectionMenuConfig, PicturePickerConfig } from "../config";
 import { useSettings } from "../SettingsContext";
-import { faAnglesRight, faBell, faBolt, faBug, faFolderOpen, faGears, faInfoCircle, faLayerGroup, faLightbulb, faLink, faTimeline } from "@fortawesome/free-solid-svg-icons";
+import { faAnglesRight, faBell, faBolt, faBug, faFolderOpen, faGears, faInfoCircle, faLayerGroup, faLightbulb, faLink } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { usePopup } from "../PopupProvider";
 
@@ -92,14 +92,14 @@ const Settings = () => {
 		{ label: "System", value: "system" },
 		{ label: "Bookly Light", value: "light" },
 		{ label: "Bookly Dark", value: "dark" },
+		{ label: "Lavender Mist", value: "lavenderMist" },
+		{ label: "Strawberry Splash", value: "strawberrySplash" },
 		{ label: "Autumn Spice", value: "autumnSpice" },
 		{ label: "Catppuccin", value: "catppuccin" },
-		{ label: "Midnight Ocean", value: "midnightOcean" },
-		{ label: "Strawberry Splash", value: "strawberrySplash" },
 		{ label: "Forest Glass", value: "forestGlass" },
-		{ label: "Lavender Mist", value: "lavenderMist" },
-		{ label: "Retro Console", value: "retroConsole" },
+		{ label: "Midnight Ocean", value: "midnightOcean" },
 		{ label: "Monochrome Ink", value: "monochromeInk" },
+		{ label: "Retro Console", value: "retroConsole" },
 	];
 
 	const notifOptions: SelectionMenuOption[] = [
@@ -153,7 +153,7 @@ const Settings = () => {
 						<ContainerGroup>
 							<PicturePickerConfig
 								name="Theme"
-								description="The theme that will be displayed across the app. New themes are added occasionally!"
+								description="The palette that is displayed across TaskBookly."
 								menu={{
 									options: themeOptions.map((o) => ({
 										...o,
@@ -194,13 +194,7 @@ const Settings = () => {
 			icon: faLightbulb,
 			content: (
 				<>
-					<Container name="settings_focus_durations" header={{ title: "Period Lengths", icon: faTimeline }}>
-						<ContainerGroup>
-							<Hint type="info" label="Work and break durations are now managed through Focus presets." />
-						</ContainerGroup>
-					</Container>
-
-					<Container name="settings_focus_sounnds">
+					<Container name="settings_focus_sounds">
 						<ContainerGroup>
 							<SwitchConfig name="Auto-Play Mode" description="If enabled, focus sounds will automatically play during work periods and stop during break and transition periods or while a focus session is inactive." value={getSetting("autoSoundMode") === "true"} onChange={() => setSetting("autoSoundMode", getSetting("autoSoundMode") === "true" ? "false" : "true")} />
 						</ContainerGroup>
@@ -237,7 +231,7 @@ const Settings = () => {
 			icon: faBell,
 			content: (
 				<>
-					<Container name="settings_notifs">
+					<Container name="settings_notifs_push">
 						<ContainerGroup>
 							<Hint type="warning" label="Make sure to go to your system settings and grant TaskBookly highest priority for notifications or they may be hidden while you're on Do Not Disturb! (Sound will still play)"></Hint>
 							<SelectionMenuConfig name="Focus timers" description="Period completions" menu={{ options: focusTimerOptions }} value={getSetting("notifsFocus")} onChange={(v) => setSetting("notifsFocus", v)} />
@@ -292,7 +286,7 @@ const Settings = () => {
 							</>
 						),
 					},
-			  ]
+				]
 			: []),
 	];
 
