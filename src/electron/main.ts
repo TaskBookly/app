@@ -157,7 +157,24 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 	};
 
 	const primaryAction = getPrimaryAction();
-	const menuItems: MenuItemConstructorOptions[] = [
+	const menuItems: MenuItemConstructorOptions[] = [];
+
+	menuItems.push({
+		type: "normal",
+		label: "New Custom Preset...",
+		accelerator: "Command+E",
+		click: () => {},
+	});
+
+	menuItems.push({
+		type: "normal",
+		label: "Edit Preset...",
+		accelerator: "Shift+Command+E",
+		click: () => {},
+	});
+
+	menuItems.push(
+		{ type: "separator" },
 		{
 			type: "normal",
 			label: primaryAction.label,
@@ -165,7 +182,7 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 			enabled: primaryAction.enabled !== false,
 			click: primaryAction.click,
 		},
-	];
+	);
 
 	if (focusTimer.status !== "stopped") {
 		menuItems.push({
@@ -176,7 +193,24 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 		});
 	}
 
-	if (settings.breakChargingEnabled === "true" && focusTimer.session === "break" && (focusTimer.status === "counting" || focusTimer.status === "paused")) {
+	if (focusTimer.session === "work") {
+		menuItems.push({
+			type: "submenu",
+			label: "Add Time",
+			submenu: [
+				{ type: "normal", label: "1 Minute", click: () => focusTimer.addTime(60) },
+				{ type: "normal", label: "2 Minutes", click: () => focusTimer.addTime(120) },
+				{ type: "normal", label: "3 Minutes", click: () => focusTimer.addTime(180) },
+				{ type: "normal", label: "4 Minutes", click: () => focusTimer.addTime(240) },
+				{ type: "normal", label: "5 Minutes", click: () => focusTimer.addTime(300) },
+				{ type: "normal", label: "10 Minutes", click: () => focusTimer.addTime(600) },
+				{ type: "normal", label: "15 Minutes", click: () => focusTimer.addTime(900) },
+				{ type: "normal", label: "20 Minutes", click: () => focusTimer.addTime(1200) },
+			],
+		});
+	}
+
+	if (settings.breakChargingEnabled === "true") {
 		menuItems.push(
 			{ type: "separator" },
 			{
@@ -184,26 +218,6 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 				label: "Charge Break",
 				enabled: !focusTimer.chargeUsedThisSession && focusTimer.chargesLeft > 0 && !focusTimer.isOnCooldown,
 				click: () => focusTimer.useBreakCharge(),
-			},
-		);
-	}
-
-	if (focusTimer.session === "work") {
-		menuItems.push(
-			{ type: "separator" },
-			{
-				type: "submenu",
-				label: "Add Time",
-				submenu: [
-					{ type: "normal", label: "1 Minute", click: () => focusTimer.addTime(60) },
-					{ type: "normal", label: "2 Minutes", click: () => focusTimer.addTime(120) },
-					{ type: "normal", label: "3 Minutes", click: () => focusTimer.addTime(180) },
-					{ type: "normal", label: "4 Minutes", click: () => focusTimer.addTime(240) },
-					{ type: "normal", label: "5 Minutes", click: () => focusTimer.addTime(300) },
-					{ type: "normal", label: "10 Minutes", click: () => focusTimer.addTime(600) },
-					{ type: "normal", label: "15 Minutes", click: () => focusTimer.addTime(900) },
-					{ type: "normal", label: "20 Minutes", click: () => focusTimer.addTime(1200) },
-				],
 			},
 		);
 	}
@@ -261,7 +275,7 @@ function updateMenu() {
 
 		menuTemplate.push({
 			role: "help",
-			submenu: [{ type: "header", label: "Socials" }, { type: "normal", label: "GitHub", click: () => shell.openExternal("https://github.com/TaskBookly") }, { type: "separator" }, { type: "normal", label: "Report an Issue...", click: () => shell.openExternal("https://github.com/TaskBookly/app/issues/new") }, { type: "normal", label: "Acknowledgments", click: () => shell.openExternal("https://taskbookly.framer.website/acknowledgments") }],
+			submenu: [{ type: "normal", label: "Help Center", click: () => shell.openExternal("https://taskbookly.framer.website/help") }, { type: "separator" }, { type: "normal", label: "Report an Issue...", click: () => shell.openExternal("https://github.com/TaskBookly/app/issues/new") }, { type: "normal", label: "Acknowledgments", click: () => shell.openExternal("https://taskbookly.framer.website/acknowledgments") }],
 		});
 
 		const menu = Menu.buildFromTemplate(menuTemplate);
