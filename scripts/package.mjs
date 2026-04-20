@@ -175,7 +175,8 @@ const isPublishing = forwardArgs.some((arg) => {
 		return true;
 	}
 	if (arg.startsWith("--publish=")) {
-		const [, value = ""] = arg.split("=");
+		const equalIndex = arg.indexOf("=");
+		const value = equalIndex >= 0 ? arg.substring(equalIndex + 1) || "" : "";
 		return value !== "never";
 	}
 	return false;
