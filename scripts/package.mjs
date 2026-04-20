@@ -86,7 +86,8 @@ function parseArgs(argv) {
 		}
 
 		if (lower.startsWith("--channel=") || lower.startsWith("-c=")) {
-			const [, value] = arg.split("=");
+			const equalIndex = arg.indexOf("=");
+			const value = equalIndex >= 0 ? arg.substring(equalIndex + 1) : "";
 			if (value) {
 				channel = value;
 			}
@@ -100,7 +101,8 @@ function parseArgs(argv) {
 		}
 
 		if (lower.startsWith("--build=") || lower.startsWith("--build-number=") || lower.startsWith("-b=")) {
-			const [, value] = arg.split("=");
+			const equalIndex = arg.indexOf("=");
+			const value = equalIndex >= 0 ? arg.substring(equalIndex + 1) : "";
 			if (value) {
 				buildNumber = value;
 			}
