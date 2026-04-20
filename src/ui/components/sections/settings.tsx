@@ -212,7 +212,7 @@ const Settings = () => {
 
 					<Container name="settings_focus_breakCharging" header={{ title: 'Break Charging', icon: faBolt }}>
 						<ContainerGroup>
-							<SwitchConfig name="Enable break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and will extend them by a few minutes." value={getSetting('breakChargingEnabled') === 'true'} onChange={() => setSetting('breakChargingEnabled', getSetting('breakChargingEnabled') === 'true' ? 'false' : 'true')} />
+							<SwitchConfig name="Enable break charging" description="Receive break charges after a certain amount of work time as reward. These charges can be used once per break and will extend them by a few minutes." value={getSetting('breakChargingEnabled') === 'true'} onChange={() => setSetting('breakChargingEnabled', getSetting('breakChargingEnabled') === 'true' ? 'false' : 'true')} />
 						</ContainerGroup>
 						{getSetting('breakChargingEnabled') === 'true' ? (
 							<ContainerGroup>
