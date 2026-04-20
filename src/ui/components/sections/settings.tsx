@@ -217,7 +217,7 @@ const Settings = () => {
 						{getSetting('breakChargingEnabled') === 'true' ? (
 							<ContainerGroup>
 								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting('breakChargeExtensionAmount')} onChange={(v) => setSetting('breakChargeExtensionAmount', v)} />
-								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting('breakChargeCooldown')} onChange={(v) => setSetting('breakChargeCooldown', v)} />
+								<SelectionMenuConfig name="Charge cooldown time" description="To prevent consecutive charge usage, a cooldown can require waiting through a specified number of breaks before using another charge." menu={{ options: breakChargeCooldownOptions }} value={getSetting('breakChargeCooldown')} onChange={(v) => setSetting('breakChargeCooldown', v)} />
 								<SelectionMenuConfig name="Work time per charge" description="The amount of work time needed to earn a break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting('workTimePerCharge')} onChange={(v) => setSetting('workTimePerCharge', v)} />
 							</ContainerGroup>
 						) : null}
