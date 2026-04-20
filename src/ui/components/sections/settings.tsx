@@ -9,6 +9,13 @@ import { usePopup } from '../PopupProvider';
 
 const Settings = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
+
+	const toggleBooleanSetting = useCallback(
+		(key: string) => {
+			setSetting(key, getSetting(key) === 'true' ? 'false' : 'true');
+		},
+		[getSetting, setSetting]
+	);
 	const [appVersion, setAppVersion] = useState<string>('Loading...');
 	const [buildChannel, setBuildChannel] = useState<string>('Loading...');
 	const [buildNumber, setBuildNumber] = useState<string>('Loading...');
@@ -178,7 +185,7 @@ const Settings = () => {
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_general_misc" header={{ title: 'Connections', icon: faLink }}>
-						<SwitchConfig name="Discord Rich Presence" description={'If enabled, focus activity will be shared with your Discord client and displayed under your profile while a focus session is running.\nShare my activity must be enabled in Discord Settings > Activity Privacy for this to work.'} value={getSetting('discordRichPresence') === 'true'} onChange={() => setSetting('discordRichPresence', getSetting('discordRichPresence') === 'true' ? 'false' : 'true')} />
+						<SwitchConfig name="Discord Rich Presence" description={'If enabled, focus activity will be shared with your Discord client and displayed under your profile while a focus session is running.\nShare my activity must be enabled in Discord Settings > Activity Privacy for this to work.'} value={getSetting('discordRichPresence') === 'true'} onChange={() => toggleBooleanSetting('discordRichPresence')} />
 					</Container>
 					<Container name="settings_general_reset">
 						<ContainerGroup>
@@ -212,12 +219,12 @@ const Settings = () => {
 
 					<Container name="settings_focus_breakCharging" header={{ title: 'Break Charging', icon: faBolt }}>
 						<ContainerGroup>
-							<SwitchConfig name="Enable break charging" description="Recieve break charges after a certain amount of work time as reward. These charges can be used once per break and will extend them by a few minutes." value={getSetting('breakChargingEnabled') === 'true'} onChange={() => setSetting('breakChargingEnabled', getSetting('breakChargingEnabled') === 'true' ? 'false' : 'true')} />
+							<SwitchConfig name="Enable break charging" description="Receive break charges after a certain amount of work time as reward. These charges can be used once per break and will extend them by a few minutes." value={getSetting('breakChargingEnabled') === 'true'} onChange={() => setSetting('breakChargingEnabled', getSetting('breakChargingEnabled') === 'true' ? 'false' : 'true')} />
 						</ContainerGroup>
 						{getSetting('breakChargingEnabled') === 'true' ? (
 							<ContainerGroup>
 								<SelectionMenuConfig name="Charge extension amount" description="The amount of extended time that will be added to a break when using a charge." menu={{ options: breakChargeExtensionAmountOptions }} value={getSetting('breakChargeExtensionAmount')} onChange={(v) => setSetting('breakChargeExtensionAmount', v)} />
-								<SelectionMenuConfig name="Charge cooldown time" description="To prevent gathering charges and just using them over and over, a cooldown can be applied that prevents a charge from being able to be used for a certain amount of breaks once one is used." menu={{ options: breakChargeCooldownOptions }} value={getSetting('breakChargeCooldown')} onChange={(v) => setSetting('breakChargeCooldown', v)} />
+								<SelectionMenuConfig name="Charge cooldown time" description="To prevent consecutive charge usage, a cooldown can require waiting through a specified number of breaks before using another charge." menu={{ options: breakChargeCooldownOptions }} value={getSetting('breakChargeCooldown')} onChange={(v) => setSetting('breakChargeCooldown', v)} />
 								<SelectionMenuConfig name="Work time per charge" description="The amount of work time needed to earn a break charge." menu={{ options: workTimePerChargeOptions }} value={getSetting('workTimePerCharge')} onChange={(v) => setSetting('workTimePerCharge', v)} />
 							</ContainerGroup>
 						) : null}
