@@ -1,30 +1,30 @@
-import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell, nativeTheme, systemPreferences } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions, Notification, dialog, shell, nativeTheme, systemPreferences } from 'electron';
 
-import path from "path";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import path from 'path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 
-import { isDev } from "./utils.js";
-import { getPreloadPath } from "./pathResolver.js";
-import { getDefaultSettings } from "../common/settingsDefaults.js";
+import { isDev } from './utils.js';
+import { getPreloadPath } from './pathResolver.js';
+import { getDefaultSettings } from '../common/settingsDefaults.js';
 
-import FocusTimer from "./focus.js";
-import FocusPresetStore from "./focusPresetStore.js";
+import FocusTimer from './focus.js';
+import FocusPresetStore from './focusPresetStore.js';
 
-import { getBuildInfo } from "./buildInfo.js";
+import { getBuildInfo } from './buildInfo.js';
 
-import electronUpdPkg from "electron-updater";
-import { startupDisRPC } from "./discordRPC.js";
+import electronUpdPkg from 'electron-updater';
+import { startupDisRPC } from './discordRPC.js';
 
 const { autoUpdater } = electronUpdPkg;
 
-if (process.platform === "win32") {
-	app.setAppUserModelId("com.taskbookly.app");
+if (process.platform === 'win32') {
+	app.setAppUserModelId('com.taskbookly.app');
 }
 
-const suppressedErrorCodes = new Set(["EIO", "EPIPE"]);
+const suppressedErrorCodes = new Set(['EIO', 'EPIPE']);
 let hasShownMainProcessError = false;
 
-function handleMainProcessError(source: "uncaughtException" | "unhandledRejection", error: unknown) {
+function handleMainProcessError(source: 'uncaughtException' | 'unhandledRejection', error: unknown) {
 	const err = error instanceof Error ? error : new Error(String(error));
 	const nodeError = err as NodeJS.ErrnoException;
 	if (nodeError.code && suppressedErrorCodes.has(nodeError.code)) {
@@ -40,32 +40,32 @@ function handleMainProcessError(source: "uncaughtException" | "unhandledRejectio
 	const showDialog = () => {
 		dialog
 			.showMessageBox({
-				type: "error",
-				title: "Unexpected Error",
-				message: "TaskBookly encountered an unexpected error in the main process.",
+				type: 'error',
+				title: 'Unexpected Error',
+				message: 'TaskBookly encountered an unexpected error in the main process.',
 				detail: err.stack ?? err.message,
-				buttons: ["OK"],
+				buttons: ['OK'],
 			})
 			.catch((dialogError) => {
-				console.error("Failed to present error dialog", dialogError);
+				console.error('Failed to present error dialog', dialogError);
 			});
 	};
 
 	if (app.isReady()) {
 		showDialog();
 	} else {
-		app.once("ready", showDialog);
+		app.once('ready', showDialog);
 	}
 
 	console.error(`[main] ${source}:`, err);
 }
 
-process.on("uncaughtException", (error) => {
-	handleMainProcessError("uncaughtException", error);
+process.on('uncaughtException', (error) => {
+	handleMainProcessError('uncaughtException', error);
 });
 
-process.on("unhandledRejection", (reason) => {
-	handleMainProcessError("unhandledRejection", reason);
+process.on('unhandledRejection', (reason) => {
+	handleMainProcessError('unhandledRejection', reason);
 });
 
 if (isDev()) {
@@ -73,14 +73,14 @@ if (isDev()) {
 	if (simulatedCode) {
 		process.nextTick(() => {
 			const simulatedError = Object.assign(new Error(`Simulated main-process error (${simulatedCode})`), { code: simulatedCode });
-			process.emit("uncaughtException", simulatedError);
+			process.emit('uncaughtException', simulatedError);
 		});
 	}
 }
 
 export const appVersion: string = app.getVersion();
 
-const settingsPath = path.join(app.getPath("userData"), "settings.json");
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
 function loadSettings(): Record<string, string> {
 	try {
@@ -89,9 +89,9 @@ function loadSettings(): Record<string, string> {
 
 		if (existsSync(settingsPath)) {
 			try {
-				loadedSettings = JSON.parse(readFileSync(settingsPath, "utf8"));
+				loadedSettings = JSON.parse(readFileSync(settingsPath, 'utf8'));
 			} catch (error) {
-				console.error("Error parsing settings file:", error);
+				console.error('Error parsing settings file:', error);
 			}
 		}
 
@@ -104,20 +104,20 @@ function loadSettings(): Record<string, string> {
 
 		return cleanedSettings;
 	} catch (error) {
-		console.error("Error loading settings:", error);
+		console.error('Error loading settings:', error);
 		return getDefaultSettings(process.platform);
 	}
 }
 
 function saveSettings(settings: Record<string, string>): void {
 	try {
-		const userDataPath = app.getPath("userData");
+		const userDataPath = app.getPath('userData');
 		if (!existsSync(userDataPath)) {
 			mkdirSync(userDataPath, { recursive: true });
 		}
 		writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
 	} catch (error) {
-		console.error("Error saving settings:", error);
+		console.error('Error saving settings:', error);
 	}
 }
 
@@ -129,54 +129,70 @@ let focusPresetStore: FocusPresetStore;
 let allowWindowClose = false;
 let pendingClosePrompt = false;
 
+type FocusPresetMenuAction = 'new' | 'edit';
+
+function requestFocusPresetPopup(action: FocusPresetMenuAction): void {
+	if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
+		return;
+	}
+
+	mainWindow.webContents.send('jumpto-section', 'focus');
+	mainWindow.webContents.send('focus-presets-menu-action', action);
+}
+
 // Function to build the focus menu based on current state
 function buildFocusMenu(): MenuItemConstructorOptions {
 	const settings = loadSettings();
 	const getPrimaryAction = () => {
 		switch (focusTimer.status) {
-			case "paused":
+			case 'paused':
 				return {
-					label: "Resume",
-					accelerator: "Option+Command+P",
+					label: 'Resume',
+					accelerator: 'Option+Command+P',
 					click: () => focusTimer.resume(),
 				};
-			case "counting":
+			case 'counting':
 				return {
-					label: "Pause",
-					accelerator: "Option+Command+P",
+					label: 'Pause',
+					accelerator: 'Option+Command+P',
 					click: () => focusTimer.pause(),
-					enabled: focusTimer.session === "work",
+					enabled: focusTimer.session === 'work',
 				};
 			default:
 				return {
-					label: "Start",
-					accelerator: "Option+Command+S",
+					label: 'Start',
+					accelerator: 'Option+Command+S',
 					click: () => focusTimer.start(),
 				};
 		}
 	};
 
 	const primaryAction = getPrimaryAction();
+	const selectedPreset = focusPresetStore.getSelectedPreset();
+	const canManagePresets = focusTimer.status === 'stopped';
+	const canEditSelectedPreset = canManagePresets && !selectedPreset.builtIn;
 	const menuItems: MenuItemConstructorOptions[] = [];
 
 	menuItems.push({
-		type: "normal",
-		label: "New Custom Preset...",
-		accelerator: "Command+E",
-		click: () => {},
+		type: 'normal',
+		label: 'New Custom Preset...',
+		accelerator: 'Command+E',
+		enabled: canManagePresets,
+		click: () => requestFocusPresetPopup('new'),
 	});
 
 	menuItems.push({
-		type: "normal",
-		label: "Edit Preset...",
-		accelerator: "Shift+Command+E",
-		click: () => {},
+		type: 'normal',
+		label: 'Edit Preset...',
+		accelerator: 'Shift+Command+E',
+		enabled: canEditSelectedPreset,
+		click: () => requestFocusPresetPopup('edit'),
 	});
 
 	menuItems.push(
-		{ type: "separator" },
+		{ type: 'separator' },
 		{
-			type: "normal",
+			type: 'normal',
 			label: primaryAction.label,
 			accelerator: primaryAction.accelerator,
 			enabled: primaryAction.enabled !== false,
@@ -184,38 +200,38 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 		},
 	);
 
-	if (focusTimer.status !== "stopped") {
+	if (focusTimer.status !== 'stopped') {
 		menuItems.push({
-			type: "normal",
-			label: "Stop",
-			accelerator: "Option+Command+X",
+			type: 'normal',
+			label: 'Stop',
+			accelerator: 'Option+Command+X',
 			click: () => focusTimer.stop(),
 		});
 	}
 
-	if (focusTimer.session === "work") {
+	if (focusTimer.session === 'work') {
 		menuItems.push({
-			type: "submenu",
-			label: "Add Time",
+			type: 'submenu',
+			label: 'Add Time',
 			submenu: [
-				{ type: "normal", label: "1 Minute", click: () => focusTimer.addTime(60) },
-				{ type: "normal", label: "2 Minutes", click: () => focusTimer.addTime(120) },
-				{ type: "normal", label: "3 Minutes", click: () => focusTimer.addTime(180) },
-				{ type: "normal", label: "4 Minutes", click: () => focusTimer.addTime(240) },
-				{ type: "normal", label: "5 Minutes", click: () => focusTimer.addTime(300) },
-				{ type: "normal", label: "10 Minutes", click: () => focusTimer.addTime(600) },
-				{ type: "normal", label: "15 Minutes", click: () => focusTimer.addTime(900) },
-				{ type: "normal", label: "20 Minutes", click: () => focusTimer.addTime(1200) },
+				{ type: 'normal', label: '1 Minute', click: () => focusTimer.addTime(60) },
+				{ type: 'normal', label: '2 Minutes', click: () => focusTimer.addTime(120) },
+				{ type: 'normal', label: '3 Minutes', click: () => focusTimer.addTime(180) },
+				{ type: 'normal', label: '4 Minutes', click: () => focusTimer.addTime(240) },
+				{ type: 'normal', label: '5 Minutes', click: () => focusTimer.addTime(300) },
+				{ type: 'normal', label: '10 Minutes', click: () => focusTimer.addTime(600) },
+				{ type: 'normal', label: '15 Minutes', click: () => focusTimer.addTime(900) },
+				{ type: 'normal', label: '20 Minutes', click: () => focusTimer.addTime(1200) },
 			],
 		});
 	}
 
-	if (settings.breakChargingEnabled === "true") {
+	if (settings.breakChargingEnabled === 'true') {
 		menuItems.push(
-			{ type: "separator" },
+			{ type: 'separator' },
 			{
-				type: "normal",
-				label: "Charge Break",
+				type: 'normal',
+				label: 'Charge Break',
 				enabled: !focusTimer.chargeUsedThisSession && focusTimer.chargesLeft > 0 && !focusTimer.isOnCooldown,
 				click: () => focusTimer.useBreakCharge(),
 			},
@@ -223,7 +239,7 @@ function buildFocusMenu(): MenuItemConstructorOptions {
 	}
 
 	return {
-		label: "Focus",
+		label: 'Focus',
 		submenu: menuItems,
 	};
 }
@@ -232,50 +248,50 @@ function updateMenu() {
 	if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
 		return;
 	}
-	if (process.platform === "darwin") {
+	if (process.platform === 'darwin') {
 		const menuTemplate: MenuItemConstructorOptions[] = [
 			{
 				label: app.name,
-				submenu: [{ role: "about" }, { type: "separator" }, { label: "Settings...", accelerator: "Command+,", click: () => mainWindow.webContents.send("jumpto-section", "settings") }, { type: "separator" }, { role: "services" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }],
+				submenu: [{ role: 'about' }, { type: 'separator' }, { label: 'Settings...', accelerator: 'Command+,', click: () => mainWindow.webContents.send('jumpto-section', 'settings') }, { type: 'separator' }, { role: 'services' }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }],
 			},
 			{
-				label: "Edit",
-				submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }],
+				label: 'Edit',
+				submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }],
 			},
 			{
-				label: "View",
+				label: 'View',
 				submenu: [
 					{
-						type: "normal",
-						label: "Toggle Sidebar",
-						accelerator: "Ctrl+Tab",
+						type: 'normal',
+						label: 'Toggle Sidebar',
+						accelerator: 'Ctrl+Tab',
 						click: () => {
 							sidebarCollapsed = !sidebarCollapsed;
-							mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+							mainWindow.webContents.send('sidebar-state', sidebarCollapsed);
 						},
 					},
-					{ type: "separator" },
-					{ role: "resetZoom" },
-					{ role: "zoomIn" },
-					{ role: "zoomOut" },
-					{ type: "separator" },
-					{ role: "togglefullscreen" },
+					{ type: 'separator' },
+					{ role: 'resetZoom' },
+					{ role: 'zoomIn' },
+					{ role: 'zoomOut' },
+					{ type: 'separator' },
+					{ role: 'togglefullscreen' },
 				],
 			},
 			buildFocusMenu(),
-			{ role: "windowMenu" },
+			{ role: 'windowMenu' },
 		];
 
 		if (isDev()) {
 			menuTemplate.push({
-				label: "Debug",
-				submenu: [{ role: "reload" }, { role: "forceReload" }, { type: "separator" }, { role: "toggleDevTools" }, { type: "separator" }, { type: "submenu", label: "More Options", submenu: [{ type: "normal", label: "Crash Renderer", click: () => mainWindow.webContents.forcefullyCrashRenderer() }] }],
+				label: 'Debug',
+				submenu: [{ role: 'reload' }, { role: 'forceReload' }, { type: 'separator' }, { role: 'toggleDevTools' }, { type: 'separator' }, { type: 'submenu', label: 'More Options', submenu: [{ type: 'normal', label: 'Crash Renderer', click: () => mainWindow.webContents.forcefullyCrashRenderer() }] }],
 			});
 		}
 
 		menuTemplate.push({
-			role: "help",
-			submenu: [{ type: "normal", label: "Help Center", click: () => shell.openExternal("https://taskbookly.framer.website/help") }, { type: "separator" }, { type: "normal", label: "Report an Issue...", click: () => shell.openExternal("https://github.com/TaskBookly/app/issues/new") }, { type: "normal", label: "Acknowledgments", click: () => shell.openExternal("https://taskbookly.framer.website/acknowledgments") }],
+			role: 'help',
+			submenu: [{ type: 'normal', label: 'Help Center', click: () => shell.openExternal('https://taskbookly.framer.website/help') }, { type: 'separator' }, { type: 'normal', label: 'Report an Issue...', click: () => shell.openExternal('https://github.com/TaskBookly/app/issues/new') }, { type: 'normal', label: 'Acknowledgments', click: () => shell.openExternal('https://taskbookly.framer.website/acknowledgments') }],
 		});
 
 		const menu = Menu.buildFromTemplate(menuTemplate);
@@ -290,7 +306,7 @@ const gotInsLock = app.requestSingleInstanceLock();
 if (!gotInsLock) {
 	app.quit();
 } else {
-	app.on("second-instance", () => {
+	app.on('second-instance', () => {
 		if (mainWindow) {
 			if (mainWindow.isMinimized()) mainWindow.restore();
 			mainWindow.focus();
@@ -300,25 +316,25 @@ if (!gotInsLock) {
 	app.whenReady().then(() => {
 		autoUpdater.autoDownload = false;
 		const buildInfo = getBuildInfo();
-		const updaterChannel = buildInfo.channel === "stable" ? "latest" : buildInfo.channel;
-		autoUpdater.allowPrerelease = buildInfo.channel !== "stable";
+		const updaterChannel = buildInfo.channel === 'stable' ? 'latest' : buildInfo.channel;
+		autoUpdater.allowPrerelease = buildInfo.channel !== 'stable';
 		autoUpdater.channel = updaterChannel;
 
 		focusPresetStore = new FocusPresetStore();
 		const settings = loadSettings();
 
-		if (!isDev() && buildInfo.channel === "stable") {
+		if (!isDev() && buildInfo.channel === 'stable') {
 			try {
 				autoUpdater.checkForUpdates();
 			} catch (err) {
-				console.error("Failed to check for updates:", err);
+				console.error('Failed to check for updates:', err);
 			}
 		}
 
 		startupDisRPC();
 
 		mainWindow = new BrowserWindow({
-			title: "TaskBookly",
+			title: 'TaskBookly',
 			webPreferences: {
 				preload: getPreloadPath(),
 				devTools: isDev(),
@@ -332,8 +348,8 @@ if (!gotInsLock) {
 			minHeight: 500,
 			autoHideMenuBar: true,
 			frame: false,
-			titleBarStyle: process.platform === "darwin" ? "hiddenInset" : undefined,
-			backgroundColor: "#000000",
+			titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : undefined,
+			backgroundColor: '#000000',
 			fullscreenable: false,
 		});
 
@@ -342,13 +358,13 @@ if (!gotInsLock) {
 
 		focusTimer.forceDataUpdate();
 
-		mainWindow.on("close", (event) => {
+		mainWindow.on('close', (event) => {
 			if (allowWindowClose) {
 				allowWindowClose = false;
 				return;
 			}
 
-			const shouldConfirmClose = Boolean(focusTimer) && focusTimer.status !== "stopped";
+			const shouldConfirmClose = Boolean(focusTimer) && focusTimer.status !== 'stopped';
 			const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
 			if (!shouldConfirmClose || !hasRenderer) {
 				return;
@@ -361,131 +377,131 @@ if (!gotInsLock) {
 			pendingClosePrompt = true;
 
 			mainWindow.show();
-			mainWindow.webContents.send("window-close-requested");
+			mainWindow.webContents.send('window-close-requested');
 		});
 
-		focusTimer.on("timer-update", (eventType, data) => {
+		focusTimer.on('timer-update', (eventType, data) => {
 			const hasRenderer = mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed();
 			if (!hasRenderer) {
 				return;
 			}
-			if (eventType !== "tick") {
+			if (eventType !== 'tick') {
 				updateMenu();
 			}
-			mainWindow.webContents.send("focus-timer-update", data);
+			mainWindow.webContents.send('focus-timer-update', data);
 		});
 
-		ipcMain.on("focus-start", () => {
+		ipcMain.on('focus-start', () => {
 			focusTimer.start();
 		});
 
-		ipcMain.on("focus-pause", () => {
+		ipcMain.on('focus-pause', () => {
 			focusTimer.pause();
 		});
 
-		ipcMain.on("focus-resume", () => {
+		ipcMain.on('focus-resume', () => {
 			focusTimer.resume();
 		});
 
-		ipcMain.on("focus-stop", () => {
+		ipcMain.on('focus-stop', () => {
 			focusTimer.stop();
 		});
 
-		ipcMain.on("focus-request-data-update", () => {
+		ipcMain.on('focus-request-data-update', () => {
 			focusTimer.forceDataUpdate();
 		});
 
-		ipcMain.on("focus-add-time", (_, seconds: number) => {
+		ipcMain.on('focus-add-time', (_, seconds: number) => {
 			focusTimer.addTime(seconds);
 		});
 
-		ipcMain.handle("focus-use-charge", () => {
+		ipcMain.handle('focus-use-charge', () => {
 			return focusTimer.useBreakCharge();
 		});
 
-		ipcMain.handle("open-userdata", () => {
-			const userDataPath = app.getPath("userData");
+		ipcMain.handle('open-userdata', () => {
+			const userDataPath = app.getPath('userData');
 			shell.openPath(userDataPath);
 		});
 
-		ipcMain.handle("sys-theme", () => {
-			return nativeTheme.shouldUseDarkColors ? "dark" : "light";
+		ipcMain.handle('sys-theme', () => {
+			return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
 		});
 
-		ipcMain.handle("sys-clock-format", () => {
-			if (process.platform === "darwin") {
-				return systemPreferences.getUserDefault("AppleICUForce24HourTime", "boolean") ? "24hr" : "12hr";
+		ipcMain.handle('sys-clock-format', () => {
+			if (process.platform === 'darwin') {
+				return systemPreferences.getUserDefault('AppleICUForce24HourTime', 'boolean') ? '24hr' : '12hr';
 			}
-			const is24Hr = !new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions().hour12;
-			return is24Hr ? "24hr" : "12hr";
+			const is24Hr = !new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hour12;
+			return is24Hr ? '24hr' : '12hr';
 		});
 
-		ipcMain.on("open-shell-url", (_, url) => {
+		ipcMain.on('open-shell-url', (_, url) => {
 			shell.openExternal(url);
 		});
 
-		nativeTheme.on("updated", () => {
-			mainWindow.webContents.send("sys-theme-changed", nativeTheme.shouldUseDarkColors ? "dark" : "light");
+		nativeTheme.on('updated', () => {
+			mainWindow.webContents.send('sys-theme-changed', nativeTheme.shouldUseDarkColors ? 'dark' : 'light');
 		});
 
-		autoUpdater.on("update-available", (data) => {
+		autoUpdater.on('update-available', (data) => {
 			if (Notification.isSupported()) {
 				const notif = new Notification({
-					title: "Update Available",
+					title: 'Update Available',
 					subtitle: `v${data.version}`,
-					body: "A new TaskBookly update is available to download!",
+					body: 'A new TaskBookly update is available to download!',
 					silent: true,
 				});
 
-				notif.on("click", () => shell.openExternal("https://taskbookly.framer.website/download"));
+				notif.on('click', () => shell.openExternal('https://taskbookly.framer.website/download'));
 				notif.show();
-				mainWindow.webContents.send("play-sound", "notifs/info.ogg");
+				mainWindow.webContents.send('play-sound', 'notifs/info.ogg');
 			}
 		});
 
-		ipcMain.on("toggle-sidebar", () => {
+		ipcMain.on('toggle-sidebar', () => {
 			sidebarCollapsed = !sidebarCollapsed;
-			mainWindow.webContents.send("sidebar-state", sidebarCollapsed);
+			mainWindow.webContents.send('sidebar-state', sidebarCollapsed);
 		});
 
-		ipcMain.handle("get-sidebar-state", () => {
+		ipcMain.handle('get-sidebar-state', () => {
 			return sidebarCollapsed;
 		});
 
-		ipcMain.handle("get-app-version", () => {
+		ipcMain.handle('get-app-version', () => {
 			return appVersion;
 		});
 
-		ipcMain.handle("get-build-info", () => {
+		ipcMain.handle('get-build-info', () => {
 			return buildInfo;
 		});
 
-		ipcMain.handle("get-node-env", () => {
-			return process.env.NODE_ENV || "production";
+		ipcMain.handle('get-node-env', () => {
+			return process.env.NODE_ENV || 'production';
 		});
 
-		ipcMain.handle("get-platform", () => {
+		ipcMain.handle('get-platform', () => {
 			return process.platform;
 		});
 
-		ipcMain.handle("get-electron-version", () => {
-			return process.versions.electron || "unknown";
+		ipcMain.handle('get-electron-version', () => {
+			return process.versions.electron || 'unknown';
 		});
 
-		ipcMain.handle("get-chrome-version", () => {
-			return process.versions.chrome || process.versions.v8 || "unknown";
+		ipcMain.handle('get-chrome-version', () => {
+			return process.versions.chrome || process.versions.v8 || 'unknown';
 		});
 
-		ipcMain.handle("settings-load", () => {
+		ipcMain.handle('settings-load', () => {
 			return loadSettings();
 		});
 
-		ipcMain.handle("settings-get", (_event, key: string) => {
+		ipcMain.handle('settings-get', (_event, key: string) => {
 			const settings = loadSettings();
-			return settings[key] || "";
+			return settings[key] || '';
 		});
 
-		ipcMain.handle("settings-set", (_event, key: string, value: string) => {
+		ipcMain.handle('settings-set', (_event, key: string, value: string) => {
 			const defaultSettings = getDefaultSettings(process.platform);
 
 			if (!(key in defaultSettings)) {
@@ -500,7 +516,7 @@ if (!gotInsLock) {
 			FocusTimer.updateSettings(settings);
 
 			// Force data update when break charge related settings change
-			if (key === "breakChargingEnabled" || key === "workTimePerCharge" || key === "breakChargeExtensionAmount" || key === "breakChargeCooldown") {
+			if (key === 'breakChargingEnabled' || key === 'workTimePerCharge' || key === 'breakChargeExtensionAmount' || key === 'breakChargeCooldown') {
 				focusTimer.forceDataUpdate();
 			}
 
@@ -512,46 +528,53 @@ if (!gotInsLock) {
 			selectedPresetId: focusPresetStore.getSelectedPresetId(),
 		});
 
-		ipcMain.handle("focus-presets-list", () => {
+		ipcMain.handle('focus-presets-list', () => {
 			return getPresetPayload();
 		});
 
-		ipcMain.handle("focus-presets-create", (_event, preset: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
-			return focusPresetStore.createPreset(preset);
+		ipcMain.handle('focus-presets-create', (_event, preset: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
+			const created = focusPresetStore.createPreset(preset);
+			updateMenu();
+			return created;
 		});
 
-		ipcMain.handle("focus-presets-update", (_event, presetId: string, payload: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
+		ipcMain.handle('focus-presets-update', (_event, presetId: string, payload: { name: string; workDurationMinutes: number; breakDurationMinutes: number; description?: string }) => {
 			const updated = focusPresetStore.updatePreset(presetId, payload);
 			if (updated && focusPresetStore.getSelectedPresetId() === presetId) {
 				FocusTimer.setActivePreset(updated);
 				focusTimer.forceDataUpdate();
 			}
+			if (updated) {
+				updateMenu();
+			}
 			return updated;
 		});
 
-		ipcMain.handle("focus-presets-delete", (_event, presetId: string) => {
+		ipcMain.handle('focus-presets-delete', (_event, presetId: string) => {
 			const result = focusPresetStore.deletePreset(presetId);
 			if (result) {
 				const activePreset = focusPresetStore.getSelectedPreset();
 				FocusTimer.setActivePreset(activePreset);
 				focusTimer.forceDataUpdate();
+				updateMenu();
 			}
 			return result;
 		});
 
-		ipcMain.handle("focus-presets-set-active", (_event, presetId: string) => {
+		ipcMain.handle('focus-presets-set-active', (_event, presetId: string) => {
 			const preset = focusPresetStore.setSelectedPreset(presetId);
 			FocusTimer.setActivePreset(preset);
 			focusTimer.forceDataUpdate();
+			updateMenu();
 			return { selectedPresetId: preset.id };
 		});
 
 		// Window control handlers
-		ipcMain.on("window-minimize", () => {
+		ipcMain.on('window-minimize', () => {
 			mainWindow.minimize();
 		});
 
-		ipcMain.on("window-maximize", () => {
+		ipcMain.on('window-maximize', () => {
 			if (mainWindow.isMaximized()) {
 				mainWindow.restore();
 			} else {
@@ -559,15 +582,15 @@ if (!gotInsLock) {
 			}
 		});
 
-		ipcMain.on("window-close", () => {
+		ipcMain.on('window-close', () => {
 			mainWindow.close();
 		});
 
-		ipcMain.handle("window-is-maximized", () => {
+		ipcMain.handle('window-is-maximized', () => {
 			return mainWindow.isMaximized();
 		});
 
-		ipcMain.handle("window-close-decision", (_event, shouldClose: boolean) => {
+		ipcMain.handle('window-close-decision', (_event, shouldClose: boolean) => {
 			pendingClosePrompt = false;
 			if (!mainWindow || mainWindow.isDestroyed()) {
 				return false;
@@ -580,33 +603,33 @@ if (!gotInsLock) {
 		});
 
 		// Listen for window state changes
-		mainWindow.on("maximize", () => {
-			mainWindow.webContents.send("window-state-changed", { maximized: true });
+		mainWindow.on('maximize', () => {
+			mainWindow.webContents.send('window-state-changed', { maximized: true });
 		});
 
-		mainWindow.on("unmaximize", () => {
-			mainWindow.webContents.send("window-state-changed", { maximized: false });
+		mainWindow.on('unmaximize', () => {
+			mainWindow.webContents.send('window-state-changed', { maximized: false });
 		});
 
-		mainWindow.webContents.on("render-process-gone", async (_, error) => {
+		mainWindow.webContents.on('render-process-gone', async (_, error) => {
 			promptProcessFailure(error);
 		});
 
-		app.on("child-process-gone", async (_, error) => {
+		app.on('child-process-gone', async (_, error) => {
 			promptProcessFailure(error);
 		});
 
 		if (isDev()) {
-			mainWindow.loadURL("http://localhost:5123");
+			mainWindow.loadURL('http://localhost:5123');
 		} else {
-			mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
+			mainWindow.loadFile(path.join(app.getAppPath(), '/dist-react/index.html'));
 		}
 
 		updateMenu();
 	});
 }
 
-app.on("window-all-closed", () => {
+app.on('window-all-closed', () => {
 	if (focusTimer) {
 		focusTimer.dispose();
 	}
@@ -615,22 +638,22 @@ app.on("window-all-closed", () => {
 
 async function promptProcessFailure(error: Electron.Details | Electron.RenderProcessGoneDetails) {
 	const { response } = await dialog.showMessageBox({
-		type: "error",
-		message: "This is.. awkward",
+		type: 'error',
+		message: 'This is.. awkward',
 		detail: `
 			TaskBookly encountered a fatal error and crashed :(
 			Reason: ${error.reason} (Exit Code: ${error.exitCode})
 
 			If you continue to encounter this error, please open a new Issue on our GitHub Repository
 			`,
-		title: "Fatal Error",
-		buttons: ["Restart", "Close & Open Issue...", "Close"],
+		title: 'Fatal Error',
+		buttons: ['Restart', 'Close & Open Issue...', 'Close'],
 		cancelId: 2,
 	});
 	if (response === 0) {
 		app.relaunch();
 	} else if (response === 1) {
-		shell.openExternal("https://github.com/TaskBookly/app/issues/new");
+		shell.openExternal('https://github.com/TaskBookly/app/issues/new');
 	}
 	app.quit();
 }

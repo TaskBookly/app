@@ -1,9 +1,11 @@
 interface TaskBooklyBuildInfo {
-	channel: "stable" | "beta" | "dev";
+	channel: 'stable' | 'beta' | 'dev';
 	buildNumber: string;
 	version: string;
 	generatedAt?: string;
 }
+
+type FocusPresetMenuAction = 'new' | 'edit';
 
 interface Window {
 	electron: {
@@ -36,13 +38,14 @@ interface Window {
 			update: (presetId: string, preset: FocusPresetInput) => Promise<FocusPreset | null>;
 			delete: (presetId: string) => Promise<boolean>;
 			setActive: (presetId: string) => Promise<{ selectedPresetId: string }>;
+			onMenuAction: (callback: (action: FocusPresetMenuAction) => void) => () => void;
 		};
 		sound: {
 			onplaySound: (callback: (soundPath: string) => void) => void;
 		};
 		system: {
 			getTheme: () => Promise<string>;
-			getClockFormat: () => Promise<"12hr" | "24hr">;
+			getClockFormat: () => Promise<'12hr' | '24hr'>;
 			onThemeChange: (callback: (theme: string) => void) => void;
 		};
 		settings: {
@@ -65,7 +68,7 @@ interface Window {
 	};
 }
 
-type FocusPresetSection = "Everyday Productivity" | "Deep Focus & Creativity" | "Quick Wins" | "Study & Learning";
+type FocusPresetSection = 'Everyday Productivity' | 'Deep Focus & Creativity' | 'Quick Wins' | 'Study & Learning';
 
 interface FocusPreset {
 	id: string;
@@ -85,8 +88,8 @@ interface FocusPresetInput {
 }
 
 interface TimerData {
-	session: "none" | "work" | "break" | "transition";
-	status: "counting" | "paused" | "stopped";
+	session: 'none' | 'work' | 'break' | 'transition';
+	status: 'counting' | 'paused' | 'stopped';
 	timeLeft: number;
 	chargesLeft: number;
 	timeLeftTillNextCharge: number;
