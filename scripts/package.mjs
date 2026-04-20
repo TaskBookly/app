@@ -227,6 +227,16 @@ if (isPublishing && !hasReleaseTypeOverride) {
 	releaseArgs.push(`--config.publish.releaseType=${inferredReleaseType}`);
 }
 
-const builderArgs = [...forwardArgs, ...releaseArgs, `--config.extraMetadata.taskbookly.channel=${channel}`, `--config.extraMetadata.taskbookly.buildNumber=${buildNumber}`, `--config.extraMetadata.taskbookly.generatedAt=${generatedAt}`];
+const extraMetadataArgs = [
+	`--config.extraMetadata.taskbookly.channel=${channel}`,
+	`--config.extraMetadata.taskbookly.buildNumber=${buildNumber}`,
+	`--config.extraMetadata.taskbookly.generatedAt=${generatedAt}`,
+];
+
+const builderArgs = [
+	...forwardArgs,
+	...releaseArgs,
+	...extraMetadataArgs,
+];
 
 run("npx", ["electron-builder", ...builderArgs], env);
