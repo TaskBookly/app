@@ -9,6 +9,13 @@ import { usePopup } from '../PopupProvider';
 
 const Settings = () => {
 	const { setSetting, getSetting, setSettingsState, defaultSettings } = useSettings();
+
+	const toggleBooleanSetting = useCallback(
+		(key: string) => {
+			setSetting(key, getSetting(key) === 'true' ? 'false' : 'true');
+		},
+		[getSetting, setSetting]
+	);
 	const [appVersion, setAppVersion] = useState<string>('Loading...');
 	const [buildChannel, setBuildChannel] = useState<string>('Loading...');
 	const [buildNumber, setBuildNumber] = useState<string>('Loading...');
@@ -178,7 +185,7 @@ const Settings = () => {
 						</ContainerGroup>
 					</Container>
 					<Container name="settings_general_misc" header={{ title: 'Connections', icon: faLink }}>
-						<SwitchConfig name="Discord Rich Presence" description={'If enabled, focus activity will be shared with your Discord client and displayed under your profile while a focus session is running.\nShare my activity must be enabled in Discord Settings > Activity Privacy for this to work.'} value={getSetting('discordRichPresence') === 'true'} onChange={() => setSetting('discordRichPresence', getSetting('discordRichPresence') === 'true' ? 'false' : 'true')} />
+						<SwitchConfig name="Discord Rich Presence" description={'If enabled, focus activity will be shared with your Discord client and displayed under your profile while a focus session is running.\nShare my activity must be enabled in Discord Settings > Activity Privacy for this to work.'} value={getSetting('discordRichPresence') === 'true'} onChange={() => toggleBooleanSetting('discordRichPresence')} />
 					</Container>
 					<Container name="settings_general_reset">
 						<ContainerGroup>
