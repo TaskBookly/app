@@ -33,7 +33,7 @@ try {
 		}
 	});
 } catch (e) {
-	// Ignore
+	// Ignore errors: gh_secret.env is optional and may be absent or unreadable in some environments
 }
 
 function showUsage() {
