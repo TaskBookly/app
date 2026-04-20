@@ -33,7 +33,7 @@ try {
 		}
 	});
 } catch (e) {
-	// Ignore
+	// Ignore errors: gh_secret.env is optional and may be absent or unreadable in some environments
 }
 
 function showUsage() {
@@ -86,7 +86,8 @@ function parseArgs(argv) {
 		}
 
 		if (lower.startsWith("--channel=") || lower.startsWith("-c=")) {
-			const [, value] = arg.split("=");
+			const equalIndex = arg.indexOf("=");
+			const value = equalIndex >= 0 ? arg.substring(equalIndex + 1) : "";
 			if (value) {
 				channel = value;
 			}
@@ -100,7 +101,8 @@ function parseArgs(argv) {
 		}
 
 		if (lower.startsWith("--build=") || lower.startsWith("--build-number=") || lower.startsWith("-b=")) {
-			const [, value] = arg.split("=");
+			const equalIndex = arg.indexOf("=");
+			const value = equalIndex >= 0 ? arg.substring(equalIndex + 1) : "";
 			if (value) {
 				buildNumber = value;
 			}
@@ -175,7 +177,8 @@ const isPublishing = forwardArgs.some((arg) => {
 		return true;
 	}
 	if (arg.startsWith("--publish=")) {
-		const [, value = ""] = arg.split("=");
+		const equalIndex = arg.indexOf("=");
+		const value = equalIndex >= 0 ? arg.substring(equalIndex + 1) || "" : "";
 		return value !== "never";
 	}
 	return false;
@@ -227,6 +230,16 @@ if (isPublishing && !hasReleaseTypeOverride) {
 	releaseArgs.push(`--config.publish.releaseType=${inferredReleaseType}`);
 }
 
-const builderArgs = [...forwardArgs, ...releaseArgs, `--config.extraMetadata.taskbookly.channel=${channel}`, `--config.extraMetadata.taskbookly.buildNumber=${buildNumber}`, `--config.extraMetadata.taskbookly.generatedAt=${generatedAt}`];
+const extraMetadataArgs = [
+	`--config.extraMetadata.taskbookly.channel=${channel}`,
+	`--config.extraMetadata.taskbookly.buildNumber=${buildNumber}`,
+	`--config.extraMetadata.taskbookly.generatedAt=${generatedAt}`,
+];
+
+const builderArgs = [
+	...forwardArgs,
+	...releaseArgs,
+	...extraMetadataArgs,
+];
 
 run("npx", ["electron-builder", ...builderArgs], env);
