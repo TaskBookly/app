@@ -1,4 +1,4 @@
-A simple task management and focus tool.
+A simple time management and focus tool.
 
 # ✨ Features
 
