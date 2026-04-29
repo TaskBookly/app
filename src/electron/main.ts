@@ -291,7 +291,10 @@ function updateMenu() {
 
 		menuTemplate.push({
 			role: 'help',
-			submenu: [{ type: 'normal', label: 'Help Center', click: () => shell.openExternal('https://taskbookly.framer.website/help') }, { type: 'separator' }, { type: 'normal', label: 'Report an Issue...', click: () => shell.openExternal('https://github.com/TaskBookly/app/issues/new') }, { type: 'normal', label: 'Acknowledgments', click: () => shell.openExternal('https://taskbookly.framer.website/acknowledgments') }],
+			submenu: [
+				{ type: 'normal', label: 'Report an Issue...', click: () => shell.openExternal('https://github.com/TaskBookly/app/issues/new') },
+				{ type: 'normal', label: 'Acknowledgments', click: () => shell.openExternal('https://github.com/TaskBookly/app/network/dependencies') },
+			],
 		});
 
 		const menu = Menu.buildFromTemplate(menuTemplate);
