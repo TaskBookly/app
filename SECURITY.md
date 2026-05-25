@@ -1,7 +1,5 @@
 # Security Policy
 
-## Reporting a Vulnerability
-
 If you discover a security vulnerability in TaskBookly, please report it privately.
 
 ### How to Report
