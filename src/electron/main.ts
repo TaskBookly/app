@@ -252,7 +252,7 @@ function updateMenu() {
 		const menuTemplate: MenuItemConstructorOptions[] = [
 			{
 				label: app.name,
-				submenu: [{ role: 'about' }, { type: 'separator' }, { label: 'Settings...', accelerator: 'Command+,', click: () => mainWindow.webContents.send('jumpto-section', 'settings') }, { type: 'separator' }, { role: 'services' }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }],
+				submenu: [{ role: 'about' }, { type: 'separator' }, { label: 'Settings...', accelerator: 'Command+,', click: () => mainWindow.webContents.send('jumpto-section', 'settings') }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }],
 			},
 			{
 				label: 'Edit',
@@ -274,8 +274,6 @@ function updateMenu() {
 					{ role: 'resetZoom' },
 					{ role: 'zoomIn' },
 					{ role: 'zoomOut' },
-					{ type: 'separator' },
-					{ role: 'togglefullscreen' },
 				],
 			},
 			buildFocusMenu(),
@@ -291,10 +289,7 @@ function updateMenu() {
 
 		menuTemplate.push({
 			role: 'help',
-			submenu: [
-				{ type: 'normal', label: 'Report an Issue...', click: () => shell.openExternal('https://github.com/TaskBookly/app/issues/new') },
-				{ type: 'normal', label: 'Acknowledgments', click: () => shell.openExternal('https://github.com/TaskBookly/app/network/dependencies') },
-			],
+			submenu: [{ type: 'normal', label: 'Website', click: () => shell.openExternal('https://taskbooklyapp.framer.website') }, { type: 'normal', label: 'GitHub', click: () => shell.openExternal('https://github.com/TaskBookly/app') }, { type: 'separator' }, { type: 'normal', label: 'Report an Issue...', click: () => shell.openExternal('https://github.com/TaskBookly/app/issues/new') }, { type: 'normal', label: 'Acknowledgments', click: () => shell.openExternal('https://github.com/TaskBookly/app/network/dependencies') }],
 		});
 
 		const menu = Menu.buildFromTemplate(menuTemplate);
@@ -456,7 +451,7 @@ if (!gotInsLock) {
 					silent: true,
 				});
 
-				notif.on('click', () => shell.openExternal('https://taskbookly.framer.website/download'));
+				notif.on('click', () => shell.openExternal('https://taskbooklyapp.framer.website'));
 				notif.show();
 				mainWindow.webContents.send('play-sound', 'notifs/info.ogg');
 			}
