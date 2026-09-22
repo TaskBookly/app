@@ -1,6 +1,6 @@
 A simple time management and focus tool.
 
-# ✨ Features
+# Features
 
 - Focus Presets (swap between timers for different tasks quickly)
     - Comes with 12 presets out of the box
@@ -13,7 +13,7 @@ A simple time management and focus tool.
 - Discord Rich Presence support (to let your friends know you're busy)
 - Super configurable
 
-# 🔧 Installation
+# Installation
 
 To download TaskBookly, go to the [latest release](https://github.com/TaskBookly/app/releases/latest).
 
@@ -21,6 +21,6 @@ To download TaskBookly, go to the [latest release](https://github.com/TaskBookly
 
 - **[@3hantom](https://github.com/3hantom)** - Notification SFXs
 
-# ⚖️ License
+# License
 
 TaskBookly is licensed under the MIT License.
