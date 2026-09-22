@@ -11,13 +11,8 @@ A simple time management and focus tool.
 - Clean and simple interface
 - 10 different themes
 - Discord Rich Presence support (to let your friends know you're busy)
-- Super configurable
 
-# Installation
-
-To download TaskBookly, go to the [latest release](https://github.com/TaskBookly/app/releases/latest).
-
-## Contributors
+# Contributors
 
 - **[@3hantom](https://github.com/3hantom)** - Notification SFXs
 
