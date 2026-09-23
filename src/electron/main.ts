@@ -451,7 +451,7 @@ if (!gotInsLock) {
 					silent: true,
 				});
 
-				notif.on('click', () => shell.openExternal('https://taskbooklyapp.framer.website'));
+				notif.on('click', () => shell.openExternal('https://github.com/TaskBookly/app/releases/latest'));
 				notif.show();
 				mainWindow.webContents.send('play-sound', 'notifs/info.ogg');
 			}
